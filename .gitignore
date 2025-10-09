@@ -1,0 +1,35 @@
+# Virtual environment
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Results and data
+results/
+*.pt
+*.pth
+*.npz
+*.joblib
+
+# OGB dataset cache
+dataset/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
