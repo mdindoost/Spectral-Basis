@@ -1,29 +1,50 @@
 """
-Investigation 2: X-Restricted Eigenvectors on ogbn-arxiv
-=========================================================
+Investigation 2: X-Restricted Eigenvectors
+==========================================
 
-Compares:
-A. Raw features X with train-only StandardScaler → Standard MLP
-B. Restricted eigenvectors U (where span(U) = span(X)) → RowNorm MLP
+Usage:
+    python experiments/investigation2_restricted_eigenvectors.py [dataset_name]
+    
+    dataset_name: ogbn-arxiv (default), cora, citeseer, pubmed
 
-Key insight: Same information content, different basis representation
-
+Compares raw X vs restricted eigenvectors U (same span, different basis).
 Expected finding: Small improvement (~1-3%) for RowNorm on U
 """
 
 import os
+import sys
 import json
 import torch
 import numpy as np
 import scipy.linalg as la
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
-from ogb.nodeproppred import NodePropPredDataset
+
+# Fix for PyTorch 2.6 + OGB compatibility
+_original_torch_load = torch.load
+def _patched_torch_load(*args, **kwargs):
+    if 'weights_only' not in kwargs:
+        kwargs['weights_only'] = False
+    return _original_torch_load(*args, **kwargs)
+torch.load = _patched_torch_load
 
 from utils import (
     StandardMLP, RowNormMLP,
-    build_graph_matrices, train_with_selection
+    build_graph_matrices, train_with_selection, load_dataset
 )
+
+# ============================================================================
+# Configuration
+# ============================================================================
+# Get dataset name from command line argument
+DATASET_NAME = sys.argv[1] if len(sys.argv) > 1 else 'ogbn-arxiv'
+
+# Validate dataset name
+VALID_DATASETS = ['ogbn-arxiv', 'cora', 'citeseer', 'pubmed']
+if DATASET_NAME not in VALID_DATASETS:
+    print(f"Error: Invalid dataset '{DATASET_NAME}'")
+    print(f"Valid datasets: {', '.join(VALID_DATASETS)}")
+    sys.exit(1)
 
 # Set random seeds
 torch.manual_seed(42)
@@ -32,35 +53,32 @@ np.random.seed(42)
 # Device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print('='*60)
-print('INVESTIGATION 2: X-RESTRICTED EIGENVECTORS')
+print(f'INVESTIGATION 2: X-RESTRICTED EIGENVECTORS - {DATASET_NAME.upper()}')
 print('='*60)
 print(f'Device: {device}')
 if torch.cuda.is_available():
     print(f'GPU: {torch.cuda.get_device_name(0)}')
 print('='*60)
 
-# Create output directories
-os.makedirs('results/investigation2/plots', exist_ok=True)
-os.makedirs('results/investigation2/metrics', exist_ok=True)
+# Create dataset-specific output directories
+output_base = f'results/investigation2/{DATASET_NAME}'
+os.makedirs(f'{output_base}/plots', exist_ok=True)
+os.makedirs(f'{output_base}/metrics', exist_ok=True)
 
 # ============================================================================
 # 1. Load Dataset
 # ============================================================================
-print('\n[1/6] Loading ogbn-arxiv...')
-dataset = NodePropPredDataset(name='ogbn-arxiv')
-graph, labels = dataset[0]
+print(f'\n[1/6] Loading {DATASET_NAME}...')
 
-edge_index = graph['edge_index']
-X_raw = graph['node_feat']
-num_nodes = graph['num_nodes']
-num_classes = dataset.num_classes
+(edge_index, X_raw, labels, num_nodes, num_classes,
+ train_idx, val_idx, test_idx) = load_dataset(DATASET_NAME, root='./dataset')
+
+if X_raw is None:
+    print(f"ERROR: Dataset {DATASET_NAME} has no node features!")
+    print("Investigation 2 requires node features to compute X-restricted eigenvectors.")
+    sys.exit(1)
+
 d_raw = X_raw.shape[1]
-labels = labels.squeeze()
-
-split_idx = dataset.get_idx_split()
-train_idx = split_idx['train']
-val_idx = split_idx['valid']
-test_idx = split_idx['test']
 
 print(f'Nodes: {num_nodes:,}')
 print(f'Edges: {edge_index.shape[1]:,}')
@@ -95,16 +113,42 @@ Lr = 0.5 * (Lr + Lr.T)
 Dr = 0.5 * (Dr + Dr.T)
 
 print(f'Solving reduced generalized eigenproblem in R^{d_raw}...')
-w, V = la.eigh(Lr, Dr)  # Dense eigensolver
-idx = np.argsort(w)
-w = w[idx]
-V = V[:, idx]
+
+# Add small regularization to ensure Dr is positive definite
+# This handles cases where X has linearly dependent columns
+reg = 1e-8 * np.trace(Dr) / d_raw
+Dr_reg = Dr + reg * np.eye(d_raw)
+
+print(f'Added regularization: {reg:.2e} * I')
+
+try:
+    w, V = la.eigh(Lr, Dr_reg)  # Dense eigensolver with regularized Dr
+    idx = np.argsort(w)
+    w = w[idx]
+    V = V[:, idx]
+except np.linalg.LinAlgError as e:
+    print(f'ERROR: Eigensolver failed even with regularization: {e}')
+    print(f'This likely means the feature matrix has very low rank.')
+    print(f'Try Investigation 1 (true eigenvectors) instead for {DATASET_NAME}.')
+    sys.exit(1)
 
 print(f'Eigenvalues range: [{w.min():.6f}, {w.max():.6f}]')
 
 # Map back to node space
 U = (X @ V).astype(np.float32)
 print(f'Restricted eigenvector matrix U shape: {U.shape}')
+
+# Check effective rank
+from numpy.linalg import matrix_rank
+rank_X = matrix_rank(X, tol=1e-6)
+rank_U = matrix_rank(U, tol=1e-6)
+print(f'Rank of X: {rank_X}/{d_raw}')
+print(f'Rank of U: {rank_U}/{d_raw}')
+
+if rank_X < d_raw:
+    print(f'⚠ Warning: X is rank-deficient ({rank_X} < {d_raw})')
+    print(f'  The restricted eigenvectors span a {rank_X}-dimensional subspace.')
+
 print(f'✓ span(U) = span(X) — same subspace, different basis')
 
 # Verify D-orthonormality of U
@@ -112,6 +156,9 @@ DU = (D @ U).astype(np.float64)
 G = U.astype(np.float64).T @ DU
 deviation = np.abs(G - np.eye(U.shape[1])).max()
 print(f'D-orthonormality check: max |U^T D U - I| = {deviation:.2e}')
+
+if deviation > 1e-4:
+    print(f'⚠ Warning: Large D-orthonormality deviation (may be due to regularization or rank deficiency)')
 
 # ============================================================================
 # 4. Prepare Data
@@ -170,8 +217,9 @@ res_U = train_with_selection(
 # ============================================================================
 print('\n[6/6] Generating plots and saving results...')
 
-# Create 2x3 grid plot (same as Professor Koutis's notebook)
+# Create 2x3 grid plot
 fig, axes = plt.subplots(2, 3, figsize=(18, 8))
+fig.suptitle(f'Investigation 2: X-Restricted Eigenvectors - {DATASET_NAME}', fontsize=14)
 
 # Row 1: Standard MLP on X (scaled)
 axes[0, 0].plot(res_X['val_accs'], linewidth=2)
@@ -204,12 +252,13 @@ axes[1, 2].grid(alpha=0.3)
 axes[1, 2].axvline(res_U['best_epoch_loss'], color='k', linestyle='--', alpha=0.5)
 
 plt.tight_layout()
-plt.savefig('results/investigation2/plots/comparison.png', dpi=150)
-print('✓ Saved plot: results/investigation2/plots/comparison.png')
+plot_path = f'{output_base}/plots/comparison.png'
+plt.savefig(plot_path, dpi=150)
+print(f'✓ Saved plot: {plot_path}')
 
 # Save metrics
 metrics = {
-    'dataset': 'ogbn-arxiv',
+    'dataset': DATASET_NAME,
     'feature_dimension': int(d_raw),
     'epochs': int(epochs),
     'hidden_dim': int(hidden_dim),
@@ -234,37 +283,36 @@ metrics = {
     }
 }
 
-with open('results/investigation2/metrics/results.json', 'w') as f:
+metrics_path = f'{output_base}/metrics/results.json'
+with open(metrics_path, 'w') as f:
     json.dump(metrics, f, indent=2)
-print('✓ Saved metrics: results/investigation2/metrics/results.json')
+print(f'✓ Saved metrics: {metrics_path}')
 
 # ============================================================================
 # Print Summary
 # ============================================================================
 print('\n' + '='*60)
-print('SUMMARY: INVESTIGATION 2')
+print(f'RESULTS - {DATASET_NAME.upper()}')
 print('='*60)
 print('Standard MLP on X (scaled):')
-print(f'  Best val loss  @ epoch {res_X["best_epoch_loss"]+1:3d}: '
-      f'test acc = {res_X["test_at_best_val_loss"]:.4f} '
+print(f'  best val loss  @ epoch {res_X["best_epoch_loss"]+1:3d}: test acc = {res_X["test_at_best_val_loss"]:.4f} '
       f'(val loss = {res_X["best_val_loss"]:.4f})')
-print(f'  Best val acc   @ epoch {res_X["best_epoch_acc"]+1:3d}: '
-      f'test acc = {res_X["test_at_best_val_acc"]:.4f} '
+print(f'  best val acc   @ epoch {res_X["best_epoch_acc"]+1:3d}: test acc = {res_X["test_at_best_val_acc"]:.4f} '
       f'(val acc  = {res_X["best_val_acc"]:.4f})')
 
 print('\nRowNorm MLP on U (restricted eigenvectors):')
-print(f'  Best val loss  @ epoch {res_U["best_epoch_loss"]+1:3d}: '
-      f'test acc = {res_U["test_at_best_val_loss"]:.4f} '
+print(f'  best val loss  @ epoch {res_U["best_epoch_loss"]+1:3d}: test acc = {res_U["test_at_best_val_loss"]:.4f} '
       f'(val loss = {res_U["best_val_loss"]:.4f})')
-print(f'  Best val acc   @ epoch {res_U["best_epoch_acc"]+1:3d}: '
-      f'test acc = {res_U["test_at_best_val_acc"]:.4f} '
+print(f'  best val acc   @ epoch {res_U["best_epoch_acc"]+1:3d}: test acc = {res_U["test_at_best_val_acc"]:.4f} '
       f'(val acc  = {res_U["best_val_acc"]:.4f})')
 
 print('\n' + '='*60)
 print('COMPARISON (U vs X):')
 diff_best_loss = res_U['test_at_best_val_loss'] - res_X['test_at_best_val_loss']
 diff_best_acc = res_U['test_at_best_val_acc'] - res_X['test_at_best_val_acc']
-print(f'At best val loss checkpoint: {diff_best_loss:+.4f}')
-print(f'At best val acc checkpoint:  {diff_best_acc:+.4f}')
+pct_best_loss = 100 * (res_U['test_at_best_val_loss'] / res_X['test_at_best_val_loss'] - 1)
+pct_best_acc = 100 * (res_U['test_at_best_val_acc'] / res_X['test_at_best_val_acc'] - 1)
+print(f'At best val loss checkpoint: {diff_best_loss:+.4f} ({pct_best_loss:+.1f}%)')
+print(f'At best val acc checkpoint:  {diff_best_acc:+.4f} ({pct_best_acc:+.1f}%)')
 print('='*60)
-print('✓ Investigation 2 complete!')
+print(f'✓ Investigation 2 complete for {DATASET_NAME}!')

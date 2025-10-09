@@ -67,6 +67,65 @@ class CosineRowNormMLP(nn.Module):
         return logits
 
 
+def load_dataset(dataset_name, root='./dataset'):
+    """
+    Load dataset and return standardized format
+    
+    Returns:
+        edge_index: numpy array of edges (2, num_edges)
+        node_features: numpy array of node features (num_nodes, num_features) or None
+        labels: numpy array of labels (num_nodes,)
+        num_nodes: int
+        num_classes: int
+        train_idx: numpy array of training indices
+        val_idx: numpy array of validation indices
+        test_idx: numpy array of test indices
+    """
+    if dataset_name == 'ogbn-arxiv':
+        from ogb.nodeproppred import NodePropPredDataset
+        
+        dataset = NodePropPredDataset(name='ogbn-arxiv', root=root)
+        graph, labels = dataset[0]
+        
+        edge_index = graph['edge_index']
+        node_features = graph['node_feat']
+        num_nodes = graph['num_nodes']
+        num_classes = dataset.num_classes
+        labels = labels.squeeze()
+        
+        split_idx = dataset.get_idx_split()
+        train_idx = split_idx['train']
+        val_idx = split_idx['valid']
+        test_idx = split_idx['test']
+        
+    elif dataset_name in ['cora', 'citeseer', 'pubmed']:
+        from torch_geometric.datasets import Planetoid
+        
+        # Map dataset names to Planetoid names (capitalize first letter)
+        planetoid_name = dataset_name.capitalize()
+        
+        dataset = Planetoid(root=root, name=planetoid_name)
+        data = dataset[0]
+        
+        # Convert to numpy
+        edge_index = data.edge_index.numpy()
+        node_features = data.x.numpy()
+        labels = data.y.numpy()
+        num_nodes = data.num_nodes
+        num_classes = dataset.num_classes
+        
+        # Convert masks to indices
+        train_idx = np.where(data.train_mask.numpy())[0]
+        val_idx = np.where(data.val_mask.numpy())[0]
+        test_idx = np.where(data.test_mask.numpy())[0]
+        
+    else:
+        raise ValueError(f"Unknown dataset: {dataset_name}")
+    
+    return (edge_index, node_features, labels, num_nodes, num_classes,
+            train_idx, val_idx, test_idx)
+
+
 def build_graph_matrices(edge_index, num_nodes):
     """
     Build adjacency and Laplacian matrices from edge index
