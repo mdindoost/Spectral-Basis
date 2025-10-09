@@ -414,7 +414,7 @@ If you use this code in your research, please cite:
 
 ```bibtex
 @misc{spectral-basis-mlp-2024,
-  author = {Dindoost, Mohammad and Koutis, Ioannis},
+  author = {Dindoost, Mohammad},
   title = {MLP Sensitivity to Spectral Basis Representations},
   year = {2024},
   publisher = {GitHub},
@@ -432,8 +432,6 @@ PhD Student, New Jersey Institute of Technology
 Email: md724@njit.edu  
 GitHub: [@mdindoost](https://github.com/mdindoost)
 
-**Professor Ioannis Koutis**  
-New Jersey Institute of Technology
 
 ---
 
