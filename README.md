@@ -6,13 +6,7 @@ Research investigating how MLPs respond to different spectral basis representati
 
 ---
 
-## Research Question
 
-**Do MLPs exhibit different performance when node features are transformed to span-equivalent but basis-distinct representations?**
-
-This project demonstrates that **basis choice matters**, not just information content. Even when two feature representations span the same subspace mathematically, MLPs achieve different performance depending on the basis used.
-
----
 
 ## Repository Structure
 
@@ -85,40 +79,11 @@ python -c "import torch, torch_geometric, ogb; print('✓ All dependencies insta
 
 ### Investigation 1: True Eigenvectors
 
-**Purpose**: Demonstrate that RowNorm MLP exploits geometric properties of graph eigenvectors.
-
-**Method**:
-- Compute true graph eigenvectors: `eigsh(L, k=2×num_classes, M=D)`
-- Small dimension (k=14 for Cora, k=32 for ogbn-arxiv)
-- Compare 6 models/preprocessing approaches:
-  1. Standard MLP (train-only StandardScaler)
-  2. Standard MLP (full-data StandardScaler - with leakage)
-  3. Standard MLP (no scaling)
-  4. Standard MLP (eigenvalue-weighted)
-  5. **RowNorm MLP** (no scaling, L2 normalization, no bias)
-  6. Cosine Classifier MLP (angular distance)
-
-**Key Finding**: RowNorm MLP significantly outperforms Standard MLP (~30-40% relative improvement)
-
-**Why it matters**: Shows that row-normalization effectively exploits spectral structure.
 
 ---
 
 ### Investigation 2: X-Restricted Eigenvectors
 
-**Purpose**: Test if basis representation matters when information content is identical.
-
-**Method**:
-- Solve restricted eigenproblem: `(X^T L X)v = λ(X^T D X)v` → `U = X @ V`
-- **Critical insight**: `span(U) = span(X)` — same information, different basis
-- Full dimension (k=128 for ogbn-arxiv, k=1433 for Cora)
-- Compare 2 models:
-  - **Model A**: Raw X with train-only StandardScaler → Standard MLP
-  - **Model B**: Restricted eigenvectors U (no scaling) → RowNorm MLP
-
-**Key Finding**: Small but real improvement (~1-3%) for RowNorm on U
-
-**Why it matters**: Demonstrates that **MLPs are sensitive to basis choice**, not just information content. Even with identical spans, different bases yield different performance.
 
 ---
 
@@ -199,114 +164,15 @@ results/
 
 ### Investigation 1 (ogbn-arxiv)
 
-```
-============================================================
-SUMMARY
-============================================================
-Dataset: ogbn-arxiv
-Features: 32 eigenvectors from (D−A)x = λ D x (D-orthonormal)
-
-1. Standard MLP (train-only scaling):
-   - Params: 84,520
-   - Test  Acc: 0.4310
-
-5. Row-Normalized MLP (Radial):
-   - Params: 83,968
-   - Test  Acc: 0.6006    ← +39.4% improvement!
-
-============================================================
-COMPARISON (Relative to Standard MLP)
-============================================================
-Row-Normalized vs Standard:     +0.1696 (+39.4%)
-============================================================
-```
-
-**Interpretation**: RowNorm MLP dramatically outperforms Standard MLP on true eigenvectors because it exploits the geometric structure through radial projections.
 
 ---
 
 ### Investigation 2 (ogbn-arxiv)
 
-```
-============================================================
-RESULTS - OGBN-ARXIV
-============================================================
-Standard MLP on X (scaled):
-  best val loss  @ epoch  89: test acc = 0.7182 (val loss = 0.8534)
-  best val acc   @ epoch 156: test acc = 0.7246 (val acc  = 0.7368)
-
-RowNorm MLP on U (restricted eigenvectors):
-  best val loss  @ epoch  94: test acc = 0.7305 (val loss = 0.8182)
-  best val acc   @ epoch 163: test acc = 0.7402 (val acc  = 0.7455)
-
-============================================================
-COMPARISON (U vs X):
-At best val loss checkpoint: +0.0123 (+1.7%)
-At best val acc checkpoint:  +0.0156 (+2.2%)
-============================================================
-```
-
-**Interpretation**: Even though span(U) = span(X) (identical information), the eigenvector basis (U) with RowNorm MLP achieves 1-2% better performance than raw features (X) with Standard MLP. This proves **basis choice matters**.
-
 ---
 
 ## Key Findings
 
-### Main Result
-
-**MLPs are sensitive to basis representation, not just information content.**
-
-Even when two feature matrices span the same subspace (contain identical information), the choice of basis affects model performance:
-- Investigation 1: ~30-40% improvement with RowNorm MLP on true eigenvectors
-- Investigation 2: ~1-3% improvement with RowNorm MLP on restricted eigenvectors (same span as raw features)
-
-### Why This Matters
-
-**Practical Implications**:
-- StandardScaler (common practice) may not be optimal preprocessing
-- Spectral basis transformation can improve MLP performance
-- Row-normalization is effective for spectral features
-
-**Theoretical Implications**:
-- Basis choice creates different optimization landscapes
-- Geometric structure (radial vs. Cartesian) affects learning
-- Information content ≠ representational quality
-
----
-
-## Investigation 2: Technical Notes
-
-### Rank-Deficient Features
-
-**Cora and CiteSeer** use sparse bag-of-words features that are rank-deficient:
-
-```
-Cora:     1,433 nominal features → ~988 effective rank
-CiteSeer: 3,703 nominal features → ~2,500 effective rank (estimated)
-```
-
-**Why this happens**: Many words never appear in the corpus, creating linearly dependent columns.
-
-**How we handle it**: Added small regularization (1e-8 scale) to ensure numerical stability:
-
-```python
-reg = 1e-8 * trace(Dr) / d
-Dr_regularized = Dr + reg * I
-```
-
-**Does this affect validity?** 
-- ✅ No! The regularization is tiny (~0.00001% of eigenvalues)
-- ✅ span(U) = span(X) still holds (just in lower-dimensional subspace)
-- ✅ Both models see identical information
-- ✅ Comparison remains scientifically valid
-
-Expected warning for Cora:
-```
-⚠ Warning: X is rank-deficient (988 < 1433)
-  The restricted eigenvectors span a 988-dimensional subspace.
-```
-
-This is **normal and expected** for bag-of-words features!
 
 ---
 
