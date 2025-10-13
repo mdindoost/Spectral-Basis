@@ -1,0 +1,44 @@
+{
+  "dataset": "pubmed",
+  "feature_dimension_original": 500,
+  "feature_dimension_effective": 500,
+  "rank_deficient": false,
+  "epochs": 200,
+  "hidden_dim": 256,
+  "batch_size": 128,
+  "scheduler": "CosineAnnealingLR",
+  "model_X": {
+    "name": "Standard MLP on X (scaled)",
+    "best_val_loss": 0.8839304447174072,
+    "best_val_acc": 0.6520000100135803,
+    "best_epoch_loss": 0,
+    "best_epoch_acc": 146,
+    "test_at_best_val_loss": 0.6040000319480896,
+    "test_at_best_val_acc": 0.6610000133514404,
+    "checkpoint_accuracies": {
+      "10": 0.6360000371932983,
+      "20": 0.64000004529953,
+      "40": 0.6380000114440918,
+      "80": 0.6380000114440918,
+      "160": 0.6480000019073486,
+      "200": 0.6500000357627869
+    }
+  },
+  "model_U": {
+    "name": "RowNorm MLP on U (restricted eigenvectors)",
+    "best_val_loss": 1.0593152046203613,
+    "best_val_acc": 0.5879999995231628,
+    "best_epoch_loss": 2,
+    "best_epoch_acc": 154,
+    "test_at_best_val_loss": 0.4280000329017639,
+    "test_at_best_val_acc": 0.5860000252723694,
+    "checkpoint_accuracies": {
+      "10": 0.43800002336502075,
+      "20": 0.44200003147125244,
+      "40": 0.4780000150203705,
+      "80": 0.534000039100647,
+      "160": 0.5860000252723694,
+      "200": 0.5860000252723694
+    }
+  }
+}

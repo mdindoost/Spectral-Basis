@@ -482,4 +482,4 @@ watch -n 1 nvidia-smi
 
 ---
 
-**Last Updated**: January 2025
+**Last Updated**: Oct 9 - 2025

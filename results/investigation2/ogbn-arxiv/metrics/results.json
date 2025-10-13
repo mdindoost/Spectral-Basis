@@ -1,0 +1,25 @@
+{
+  "dataset": "ogbn-arxiv",
+  "feature_dimension": 128,
+  "epochs": 200,
+  "hidden_dim": 256,
+  "batch_size": 128,
+  "model_X": {
+    "name": "Standard MLP on X (scaled)",
+    "best_val_loss": 1.6094293594360352,
+    "best_val_acc": 0.5393804907798767,
+    "best_epoch_loss": 60,
+    "best_epoch_acc": 151,
+    "test_at_best_val_loss": 0.5172725915908813,
+    "test_at_best_val_acc": 0.5170051455497742
+  },
+  "model_U": {
+    "name": "RowNorm MLP on U (restricted eigenvectors)",
+    "best_val_loss": 1.629768967628479,
+    "best_val_acc": 0.5479042530059814,
+    "best_epoch_loss": 127,
+    "best_epoch_acc": 127,
+    "test_at_best_val_loss": 0.52597576379776,
+    "test_at_best_val_acc": 0.52597576379776
+  }
+}

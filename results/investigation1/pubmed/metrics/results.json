@@ -1,0 +1,31 @@
+{
+  "dataset": "pubmed",
+  "k_eigenvectors": 6,
+  "epochs": 60,
+  "hidden_dim": 256,
+  "batch_size": 128,
+  "test_accuracies": {
+    "standard_train_scaled": 0.6940000057220459,
+    "standard_full_scaled": 0.6820000410079956,
+    "standard_no_scale": 0.41200003027915955,
+    "standard_weighted": 0.6550000309944153,
+    "rownorm": 0.6880000233650208,
+    "cosine": 0.6710000038146973
+  },
+  "final_val_accuracies": {
+    "standard_train_scaled": 0.7020000219345093,
+    "standard_full_scaled": 0.6860000491142273,
+    "standard_no_scale": 0.3880000114440918,
+    "standard_weighted": 0.6600000262260437,
+    "rownorm": 0.6940000057220459,
+    "cosine": 0.6600000262260437
+  },
+  "best_val_accuracies": {
+    "standard_train_scaled": 0.7200000286102295,
+    "standard_full_scaled": 0.690000057220459,
+    "standard_no_scale": 0.41600000858306885,
+    "standard_weighted": 0.6820000410079956,
+    "rownorm": 0.6980000138282776,
+    "cosine": 0.6800000071525574
+  }
+}

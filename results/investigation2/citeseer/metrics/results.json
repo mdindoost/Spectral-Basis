@@ -1,0 +1,25 @@
+{
+  "dataset": "citeseer",
+  "feature_dimension": 3703,
+  "epochs": 200,
+  "hidden_dim": 256,
+  "batch_size": 128,
+  "model_X": {
+    "name": "Standard MLP on X (scaled)",
+    "best_val_loss": 1.4056867361068726,
+    "best_val_acc": 0.46800002455711365,
+    "best_epoch_loss": 195,
+    "best_epoch_acc": 160,
+    "test_at_best_val_loss": 0.4870000183582306,
+    "test_at_best_val_acc": 0.48900002241134644
+  },
+  "model_U": {
+    "name": "RowNorm MLP on U (restricted eigenvectors)",
+    "best_val_loss": 1.7900371551513672,
+    "best_val_acc": 0.2580000162124634,
+    "best_epoch_loss": 0,
+    "best_epoch_acc": 41,
+    "test_at_best_val_loss": 0.18200001120567322,
+    "test_at_best_val_acc": 0.22200001776218414
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "dataset": "ogbn-arxiv",
+  "k_eigenvectors": 32,
+  "epochs": 60,
+  "hidden_dim": 256,
+  "batch_size": 128,
+  "test_accuracies": {
+    "standard_train_scaled": 0.4310021996498108,
+    "standard_full_scaled": 0.4369894862174988,
+    "standard_no_scale": 0.05861778184771538,
+    "standard_weighted": 0.31463077664375305,
+    "rownorm": 0.6006213426589966,
+    "cosine": 0.6282739639282227
+  },
+  "final_val_accuracies": {
+    "standard_train_scaled": 0.45847174525260925,
+    "standard_full_scaled": 0.4707540273666382,
+    "standard_no_scale": 0.0762777253985405,
+    "standard_weighted": 0.35098493099212646,
+    "rownorm": 0.6056243181228638,
+    "cosine": 0.6223362684249878
+  },
+  "best_val_accuracies": {
+    "standard_train_scaled": 0.5588442087173462,
+    "standard_full_scaled": 0.5338769555091858,
+    "standard_no_scale": 0.0762777253985405,
+    "standard_weighted": 0.3861538767814636,
+    "rownorm": 0.6127386689186096,
+    "cosine": 0.6223362684249878
+  }
+}

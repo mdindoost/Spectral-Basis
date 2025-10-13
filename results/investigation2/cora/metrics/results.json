@@ -1,0 +1,25 @@
+{
+  "dataset": "cora",
+  "feature_dimension": 1433,
+  "epochs": 200,
+  "hidden_dim": 256,
+  "batch_size": 128,
+  "model_X": {
+    "name": "Standard MLP on X (scaled)",
+    "best_val_loss": 1.495771050453186,
+    "best_val_acc": 0.5320000052452087,
+    "best_epoch_loss": 1,
+    "best_epoch_acc": 195,
+    "test_at_best_val_loss": 0.453000009059906,
+    "test_at_best_val_acc": 0.5040000081062317
+  },
+  "model_U": {
+    "name": "RowNorm MLP on U (restricted eigenvectors)",
+    "best_val_loss": 1.922181487083435,
+    "best_val_acc": 0.242000013589859,
+    "best_epoch_loss": 3,
+    "best_epoch_acc": 66,
+    "test_at_best_val_loss": 0.23800000548362732,
+    "test_at_best_val_acc": 0.21900001168251038
+  }
+}

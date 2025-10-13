@@ -1,0 +1,25 @@
+{
+  "dataset": "pubmed",
+  "feature_dimension": 500,
+  "epochs": 200,
+  "hidden_dim": 256,
+  "batch_size": 128,
+  "model_X": {
+    "name": "Standard MLP on X (scaled)",
+    "best_val_loss": 0.8839304447174072,
+    "best_val_acc": 0.6500000357627869,
+    "best_epoch_loss": 0,
+    "best_epoch_acc": 95,
+    "test_at_best_val_loss": 0.6040000319480896,
+    "test_at_best_val_acc": 0.6520000100135803
+  },
+  "model_U": {
+    "name": "RowNorm MLP on U (restricted eigenvectors)",
+    "best_val_loss": 1.059259295463562,
+    "best_val_acc": 0.5660000443458557,
+    "best_epoch_loss": 2,
+    "best_epoch_acc": 102,
+    "test_at_best_val_loss": 0.4310000240802765,
+    "test_at_best_val_acc": 0.5649999976158142
+  }
+}
