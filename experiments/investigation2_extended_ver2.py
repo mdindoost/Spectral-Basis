@@ -105,7 +105,7 @@ def get_batch_size(train_size):
     """
     Adaptive batch size strategy:
     - Large datasets (>256 samples): use batch_size=128
-    - Small datasets (≤256 samples): use full batch
+    - Small datasets (â‰¤256 samples): use full batch
     """
     if train_size > 256:
         return 128
@@ -385,7 +385,7 @@ def aggregate_results(results_list):
 def plot_convergence_with_confidence(aggregated_results, model_names, model_keys,
                                     dataset_name, save_path, epochs):
     """
-    Plot validation accuracy curves with confidence bands (mean ± std)
+    Plot validation accuracy curves with confidence bands (mean Â± std)
     """
     fig, axes = plt.subplots(1, 2, figsize=(16, 5))
     
@@ -412,21 +412,21 @@ def plot_convergence_with_confidence(aggregated_results, model_names, model_keys
     
     axes[0].set_xlabel('Epoch', fontsize=12)
     axes[0].set_ylabel('Validation Accuracy', fontsize=12)
-    axes[0].set_title(f'Validation Accuracy (Mean ± Std) - {dataset_name}', fontsize=13)
+    axes[0].set_title(f'Validation Accuracy (Mean Â± Std) - {dataset_name}', fontsize=13)
     axes[0].legend(fontsize=10)
     axes[0].grid(True, alpha=0.3)
     axes[0].set_xlim([0, epochs])
     
     axes[1].set_xlabel('Epoch', fontsize=12)
     axes[1].set_ylabel('Training Loss', fontsize=12)
-    axes[1].set_title(f'Training Loss (Mean ± Std) - {dataset_name}', fontsize=13)
+    axes[1].set_title(f'Training Loss (Mean Â± Std) - {dataset_name}', fontsize=13)
     axes[1].legend(fontsize=10)
     axes[1].grid(True, alpha=0.3)
     axes[1].set_xlim([0, epochs])
     
     plt.tight_layout()
     plt.savefig(save_path, dpi=150, bbox_inches='tight')
-    print(f'✓ Saved: {save_path}')
+    print(f'âœ“ Saved: {save_path}')
     plt.close()
 
 def plot_early_convergence_zoom(aggregated_results, dataset_name, save_path):
@@ -462,72 +462,90 @@ def plot_early_convergence_zoom(aggregated_results, dataset_name, save_path):
     
     plt.tight_layout()
     plt.savefig(save_path, dpi=150, bbox_inches='tight')
-    print(f'✓ Saved: {save_path}')
+    print(f'âœ“ Saved: {save_path}')
     plt.close()
+
+
 
 def plot_original_style_grid(aggregated_results, dataset_name, save_path, epochs):
     """
-    Plot 2×3 grid (original Investigation 2 style):
-    Row 1: Standard MLP (Val Acc, Train Loss, Val Loss)
-    Row 2: RowNorm MLP (Val Acc, Train Loss, Val Loss)
+    Plot 1x3 grid:
+      Col 1: Validation Accuracy (both models)
+      Col 2: Training Loss (both models)
+      Col 3: Validation Loss (both models)
+    Clean layout with legend below plots and non-overlapping title.
     """
-    fig, axes = plt.subplots(2, 3, figsize=(18, 8))
-    
-    # Standard MLP (X-scaled) - Row 0
-    std_results = aggregated_results['standard_scaled']
-    axes[0,0].plot(std_results['val_accs']['mean'], linewidth=2, color='#d62728')
-    axes[0,0].fill_between(range(len(std_results['val_accs']['mean'])),
-                          std_results['val_accs']['mean'] - std_results['val_accs']['std'],
-                          std_results['val_accs']['mean'] + std_results['val_accs']['std'],
-                          alpha=0.2, color='#d62728')
-    axes[0,0].set_title('X-scaled: Val Acc')
-    axes[0,0].grid(alpha=0.3)
-    
-    axes[0,1].plot(std_results['train_losses']['mean'], linewidth=2, color='#d62728')
-    axes[0,1].fill_between(range(len(std_results['train_losses']['mean'])),
-                          std_results['train_losses']['mean'] - std_results['train_losses']['std'],
-                          std_results['train_losses']['mean'] + std_results['train_losses']['std'],
-                          alpha=0.2, color='#d62728')
-    axes[0,1].set_title('X-scaled: Train Loss')
-    axes[0,1].grid(alpha=0.3)
-    
-    axes[0,2].plot(std_results['val_losses']['mean'], linewidth=2, color='#d62728')
-    axes[0,2].fill_between(range(len(std_results['val_losses']['mean'])),
-                          std_results['val_losses']['mean'] - std_results['val_losses']['std'],
-                          std_results['val_losses']['mean'] + std_results['val_losses']['std'],
-                          alpha=0.2, color='#d62728')
-    axes[0,2].set_title('X-scaled: Val Loss')
-    axes[0,2].grid(alpha=0.3)
-    
-    # RowNorm MLP (U-restricted) - Row 1
-    rn_results = aggregated_results['rownorm_restricted']
-    axes[1,0].plot(rn_results['val_accs']['mean'], linewidth=2, color='#1f77b4')
-    axes[1,0].fill_between(range(len(rn_results['val_accs']['mean'])),
-                          rn_results['val_accs']['mean'] - rn_results['val_accs']['std'],
-                          rn_results['val_accs']['mean'] + rn_results['val_accs']['std'],
-                          alpha=0.2, color='#1f77b4')
-    axes[1,0].set_title('U-restricted: Val Acc')
-    axes[1,0].grid(alpha=0.3)
-    
-    axes[1,1].plot(rn_results['train_losses']['mean'], linewidth=2, color='#1f77b4')
-    axes[1,1].fill_between(range(len(rn_results['train_losses']['mean'])),
-                          rn_results['train_losses']['mean'] - rn_results['train_losses']['std'],
-                          rn_results['train_losses']['mean'] + rn_results['train_losses']['std'],
-                          alpha=0.2, color='#1f77b4')
-    axes[1,1].set_title('U-restricted: Train Loss')
-    axes[1,1].grid(alpha=0.3)
-    
-    axes[1,2].plot(rn_results['val_losses']['mean'], linewidth=2, color='#1f77b4')
-    axes[1,2].fill_between(range(len(rn_results['val_losses']['mean'])),
-                          rn_results['val_losses']['mean'] - rn_results['val_losses']['std'],
-                          rn_results['val_losses']['mean'] + rn_results['val_losses']['std'],
-                          alpha=0.2, color='#1f77b4')
-    axes[1,2].set_title('U-restricted: Val Loss')
-    axes[1,2].grid(alpha=0.3)
-    
-    plt.suptitle(f'Investigation 2 Extended: X-Restricted Eigenvectors - {dataset_name}', 
-                 fontsize=14, y=0.995)
-    plt.tight_layout()
+
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+
+    # Model configs: (key, label, color)
+    cfgs = [
+        ('standard_scaled', 'Standard MLP (X-scaled)', '#d62728'),   # red
+        ('rownorm_restricted', 'RowNorm MLP (U-restricted)', '#1f77b4')  # blue
+    ]
+
+    def plot_with_band(ax, y_mean, y_std, label, color):
+        x = np.arange(len(y_mean))
+        ax.plot(x, y_mean, label=label, linewidth=2.2, color=color)
+        ax.fill_between(x, y_mean - y_std, y_mean + y_std, alpha=0.2, color=color)
+
+    # --- (1) Validation Accuracy ---
+    ax = axes[0]
+    for key, label, color in cfgs:
+        res = aggregated_results[key]
+        plot_with_band(ax, res['val_accs']['mean'], res['val_accs']['std'], label, color)
+    ax.set_title('Validation Accuracy', fontsize=12)
+    ax.set_xlabel('Epoch')
+    ax.set_ylabel('Accuracy')
+    ax.grid(alpha=0.3)
+
+    # --- (2) Training Loss ---
+    ax = axes[1]
+    for key, label, color in cfgs:
+        res = aggregated_results[key]
+        plot_with_band(ax, res['train_losses']['mean'], res['train_losses']['std'], label, color)
+    ax.set_title('Training Loss', fontsize=12)
+    ax.set_xlabel('Epoch')
+    ax.set_ylabel('Loss')
+    ax.grid(alpha=0.3)
+
+    # --- (3) Validation Loss ---
+    ax = axes[2]
+    for key, label, color in cfgs:
+        res = aggregated_results[key]
+        plot_with_band(ax, res['val_losses']['mean'], res['val_losses']['std'], label, color)
+    ax.set_title('Validation Loss', fontsize=12)
+    ax.set_xlabel('Epoch')
+    ax.set_ylabel('Loss')
+    ax.grid(alpha=0.3)
+
+    # Legend BELOW plots (non-overlapping)
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(
+        handles,
+        labels,
+        loc='lower center',
+        ncol=2,
+        frameon=True,
+        fancybox=True,
+        framealpha=0.9,
+        fontsize=11,
+        handlelength=3.5,
+        columnspacing=1.5,
+        bbox_to_anchor=(0.5, -0.05)  # move below plots
+    )
+
+    # Title at top with enough space
+    plt.suptitle(
+        f'Investigation 2 Extended: X-Restricted Eigenvectors — {dataset_name}',
+        fontsize=15,
+        y=1.02,
+        fontweight='bold'
+    )
+
+    # Adjust layout to fit everything neatly
+    plt.tight_layout(rect=[0, 0.05, 1, 0.95])
+    plt.subplots_adjust(bottom=0.18)  # space for legend
     plt.savefig(save_path, dpi=150, bbox_inches='tight')
     print(f'✓ Saved: {save_path}')
     plt.close()
@@ -543,7 +561,7 @@ def print_convergence_table(aggregated_results, model_names, model_keys, dataset
     print('\n' + '='*70)
     print(f'CONVERGENCE TABLE: {dataset_name.upper()}')
     print('='*70)
-    print(f'Validation Accuracy (%) at Checkpoints [Mean ± Std]')
+    print(f'Validation Accuracy (%) at Checkpoints [Mean Â± Std]')
     print('-'*70)
     
     checkpoints = [10, 20, 40, 80, 160, 200]
@@ -559,13 +577,13 @@ def print_convergence_table(aggregated_results, model_names, model_keys, dataset
             if cp in results['checkpoint_accs']:
                 mean = results['checkpoint_accs'][cp]['mean'] * 100
                 std = results['checkpoint_accs'][cp]['std'] * 100
-                row += f" {mean:5.1f}±{std:3.1f}"
+                row += f" {mean:5.1f}Â±{std:3.1f}"
             else:
                 row += "    -    "
         
         final_mean = results['test_acc']['mean'] * 100
         final_std = results['test_acc']['std'] * 100
-        row += f"  {final_mean:5.1f}±{final_std:3.1f}"
+        row += f"  {final_mean:5.1f}Â±{final_std:3.1f}"
         
         print(row)
     
@@ -593,8 +611,8 @@ def print_convergence_metrics_table(aggregated_results, model_names, model_keys,
         auc_m = metrics['auc']['mean']
         auc_s = metrics['auc']['std']
         
-        print(f"{name:<30} {s90_m:4.0f}±{s90_s:3.0f}   {s95_m:4.0f}±{s95_s:3.0f}   "
-              f"{s99_m:4.0f}±{s99_s:3.0f}   {auc_m:.3f}±{auc_s:.3f}")
+        print(f"{name:<30} {s90_m:4.0f}Â±{s90_s:3.0f}   {s95_m:4.0f}Â±{s95_s:3.0f}   "
+              f"{s99_m:4.0f}Â±{s99_s:3.0f}   {auc_m:.3f}Â±{auc_s:.3f}")
     
     print('='*70)
     print('Lower epochs-to-threshold is better (faster convergence)')
@@ -662,7 +680,7 @@ rank_X = matrix_rank(X, tol=1e-6)
 print(f'Rank of X: {rank_X}/{d_raw}')
 
 if rank_X < d_raw:
-    print(f'⚠️  Warning: X is rank-deficient ({rank_X} < {d_raw})')
+    print(f'âš ï¸  Warning: X is rank-deficient ({rank_X} < {d_raw})')
     print(f'Performing QR decomposition to handle rank deficiency...')
     
     # QR decomposition
@@ -671,14 +689,14 @@ if rank_X < d_raw:
     # CRITICAL: Truncate Q to effective rank
     Q = Q[:, :rank_X]
     
-    print(f'✓ Reduced dimension from {d_raw} to {rank_X} (effective rank)')
+    print(f'âœ“ Reduced dimension from {d_raw} to {rank_X} (effective rank)')
     print(f'  Q shape after truncation: {Q.shape}')
-    print(f'  span(Q) = span(X) — same subspace, orthonormal basis')
+    print(f'  span(Q) = span(X) â€” same subspace, orthonormal basis')
     
     X_for_projection = Q
     d_effective = rank_X
 else:
-    print(f'✓ X is full-rank')
+    print(f'âœ“ X is full-rank')
     X_for_projection = X
     d_effective = d_raw
 
@@ -716,7 +734,7 @@ print(f'Restricted eigenvector matrix U shape: {U.shape}')
 
 rank_U = matrix_rank(U, tol=1e-6)
 print(f'Rank of U: {rank_U}/{d_effective}')
-print(f'✓ span(U) = span(X) — same subspace, different basis')
+print(f'âœ“ span(U) = span(X) â€” same subspace, different basis')
 
 # Verify D-orthonormality of U
 DU = (D @ U).astype(np.float64)
@@ -725,17 +743,17 @@ deviation = np.abs(G - np.eye(U.shape[1])).max()
 print(f'D-orthonormality check: max |U^T D U - I| = {deviation:.2e}')
 
 if deviation < 1e-6:
-    print(f'✓ Excellent D-orthonormality!')
+    print(f'âœ“ Excellent D-orthonormality!')
 elif deviation < 1e-4:
-    print(f'✓ Good D-orthonormality')
+    print(f'âœ“ Good D-orthonormality')
 else:
-    print(f'⚠️  Warning: Large D-orthonormality deviation')
+    print(f'âš ï¸  Warning: Large D-orthonormality deviation')
 
 # ============================================================================
 # 4. Prepare Labels (Common for All Splits)
 # ============================================================================
 print('\n[4/6] Preparing labels...')
-print('✓ Labels prepared')
+print('âœ“ Labels prepared')
 
 # ============================================================================
 # 5. Train Models with Multiple Seeds and Splits
@@ -743,15 +761,15 @@ print('✓ Labels prepared')
 print(f'\n[5/6] Training 2 models with {NUM_SEEDS} random seeds each...')
 if USE_RANDOM_SPLITS:
     print(f'Across {NUM_RANDOM_SPLITS} random splits')
-    print(f'Total runs: {2 * NUM_SEEDS * NUM_RANDOM_SPLITS} = {2}(models) × {NUM_SEEDS}(seeds) × {NUM_RANDOM_SPLITS}(splits)')
+    print(f'Total runs: {2 * NUM_SEEDS * NUM_RANDOM_SPLITS} = {2}(models) Ã— {NUM_SEEDS}(seeds) Ã— {NUM_RANDOM_SPLITS}(splits)')
 else:
-    print(f'Total runs: {2 * NUM_SEEDS} = {2}(models) × {NUM_SEEDS}(seeds)')
+    print(f'Total runs: {2 * NUM_SEEDS} = {2}(models) Ã— {NUM_SEEDS}(seeds)')
 
 print(f'\nModel dimensions:')
 print(f'  Model A (Standard MLP): input_dim = {d_raw} (original X features)')
 print(f'  Model B (RowNorm MLP):  input_dim = {d_effective} (restricted eigenvectors U)')
 if d_raw != d_effective:
-    print(f'  → Different input dimensions due to QR decomposition')
+    print(f'  â†’ Different input dimensions due to QR decomposition')
 
 model_configs = [
     ('Standard MLP on X (train-scaled)', 'standard_scaled', 'X_scaled'),
@@ -857,7 +875,7 @@ for split_idx in range(num_split_iterations):
 print(f'\n[6/6] Aggregating results and generating outputs...')
 
 if USE_RANDOM_SPLITS:
-    print(f'Aggregating across {NUM_RANDOM_SPLITS} splits × {NUM_SEEDS} seeds = {NUM_RANDOM_SPLITS * NUM_SEEDS} runs per model')
+    print(f'Aggregating across {NUM_RANDOM_SPLITS} splits Ã— {NUM_SEEDS} seeds = {NUM_RANDOM_SPLITS * NUM_SEEDS} runs per model')
 else:
     print(f'Aggregating across {NUM_SEEDS} seeds')
 
@@ -873,7 +891,7 @@ model_keys = [key for _, key, _ in model_configs]
 # Generate plots
 print('\nGenerating plots...')
 
-# Plot 1: Original 2×3 grid (from Investigation 2 Extended)
+# Plot 1: Original 2Ã—3 grid (from Investigation 2 Extended)
 plot_path_grid = f'{output_base}/plots/original_2x3_grid.png'
 plot_original_style_grid(aggregated_results, DATASET_NAME, plot_path_grid, EPOCHS)
 
@@ -919,7 +937,7 @@ for model_name, model_key, _ in model_configs:
 metrics_path = f'{output_base}/metrics/results_aggregated.json'
 with open(metrics_path, 'w') as f:
     json.dump(metrics, f, indent=2)
-print(f'\n✓ Saved aggregated metrics: {metrics_path}')
+print(f'\nâœ“ Saved aggregated metrics: {metrics_path}')
 
 # ============================================================================
 # Print Final Summary
@@ -932,8 +950,8 @@ print(f'Split type: {split_type}')
 print(f'Raw feature dimension: {d_raw}')
 print(f'Effective dimension (after QR): {d_effective}')
 if rank_X < d_raw:
-    print(f'Rank deficiency handled: {d_raw} → {d_effective}')
-print(f'span(U) = span(X) — same subspace, different basis')
+    print(f'Rank deficiency handled: {d_raw} â†’ {d_effective}')
+print(f'span(U) = span(X) â€” same subspace, different basis')
 print(f'Hidden dimension: {HIDDEN_DIM}')
 print(f'Training epochs: {EPOCHS}')
 print(f'Batch size: {batch_size}')
@@ -948,8 +966,8 @@ for model_name, model_key, _ in model_configs:
     input_dim = d_raw if "Standard" in model_name else d_effective
     
     print(f'\n{model_name}:')
-    print(f'  Test Accuracy:  {test_acc["mean"]:.4f} ± {test_acc["std"]:.4f}')
-    print(f'  Final Val Acc:  {final_val_acc["mean"]:.4f} ± {final_val_acc["std"]:.4f}')
+    print(f'  Test Accuracy:  {test_acc["mean"]:.4f} Â± {test_acc["std"]:.4f}')
+    print(f'  Final Val Acc:  {final_val_acc["mean"]:.4f} Â± {final_val_acc["std"]:.4f}')
     print(f'  Input dim: {input_dim}')
     print(f'  Params: {sum(p.numel() for p in (StandardMLP(input_dim, HIDDEN_DIM, num_classes) if "Standard" in model_name else RowNormMLP(input_dim, HIDDEN_DIM, num_classes)).parameters()):,}')
 
@@ -969,5 +987,5 @@ else:
     print('Result: Standard better (scaling more important than basis)')
 
 print('\n' + '='*70)
-print('✓ Investigation 2 Extended Ver2 Complete!')
+print('âœ“ Investigation 2 Extended Ver2 Complete!')
 print('='*70)
