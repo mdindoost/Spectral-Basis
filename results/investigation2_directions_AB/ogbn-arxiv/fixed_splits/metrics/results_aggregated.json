@@ -1,0 +1,114 @@
+{
+  "dataset": "ogbn-arxiv",
+  "split_type": "fixed_splits",
+  "num_seeds": 5,
+  "num_splits": 1,
+  "total_runs_per_model": 5,
+  "d_raw": 128,
+  "d_effective": 128,
+  "rank_deficiency": false,
+  "epochs": 200,
+  "hidden_dim": 256,
+  "batch_size": 128,
+  "models": {
+    "standard_X_scaled": {
+      "name": "(a) Standard MLP on X (scaled)",
+      "test_accuracy": {
+        "mean": 0.523074722290039,
+        "std": 0.002138327825197966
+      },
+      "convergence_metrics": {
+        "speed_to_90": {
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "speed_to_95": {
+          "mean": 1.6,
+          "std": 0.4898979485566356
+        },
+        "speed_to_99": {
+          "mean": 23.0,
+          "std": 0.6324555320336759
+        },
+        "auc": {
+          "mean": 0.9958938889220622,
+          "std": 0.0014160266103905922
+        },
+        "convergence_rate": {
+          "mean": 0.0009493601322174073,
+          "std": 0.0006322978957321549
+        },
+        "final_acc": {
+          "mean": 0.5454343914985657,
+          "std": 0.0020482693532040256
+        }
+      }
+    },
+    "standard_V_scaled": {
+      "name": "(b) Standard MLP on V (scaled)",
+      "test_accuracy": {
+        "mean": 0.5053803205490113,
+        "std": 0.001558218513955183
+      },
+      "convergence_metrics": {
+        "speed_to_90": {
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "speed_to_95": {
+          "mean": 0.2,
+          "std": 0.4000000000000001
+        },
+        "speed_to_99": {
+          "mean": 4.8,
+          "std": 2.7129319932501077
+        },
+        "auc": {
+          "mean": 1.0053463359435917,
+          "std": 0.0032496647897214317
+        },
+        "convergence_rate": {
+          "mean": 0.0009600985050201415,
+          "std": 0.0008525066856756844
+        },
+        "final_acc": {
+          "mean": 0.5297694325447082,
+          "std": 0.0019378623020920463
+        }
+      }
+    },
+    "rownorm_V": {
+      "name": "(c) RowNorm MLP on V (unscaled)",
+      "test_accuracy": {
+        "mean": 0.4724070608615875,
+        "std": 0.0018605226525472956
+      },
+      "convergence_metrics": {
+        "speed_to_90": {
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "speed_to_95": {
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "speed_to_99": {
+          "mean": 0.0,
+          "std": 0.0
+        },
+        "auc": {
+          "mean": 1.0509301354579053,
+          "std": 0.006809151580324088
+        },
+        "convergence_rate": {
+          "mean": 0.001184939742088318,
+          "std": 0.00031369081473881465
+        },
+        "final_acc": {
+          "mean": 0.4982583045959473,
+          "std": 0.0028089333665084247
+        }
+      }
+    }
+  }
+}

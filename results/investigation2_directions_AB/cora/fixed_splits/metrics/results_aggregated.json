@@ -1,0 +1,114 @@
+{
+  "dataset": "cora",
+  "split_type": "fixed_splits",
+  "num_seeds": 5,
+  "num_splits": 1,
+  "total_runs_per_model": 5,
+  "d_raw": 1433,
+  "d_effective": 1431,
+  "rank_deficiency": true,
+  "epochs": 200,
+  "hidden_dim": 256,
+  "batch_size": 140,
+  "models": {
+    "standard_X_scaled": {
+      "name": "(a) Standard MLP on X (scaled)",
+      "test_accuracy": {
+        "mean": 0.45860002040863035,
+        "std": 0.03490902211765076
+      },
+      "convergence_metrics": {
+        "speed_to_90": {
+          "mean": 1.0,
+          "std": 0.8944271909999159
+        },
+        "speed_to_95": {
+          "mean": 2.0,
+          "std": 1.2649110640673518
+        },
+        "speed_to_99": {
+          "mean": 18.0,
+          "std": 20.571825392998065
+        },
+        "auc": {
+          "mean": 0.9900209188167912,
+          "std": 0.0033589811996596946
+        },
+        "convergence_rate": {
+          "mean": 0.0027600002288818357,
+          "std": 0.0010669583552315228
+        },
+        "final_acc": {
+          "mean": 0.4704000234603882,
+          "std": 0.03680000855870933
+        }
+      }
+    },
+    "standard_V_scaled": {
+      "name": "(b) Standard MLP on V (scaled)",
+      "test_accuracy": {
+        "mean": 0.191400009393692,
+        "std": 0.021767865679136123
+      },
+      "convergence_metrics": {
+        "speed_to_90": {
+          "mean": 0.8,
+          "std": 0.4
+        },
+        "speed_to_95": {
+          "mean": 0.8,
+          "std": 0.4
+        },
+        "speed_to_99": {
+          "mean": 0.8,
+          "std": 0.4
+        },
+        "auc": {
+          "mean": 0.9891739697425352,
+          "std": 0.008877585209712132
+        },
+        "convergence_rate": {
+          "mean": 0.0018599998950958254,
+          "std": 0.0017315888690438092
+        },
+        "final_acc": {
+          "mean": 0.16320000886917113,
+          "std": 0.017825825581953912
+        }
+      }
+    },
+    "rownorm_V": {
+      "name": "(c) RowNorm MLP on V (unscaled)",
+      "test_accuracy": {
+        "mean": 0.2522000104188919,
+        "std": 0.0036551298580814883
+      },
+      "convergence_metrics": {
+        "speed_to_90": {
+          "mean": 9.2,
+          "std": 11.070682002478438
+        },
+        "speed_to_95": {
+          "mean": 23.0,
+          "std": 14.170391667134682
+        },
+        "speed_to_99": {
+          "mean": 43.6,
+          "std": 23.122283624244382
+        },
+        "auc": {
+          "mean": 0.9715545943120814,
+          "std": 0.005214538695325137
+        },
+        "convergence_rate": {
+          "mean": 0.0009199999272823334,
+          "std": 0.0014851261224234473
+        },
+        "final_acc": {
+          "mean": 0.2104000121355057,
+          "std": 0.0067409226919070185
+        }
+      }
+    }
+  }
+}
