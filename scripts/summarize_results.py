@@ -56,7 +56,8 @@ def print_summary_table():
             'd_raw': results['d_raw'],
             'd_effective': results['d_effective'],
             'rank_deficient': results['rank_deficiency'],
-            'ortho_error': results['orthonormality_error'],
+            # 'ortho_error': results['orthonormality_error'],
+            'ortho_error': results.get('orthonormality_error', 0.0),
             'acc_a': a['mean'],
             'std_a': a['std'],
             'acc_b': b['mean'],
@@ -150,7 +151,7 @@ def print_summary_table():
     print('\n' + '='*140)
 
 def print_convergence_comparison():
-    """Print convergence speed comparison"""
+    """Print convergence speed comparison (now includes 99%)"""
     
     datasets = ['ogbn-arxiv', 'wikics', 'amazon-photo', 'amazon-computers', 
                 'coauthor-cs', 'coauthor-physics']
@@ -158,12 +159,23 @@ def print_convergence_comparison():
     print('\n' + '='*120)
     print('CONVERGENCE SPEED COMPARISON')
     print('='*120)
-    print(f"{'Dataset':<20} {'Model':<25} {'90%':<10} {'95%':<10} {'AUC':<10}")
+    # Added 99% column
+    print(f"{'Dataset':<20} {'Model':<25} {'90%':<10} {'95%':<10} {'99%':<10} {'AUC':<10}")
     print('-'*120)
+    
+    def safe_mean(conv_block, key):
+        try:
+            return conv_block.get(key, {}).get('mean', None)
+        except Exception:
+            return None
+    
+    def fmt_num(x, width=6, prec=1):
+        if x is None:
+            return f"{'n/a':>{width}}"
+        return f"{x:>{width}.{prec}f}"
     
     for dataset_name in datasets:
         results = load_results(dataset_name)
-        
         if results is None:
             continue
         
@@ -176,11 +188,13 @@ def print_convergence_comparison():
         for model_name, model_key in models_data:
             conv = results['models'][model_key]['convergence_metrics']
             
-            s90 = conv['speed_to_90']['mean']
-            s95 = conv['speed_to_95']['mean']
-            auc = conv['auc']['mean']
+            s90 = safe_mean(conv, 'speed_to_90')
+            s95 = safe_mean(conv, 'speed_to_95')
+            s99 = safe_mean(conv, 'speed_to_99')  # NEW
+            auc = safe_mean(conv, 'auc')
             
-            print(f"{dataset_name:<20} {model_name:<25} {s90:>6.1f}    {s95:>6.1f}    {auc:>6.3f}")
+            print(f"{dataset_name:<20} {model_name:<25} "
+                  f"{fmt_num(s90)}    {fmt_num(s95)}    {fmt_num(s99)}    {fmt_num(auc, width=6, prec=3)}")
         
         print('-'*120)
     

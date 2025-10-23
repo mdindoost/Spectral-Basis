@@ -110,9 +110,9 @@ def load_dataset(dataset_name, root='./dataset'):
         num_classes = dataset.num_classes
         
         split_idx = dataset.get_idx_split()
-        train_idx = split_idx['train'].numpy()
-        val_idx = split_idx['valid'].numpy()
-        test_idx = split_idx['test'].numpy()
+        train_idx = np.asarray(split_idx['train']).reshape(-1)
+        val_idx   = np.asarray(split_idx['valid']).reshape(-1)
+        test_idx  = np.asarray(split_idx['test']).reshape(-1)
     
     # ========================================================================
     # Planetoid Datasets (Cora, CiteSeer, PubMed)

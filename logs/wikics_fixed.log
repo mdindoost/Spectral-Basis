@@ -1,0 +1,233 @@
+/home/md724/Spectral-Basis/venv/lib/python3.12/site-packages/outdated/__init__.py:36: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import parse_version
+/home/md724/Spectral-Basis/venv/lib/python3.12/site-packages/torch_geometric/datasets/wikics.py:45: UserWarning: The WikiCS dataset now returns an undirected graph by default. Please explicitly specify 'is_undirected=False' to restore the old behavior.
+  warnings.warn(
+/home/md724/Spectral-Basis/experiments/investigation2_directions_AB.py:291: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+  auc = np.trapz(val_accs, dx=1) / len(val_accs)
+/home/md724/Spectral-Basis/experiments/investigation2_directions_AB.py:291: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+  auc = np.trapz(val_accs, dx=1) / len(val_accs)
+/home/md724/Spectral-Basis/experiments/investigation2_directions_AB.py:291: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+  auc = np.trapz(val_accs, dx=1) / len(val_accs)
+/home/md724/Spectral-Basis/experiments/investigation2_directions_AB.py:291: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+  auc = np.trapz(val_accs, dx=1) / len(val_accs)
+/home/md724/Spectral-Basis/experiments/investigation2_directions_AB.py:291: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+  auc = np.trapz(val_accs, dx=1) / len(val_accs)
+/home/md724/Spectral-Basis/experiments/investigation2_directions_AB.py:291: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+  auc = np.trapz(val_accs, dx=1) / len(val_accs)
+/home/md724/Spectral-Basis/experiments/investigation2_directions_AB.py:291: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+  auc = np.trapz(val_accs, dx=1) / len(val_accs)
+/home/md724/Spectral-Basis/experiments/investigation2_directions_AB.py:291: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+  auc = np.trapz(val_accs, dx=1) / len(val_accs)
+/home/md724/Spectral-Basis/experiments/investigation2_directions_AB.py:291: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+  auc = np.trapz(val_accs, dx=1) / len(val_accs)
+/home/md724/Spectral-Basis/experiments/investigation2_directions_AB.py:291: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+  auc = np.trapz(val_accs, dx=1) / len(val_accs)
+======================================================================
+INVESTIGATION 2: DIRECTIONS A & B - WIKICS
+======================================================================
+Device: cuda
+GPU: NVIDIA GeForce RTX 4070 Ti SUPER
+GPU Memory: 15.56 GB
+Random splits: No (fixed benchmark)
+======================================================================
+
+[1/6] Loading wikics...
+WikiCS using split 0: Train=580, Val=1769, Test=5847
+
+Dataset Statistics:
+  Nodes: 11,701
+  Edges: 431,726
+  Classes: 10
+  Raw feature dimension: 300
+  Train: 580 (5.0%)
+  Val: 1,769 (15.1%)
+  Test: 5,847 (50.0%)
+
+[2/6] Building graph matrices...
+Adjacency: (11701, 11701), nnz=442,907
+Laplacian: (11701, 11701)
+Degree matrix: (11701, 11701)
+
+[3/6] Computing X-restricted eigenvectors...
+Performing QR decomposition on X...
+Original dimension: 300
+Effective rank: 300/300
+✓ Full rank - no dimension reduction needed
+Computing projected matrices (Q^T L Q, Q^T D Q)...
+Reduced Laplacian: (300, 300)
+Reduced degree matrix: (300, 300)
+Solving generalized eigenproblem in R^300...
+Eigenvalue range: [0.001409, 1.053919]
+Restricted eigenvectors U: (11701, 300)
+D-orthonormality check: max |U^T D U - I| = 3.60e-08
+✓ Excellent D-orthonormality
+
+[4/6] Preparing data splits...
+
+[5/6] Training 3 models (Directions A & B)...
+Total runs: 15 = 3(models) × 5(seeds)
+Batch size: 128 (dataset has 580 training samples)
+
+======================================================================
+USING FIXED BENCHMARK SPLITS
+======================================================================
+Train: 580 | Val: 1,769 | Test: 5,847
+Parameter-to-sample ratio: 249.8:1
+⚠️  WARNING: High parameter-to-sample ratio! Expect overfitting.
+
+--- Split 1/1, Seed 1/5 (seed=0) ---
+
+Training: (a) Standard MLP on X (scaled)...
+  ✓ Test acc: 0.7074 | Final val: 0.7275 | Ep20 val: 0.6970
+
+Training: (b) Standard MLP on V (scaled)...
+  🔍 This is experiment (b) - isolates pure basis effect!
+  ✓ Test acc: 0.6174 | Final val: 0.6235 | Ep20 val: 0.5325
+
+Training: (c) RowNorm MLP on V (unscaled)...
+  ✓ Test acc: 0.5538 | Final val: 0.5642 | Ep20 val: 0.4958
+
+--- Seed 1 Summary ---
+  (a) Standard X: 0.7074
+  (b) Standard V: 0.6174  [Diff from (a): -9.00%]
+  (c) RowNorm V:  0.5538  [Diff from (b): -6.36%]
+  → Basis effect (a vs b): 12.7% difference
+  → RowNorm hurts: -10.3%
+
+--- Split 1/1, Seed 2/5 (seed=1) ---
+
+Training: (a) Standard MLP on X (scaled)...
+  ✓ Test acc: 0.7190 | Final val: 0.7309 | Ep20 val: 0.6868
+
+Training: (b) Standard MLP on V (scaled)...
+  🔍 This is experiment (b) - isolates pure basis effect!
+  ✓ Test acc: 0.6136 | Final val: 0.6184 | Ep20 val: 0.5065
+
+Training: (c) RowNorm MLP on V (unscaled)...
+  ✓ Test acc: 0.5765 | Final val: 0.5868 | Ep20 val: 0.5093
+
+--- Seed 2 Summary ---
+  (a) Standard X: 0.7190
+  (b) Standard V: 0.6136  [Diff from (a): -10.54%]
+  (c) RowNorm V:  0.5765  [Diff from (b): -3.71%]
+  → Basis effect (a vs b): 14.7% difference
+  → RowNorm hurts: -6.0%
+
+--- Split 1/1, Seed 3/5 (seed=2) ---
+
+Training: (a) Standard MLP on X (scaled)...
+  ✓ Test acc: 0.7053 | Final val: 0.7196 | Ep20 val: 0.6964
+
+Training: (b) Standard MLP on V (scaled)...
+  🔍 This is experiment (b) - isolates pure basis effect!
+  ✓ Test acc: 0.6176 | Final val: 0.6184 | Ep20 val: 0.5235
+
+Training: (c) RowNorm MLP on V (unscaled)...
+  ✓ Test acc: 0.5286 | Final val: 0.5387 | Ep20 val: 0.5138
+
+--- Seed 3 Summary ---
+  (a) Standard X: 0.7053
+  (b) Standard V: 0.6176  [Diff from (a): -8.77%]
+  (c) RowNorm V:  0.5286  [Diff from (b): -8.89%]
+  → Basis effect (a vs b): 12.4% difference
+  → RowNorm hurts: -14.4%
+
+--- Split 1/1, Seed 4/5 (seed=3) ---
+
+Training: (a) Standard MLP on X (scaled)...
+  ✓ Test acc: 0.7005 | Final val: 0.7157 | Ep20 val: 0.6846
+
+Training: (b) Standard MLP on V (scaled)...
+  🔍 This is experiment (b) - isolates pure basis effect!
+  ✓ Test acc: 0.6145 | Final val: 0.6230 | Ep20 val: 0.5144
+
+Training: (c) RowNorm MLP on V (unscaled)...
+  ✓ Test acc: 0.5541 | Final val: 0.5602 | Ep20 val: 0.5212
+
+--- Seed 4 Summary ---
+  (a) Standard X: 0.7005
+  (b) Standard V: 0.6145  [Diff from (a): -8.60%]
+  (c) RowNorm V:  0.5541  [Diff from (b): -6.04%]
+  → Basis effect (a vs b): 12.3% difference
+  → RowNorm hurts: -9.8%
+
+--- Split 1/1, Seed 5/5 (seed=4) ---
+
+Training: (a) Standard MLP on X (scaled)...
+  ✓ Test acc: 0.7169 | Final val: 0.7343 | Ep20 val: 0.6846
+
+Training: (b) Standard MLP on V (scaled)...
+  🔍 This is experiment (b) - isolates pure basis effect!
+  ✓ Test acc: 0.6195 | Final val: 0.6258 | Ep20 val: 0.4890
+
+Training: (c) RowNorm MLP on V (unscaled)...
+  ✓ Test acc: 0.5345 | Final val: 0.5478 | Ep20 val: 0.5291
+
+--- Seed 5 Summary ---
+  (a) Standard X: 0.7169
+  (b) Standard V: 0.6195  [Diff from (a): -9.75%]
+  (c) RowNorm V:  0.5345  [Diff from (b): -8.50%]
+  → Basis effect (a vs b): 13.6% difference
+  → RowNorm hurts: -13.7%
+
+[6/6] Aggregating results and generating outputs...
+Aggregating: (a) Standard MLP on X (scaled)...
+Aggregating: (b) Standard MLP on V (scaled)...
+Aggregating: (c) RowNorm MLP on V (unscaled)...
+
+✓ Saved aggregated metrics: results/investigation2_directions_AB/wikics/fixed_splits/metrics/results_aggregated.json
+
+======================================================================
+FINAL SUMMARY
+======================================================================
+Dataset: wikics
+Split type: fixed_splits
+Raw feature dimension: 300
+Effective dimension (after QR): 300
+span(U) = span(X) — same subspace, different basis
+D-orthonormality: max |U^T D U - I| = 3.60e-08
+Hidden dimension: 256
+Epochs: 200
+Total runs per model: 5
+
+======================================================================
+TEST ACCURACY RESULTS (Mean ± Std)
+======================================================================
+(a) Standard MLP on X (scaled):  70.98±0.70%
+(b) Standard MLP on V (scaled):  61.65±0.21%
+(c) RowNorm MLP on V (unscaled): 54.95±1.69%
+
+======================================================================
+DIRECTION B: BASIS SENSITIVITY (a vs b)
+======================================================================
+Same model (Standard MLP), same preprocessing (StandardScaler)
+Only difference: coordinate system (X vs V)
+
+Basis Effect: -0.0933 (-13.1%)
+✓ SIGNIFICANT basis sensitivity detected
+  → MLPs are sensitive to basis representation!
+
+======================================================================
+DIRECTION A: MODEL SENSITIVITY (b vs c)
+======================================================================
+Same basis (V), different models
+Question: Does RowNorm help on restricted eigenvectors?
+
+Model Effect: -0.0670 (-10.9%)
+✗ RowNorm does NOT help on restricted eigenvectors
+
+======================================================================
+EFFECT INDEPENDENCE
+======================================================================
+Basis effect (a→b):       -13.15%
+Model effect (b→c):       -10.87%
+Expected combined:        -24.01%
+Observed combined (a→c):  -22.59%
+Interaction term:          +1.43%
+
+⚠ Effects show INTERACTION (1.4%)
+
+======================================================================
+✓ Investigation 2 Directions A&B complete for wikics!
+✓ Results saved to: results/investigation2_directions_AB/wikics/fixed_splits/
+======================================================================
