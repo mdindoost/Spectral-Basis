@@ -1,0 +1,94 @@
+{
+  "dataset": "coauthor-physics",
+  "split_type": "random_splits",
+  "dimension": 7702,
+  "num_random_subspaces": 3,
+  "num_seeds_per_subspace": 5,
+  "num_data_splits": 5,
+  "original_features": {
+    "a_X_std": {
+      "test_acc_mean": 0.9361854648590088,
+      "test_acc_std": 0.001975237304497359
+    },
+    "b_U_std": {
+      "test_acc_mean": 0.7714376425743102,
+      "test_acc_std": 0.004176918298076579
+    },
+    "c_U_row": {
+      "test_acc_mean": 0.7890086603164673,
+      "test_acc_std": 0.0025216004922613733
+    }
+  },
+  "random_subspaces": [
+    {
+      "a_X_std": {
+        "test_acc_mean": 0.5031709897518157,
+        "test_acc_std": 0.006176293710441354
+      },
+      "b_U_std": {
+        "test_acc_mean": 0.47001157164573665,
+        "test_acc_std": 0.007587181248885788
+      },
+      "c_U_row": {
+        "test_acc_mean": 0.5082898259162902,
+        "test_acc_std": 0.004717971299690144
+      }
+    },
+    {
+      "a_X_std": {
+        "test_acc_mean": 0.5053506970405578,
+        "test_acc_std": 0.007163064347446127
+      },
+      "b_U_std": {
+        "test_acc_mean": 0.47359997749328614,
+        "test_acc_std": 0.017620181354127518
+      },
+      "c_U_row": {
+        "test_acc_mean": 0.5082898259162902,
+        "test_acc_std": 0.004717971299690144
+      }
+    },
+    {
+      "a_X_std": {
+        "test_acc_mean": 0.4975709867477417,
+        "test_acc_std": 0.007382177231746811
+      },
+      "b_U_std": {
+        "test_acc_mean": 0.47860287666320805,
+        "test_acc_std": 0.003154471343547789
+      },
+      "c_U_row": {
+        "test_acc_mean": 0.5082898259162902,
+        "test_acc_std": 0.004717971299690144
+      }
+    }
+  ],
+  "aggregated_random": {
+    "a_X_std": {
+      "mean_across_subspaces": 0.5020308911800385,
+      "std_across_subspaces": 0.0032767709334102797,
+      "min": 0.4975709867477417,
+      "max": 0.5053506970405578
+    },
+    "b_U_std": {
+      "mean_across_subspaces": 0.4740714752674103,
+      "std_across_subspaces": 0.0035231958114814222,
+      "min": 0.47001157164573665,
+      "max": 0.47860287666320805
+    },
+    "c_U_row": {
+      "mean_across_subspaces": 0.5082898259162902,
+      "std_across_subspaces": 0.0,
+      "min": 0.5082898259162902,
+      "max": 0.5082898259162902
+    }
+  },
+  "comparisons": {
+    "direction_A_original": 2.2776977389283304,
+    "direction_A_random": 7.217972907899248,
+    "direction_A_improvement": 4.940275168970917,
+    "direction_B_original": -17.597776131838348,
+    "direction_B_random": -5.569262052163523,
+    "baseline_diff": -0.43415457367897026
+  }
+}

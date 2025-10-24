@@ -1,0 +1,94 @@
+{
+  "dataset": "wikics",
+  "split_type": "fixed_splits",
+  "dimension": 300,
+  "num_random_subspaces": 3,
+  "num_seeds_per_subspace": 5,
+  "num_data_splits": 1,
+  "original_features": {
+    "a_X_std": {
+      "test_acc_mean": 0.7098340868949891,
+      "test_acc_std": 0.0
+    },
+    "b_U_std": {
+      "test_acc_mean": 0.6148452043533326,
+      "test_acc_std": 0.0
+    },
+    "c_U_row": {
+      "test_acc_mean": 0.5355224967002868,
+      "test_acc_std": 0.0
+    }
+  },
+  "random_subspaces": [
+    {
+      "a_X_std": {
+        "test_acc_mean": 0.16292115151882172,
+        "test_acc_std": 0.0
+      },
+      "b_U_std": {
+        "test_acc_mean": 0.16476825177669524,
+        "test_acc_std": 0.0
+      },
+      "c_U_row": {
+        "test_acc_mean": 0.16134769320487977,
+        "test_acc_std": 0.0
+      }
+    },
+    {
+      "a_X_std": {
+        "test_acc_mean": 0.1557721883058548,
+        "test_acc_std": 0.0
+      },
+      "b_U_std": {
+        "test_acc_mean": 0.15744826197624207,
+        "test_acc_std": 0.0
+      },
+      "c_U_row": {
+        "test_acc_mean": 0.16076620221138,
+        "test_acc_std": 0.0
+      }
+    },
+    {
+      "a_X_std": {
+        "test_acc_mean": 0.16121087372303008,
+        "test_acc_std": 0.0
+      },
+      "b_U_std": {
+        "test_acc_mean": 0.16080040633678436,
+        "test_acc_std": 0.0
+      },
+      "c_U_row": {
+        "test_acc_mean": 0.16117666959762572,
+        "test_acc_std": 0.0
+      }
+    }
+  ],
+  "aggregated_random": {
+    "a_X_std": {
+      "mean_across_subspaces": 0.15996807118256887,
+      "std_across_subspaces": 0.0030479870265495176,
+      "min": 0.1557721883058548,
+      "max": 0.16292115151882172
+    },
+    "b_U_std": {
+      "mean_across_subspaces": 0.16100564002990722,
+      "std_across_subspaces": 0.002991894976017626,
+      "min": 0.15744826197624207,
+      "max": 0.16476825177669524
+    },
+    "c_U_row": {
+      "mean_across_subspaces": 0.1610968550046285,
+      "std_across_subspaces": 0.00024400918127784037,
+      "min": 0.16076620221138,
+      "max": 0.16134769320487977
+    }
+  },
+  "comparisons": {
+    "direction_A_original": -12.90124849171978,
+    "direction_A_random": 0.0566532791673252,
+    "direction_A_improvement": 12.957901770887105,
+    "direction_B_original": -13.381842925741166,
+    "direction_B_random": 0.6486099630183044,
+    "baseline_diff": -0.5498660157124202
+  }
+}

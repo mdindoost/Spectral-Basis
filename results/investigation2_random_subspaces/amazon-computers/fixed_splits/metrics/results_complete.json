@@ -1,0 +1,94 @@
+{
+  "dataset": "amazon-computers",
+  "split_type": "fixed_splits",
+  "dimension": 767,
+  "num_random_subspaces": 3,
+  "num_seeds_per_subspace": 5,
+  "num_data_splits": 1,
+  "original_features": {
+    "a_X_std": {
+      "test_acc_mean": 0.8048709869384766,
+      "test_acc_std": 0.0
+    },
+    "b_U_std": {
+      "test_acc_mean": 0.7955652832984924,
+      "test_acc_std": 0.0
+    },
+    "c_U_row": {
+      "test_acc_mean": 0.778335177898407,
+      "test_acc_std": 0.0
+    }
+  },
+  "random_subspaces": [
+    {
+      "a_X_std": {
+        "test_acc_mean": 0.22711742222309111,
+        "test_acc_std": 0.0
+      },
+      "b_U_std": {
+        "test_acc_mean": 0.2106870323419571,
+        "test_acc_std": 0.0
+      },
+      "c_U_row": {
+        "test_acc_mean": 0.21955653429031372,
+        "test_acc_std": 0.0
+      }
+    },
+    {
+      "a_X_std": {
+        "test_acc_mean": 0.2446383237838745,
+        "test_acc_std": 0.0
+      },
+      "b_U_std": {
+        "test_acc_mean": 0.21861141920089722,
+        "test_acc_std": 0.0
+      },
+      "c_U_row": {
+        "test_acc_mean": 0.2160668909549713,
+        "test_acc_std": 0.0
+      }
+    },
+    {
+      "a_X_std": {
+        "test_acc_mean": 0.23838604986667633,
+        "test_acc_std": 0.0
+      },
+      "b_U_std": {
+        "test_acc_mean": 0.2218102604150772,
+        "test_acc_std": 0.0
+      },
+      "c_U_row": {
+        "test_acc_mean": 0.2256634056568146,
+        "test_acc_std": 0.0
+      }
+    }
+  ],
+  "aggregated_random": {
+    "a_X_std": {
+      "mean_across_subspaces": 0.23671393195788068,
+      "std_across_subspaces": 0.007249941682586233,
+      "min": 0.22711742222309111,
+      "max": 0.2446383237838745
+    },
+    "b_U_std": {
+      "mean_across_subspaces": 0.21703623731931052,
+      "std_across_subspaces": 0.004675642498575007,
+      "min": 0.2106870323419571,
+      "max": 0.2218102604150772
+    },
+    "c_U_row": {
+      "mean_across_subspaces": 0.2204289436340332,
+      "std_across_subspaces": 0.003966030522065301,
+      "min": 0.2160668909549713,
+      "max": 0.2256634056568146
+    }
+  },
+  "comparisons": {
+    "direction_A_original": -2.1657688893421394,
+    "direction_A_random": 1.5631980892348554,
+    "direction_A_improvement": 3.7289669785769948,
+    "direction_B_original": -1.1561733235509821,
+    "direction_B_random": -8.312858679594527,
+    "baseline_diff": -0.5681570549805959
+  }
+}

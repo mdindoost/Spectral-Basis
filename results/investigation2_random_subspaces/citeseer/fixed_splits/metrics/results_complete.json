@@ -1,0 +1,94 @@
+{
+  "dataset": "citeseer",
+  "split_type": "fixed_splits",
+  "dimension": 3302,
+  "num_random_subspaces": 3,
+  "num_seeds_per_subspace": 5,
+  "num_data_splits": 1,
+  "original_features": {
+    "a_X_std": {
+      "test_acc_mean": 0.4864000201225281,
+      "test_acc_std": 0.0
+    },
+    "b_U_std": {
+      "test_acc_mean": 0.21520000994205474,
+      "test_acc_std": 0.0
+    },
+    "c_U_row": {
+      "test_acc_mean": 0.19140001237392426,
+      "test_acc_std": 0.0
+    }
+  },
+  "random_subspaces": [
+    {
+      "a_X_std": {
+        "test_acc_mean": 0.15020000636577607,
+        "test_acc_std": 0.0
+      },
+      "b_U_std": {
+        "test_acc_mean": 0.21020000874996186,
+        "test_acc_std": 0.0
+      },
+      "c_U_row": {
+        "test_acc_mean": 0.19480001032352448,
+        "test_acc_std": 0.0
+      }
+    },
+    {
+      "a_X_std": {
+        "test_acc_mean": 0.16360000967979432,
+        "test_acc_std": 0.0
+      },
+      "b_U_std": {
+        "test_acc_mean": 0.2150000125169754,
+        "test_acc_std": 0.0
+      },
+      "c_U_row": {
+        "test_acc_mean": 0.18960000872611998,
+        "test_acc_std": 0.0
+      }
+    },
+    {
+      "a_X_std": {
+        "test_acc_mean": 0.15980000793933868,
+        "test_acc_std": 0.0
+      },
+      "b_U_std": {
+        "test_acc_mean": 0.21160001158714295,
+        "test_acc_std": 0.0
+      },
+      "c_U_row": {
+        "test_acc_mean": 0.17900000512599945,
+        "test_acc_std": 0.0
+      }
+    }
+  ],
+  "aggregated_random": {
+    "a_X_std": {
+      "mean_across_subspaces": 0.15786667466163637,
+      "std_across_subspaces": 0.0056387560907188525,
+      "min": 0.15020000636577607,
+      "max": 0.16360000967979432
+    },
+    "b_U_std": {
+      "mean_across_subspaces": 0.21226667761802673,
+      "std_across_subspaces": 0.0020154969177826067,
+      "min": 0.21020000874996186,
+      "max": 0.2150000125169754
+    },
+    "c_U_row": {
+      "mean_across_subspaces": 0.187800008058548,
+      "std_across_subspaces": 0.0065747011522907135,
+      "min": 0.17900000512599945,
+      "max": 0.19480001032352448
+    }
+  },
+  "comparisons": {
+    "direction_A_original": -11.059477912914094,
+    "direction_A_random": -11.526382677693029,
+    "direction_A_improvement": -0.46690476477893483,
+    "direction_B_original": -55.75657873372536,
+    "direction_B_random": 34.45945958701457,
+    "baseline_diff": -0.32853334546089175
+  }
+}
