@@ -1,0 +1,58 @@
+{
+  "dataset": "citeseer",
+  "k_diffusion": 16,
+  "dimension": 3703,
+  "num_random_subspaces": 3,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs_per_exp": 75,
+  "avg_diffusion_time_seconds": 0.7369500001271566,
+  "baseline_engineered": {
+    "a_raw_std": {
+      "mean": 0.6631832027435303,
+      "std": 0.010741516907017528
+    },
+    "b_restricted_std": {
+      "mean": 0.31603604555130005,
+      "std": 0.010415876976587086
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.6897297382354737,
+      "std": 0.016139731066686463
+    }
+  },
+  "random_no_diffusion": {
+    "a_raw_std": {
+      "mean": 0.177777783870697,
+      "std": 0.004999797081566738
+    },
+    "b_restricted_std": {
+      "mean": 0.32054054737091064,
+      "std": 0.00953348379293504
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.687987995147705,
+      "std": 0.011505845430667107
+    }
+  },
+  "graph_diffused": {
+    "a_raw_std": {
+      "mean": 0.6712312483787535,
+      "std": 0.010138231720480078
+    },
+    "b_restricted_std": {
+      "mean": 0.3924324452877045,
+      "std": 0.016035475167792215
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.6848048138618469,
+      "std": 0.012670530104338286
+    }
+  },
+  "comparisons": {
+    "diffusion_improvement_raw": 49.34534645080565,
+    "gap_to_engineered": -0.8048045635223211,
+    "rownorm_effect_diffused": 74.50259836691002,
+    "rownorm_effect_random": 114.63368699860797
+  }
+}

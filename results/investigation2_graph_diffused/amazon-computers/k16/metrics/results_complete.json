@@ -1,0 +1,58 @@
+{
+  "dataset": "amazon-computers",
+  "k_diffusion": 16,
+  "dimension": 767,
+  "num_random_subspaces": 3,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs_per_exp": 75,
+  "avg_diffusion_time_seconds": 4.356789429982503,
+  "baseline_engineered": {
+    "a_raw_std": {
+      "mean": 0.832104721069336,
+      "std": 0.003942124159814452
+    },
+    "b_restricted_std": {
+      "mean": 0.8096110773086547,
+      "std": 0.004699510423179773
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.8112831997871399,
+      "std": 0.0013781738699932713
+    }
+  },
+  "random_no_diffusion": {
+    "a_raw_std": {
+      "mean": 0.22857143580913541,
+      "std": 0.007532591286549578
+    },
+    "b_restricted_std": {
+      "mean": 0.22931298673152922,
+      "std": 0.0035066829727303326
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.20761905670166017,
+      "std": 0.0030274983495836875
+    }
+  },
+  "graph_diffused": {
+    "a_raw_std": {
+      "mean": 0.3762123036384583,
+      "std": 0.010372594564612855
+    },
+    "b_restricted_std": {
+      "mean": 0.8801599717140198,
+      "std": 0.008196916634259194
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.8600654625892639,
+      "std": 0.005809774211799206
+    }
+  },
+  "comparisons": {
+    "diffusion_improvement_raw": 14.76408678293229,
+    "gap_to_engineered": 45.58924174308777,
+    "rownorm_effect_diffused": -2.283051919030583,
+    "rownorm_effect_random": -9.460401846000753
+  }
+}

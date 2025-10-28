@@ -1,0 +1,58 @@
+{
+  "dataset": "coauthor-cs",
+  "k_diffusion": 32,
+  "dimension": 6805,
+  "num_random_subspaces": 3,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs_per_exp": 75,
+  "avg_diffusion_time_seconds": 78.05131522814433,
+  "baseline_engineered": {
+    "a_raw_std": {
+      "mean": 0.9377207899093627,
+      "std": 0.0037844707284126933
+    },
+    "b_restricted_std": {
+      "mean": 0.7080370497703552,
+      "std": 0.006169409736773245
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.841930170059204,
+      "std": 0.0036351857970350963
+    }
+  },
+  "random_no_diffusion": {
+    "a_raw_std": {
+      "mean": 0.11332605808973312,
+      "std": 0.0034097661866727795
+    },
+    "b_restricted_std": {
+      "mean": 0.12190839260816572,
+      "std": 0.003958035123978065
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.20513630449771883,
+      "std": 0.003473654167492098
+    }
+  },
+  "graph_diffused": {
+    "a_raw_std": {
+      "mean": 0.7955942916870118,
+      "std": 0.027428011630219927
+    },
+    "b_restricted_std": {
+      "mean": 0.684994511604309,
+      "std": 0.003450814207193063
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.8111995267868041,
+      "std": 0.0037442241133296274
+    }
+  },
+  "comparisons": {
+    "diffusion_improvement_raw": 68.22682335972787,
+    "gap_to_engineered": 14.21264982223509,
+    "rownorm_effect_diffused": 18.424237427379285,
+    "rownorm_effect_random": 68.27086315300848
+  }
+}
