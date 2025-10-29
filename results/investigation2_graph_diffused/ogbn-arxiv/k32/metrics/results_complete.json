@@ -1,0 +1,58 @@
+{
+  "dataset": "ogbn-arxiv",
+  "k_diffusion": 32,
+  "dimension": 128,
+  "num_random_subspaces": 3,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs_per_exp": 75,
+  "avg_diffusion_time_seconds": 8.602089484532675,
+  "baseline_engineered": {
+    "a_raw_std": {
+      "mean": 0.5620395755767822,
+      "std": 0.0009682024242141799
+    },
+    "b_restricted_std": {
+      "mean": 0.546491892337799,
+      "std": 0.001745798227350333
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.5562846302986145,
+      "std": 0.0010535108009314177
+    }
+  },
+  "random_no_diffusion": {
+    "a_raw_std": {
+      "mean": 0.14221435070037844,
+      "std": 0.0012809706029295758
+    },
+    "b_restricted_std": {
+      "mean": 0.14154237031936648,
+      "std": 0.0018872618748117362
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.1462167137861252,
+      "std": 0.0026770839721719105
+    }
+  },
+  "graph_diffused": {
+    "a_raw_std": {
+      "mean": 0.24933688044548039,
+      "std": 0.006412444809381486
+    },
+    "b_restricted_std": {
+      "mean": 0.2595158016681671,
+      "std": 0.003410928550007718
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.6252305960655211,
+      "std": 0.002136490214502894
+    }
+  },
+  "comparisons": {
+    "diffusion_improvement_raw": 10.712252974510195,
+    "gap_to_engineered": 31.270269513130177,
+    "rownorm_effect_diffused": 140.9219754814697,
+    "rownorm_effect_random": 3.302434074130485
+  }
+}
