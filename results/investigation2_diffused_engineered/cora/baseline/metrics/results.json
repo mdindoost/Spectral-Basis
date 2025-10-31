@@ -1,0 +1,19 @@
+{
+  "dataset": "cora",
+  "num_seeds": 3,
+  "num_splits": 3,
+  "results": {
+    "a_raw_std": {
+      "mean": 0.7008389565679763,
+      "std": 0.01765234306615817
+    },
+    "b_restricted_std": {
+      "mean": 0.5334561334715948,
+      "std": 0.016218346152346557
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.7560875879393684,
+      "std": 0.009096008618989687
+    }
+  }
+}

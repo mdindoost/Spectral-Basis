@@ -1,0 +1,22 @@
+{
+  "dataset": "cora",
+  "diffusion_type": "standard",
+  "k": 4,
+  "num_seeds": 3,
+  "num_splits": 3,
+  "avg_diffusion_time": 0.06816506385803223,
+  "results": {
+    "a_raw_std": {
+      "mean": 0.8420298960473801,
+      "std": 0.01593183777687814
+    },
+    "b_restricted_std": {
+      "mean": 0.6558215816815695,
+      "std": 0.008599100128767712
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.807448340786828,
+      "std": 0.010589196938458846
+    }
+  }
+}

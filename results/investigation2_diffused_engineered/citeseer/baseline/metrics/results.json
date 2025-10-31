@@ -1,0 +1,19 @@
+{
+  "dataset": "citeseer",
+  "num_seeds": 3,
+  "num_splits": 3,
+  "results": {
+    "a_raw_std": {
+      "mean": 0.66583251953125,
+      "std": 0.01353717096030882
+    },
+    "b_restricted_std": {
+      "mean": 0.18635302119784883,
+      "std": 0.00941094804867686
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.6808475255966187,
+      "std": 0.01351865365721994
+    }
+  }
+}

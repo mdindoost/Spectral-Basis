@@ -1,0 +1,19 @@
+{
+  "dataset": "amazon-computers",
+  "num_seeds": 3,
+  "num_splits": 3,
+  "results": {
+    "a_raw_std": {
+      "mean": 0.8338786164919535,
+      "std": 0.006809165201157711
+    },
+    "b_restricted_std": {
+      "mean": 0.8146936827235752,
+      "std": 0.0028849498063663334
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.8104124135441251,
+      "std": 0.0030110985367502235
+    }
+  }
+}

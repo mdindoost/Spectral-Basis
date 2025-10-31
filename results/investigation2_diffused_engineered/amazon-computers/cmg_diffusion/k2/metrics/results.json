@@ -1,0 +1,22 @@
+{
+  "dataset": "amazon-computers",
+  "diffusion_type": "cmg",
+  "k": 2,
+  "num_seeds": 3,
+  "num_splits": 3,
+  "avg_diffusion_time": NaN,
+  "results": {
+    "a_raw_std": {
+      "mean": 0.8527000480228,
+      "std": 0.0038651590807010526
+    },
+    "b_restricted_std": {
+      "mean": 0.7984571523136563,
+      "std": 0.010863007030216854
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.7854517896970113,
+      "std": 0.00356205428892141
+    }
+  }
+}

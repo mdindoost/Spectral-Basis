@@ -1,0 +1,22 @@
+{
+  "dataset": "citeseer",
+  "diffusion_type": "cmg",
+  "k": 2,
+  "num_seeds": 3,
+  "num_splits": 3,
+  "avg_diffusion_time": NaN,
+  "results": {
+    "a_raw_std": {
+      "mean": 0.6778445243835449,
+      "std": 0.018715108848095924
+    },
+    "b_restricted_std": {
+      "mean": 0.3408408496114943,
+      "std": 0.01169501374264261
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.6791791915893555,
+      "std": 0.011442387707317068
+    }
+  }
+}

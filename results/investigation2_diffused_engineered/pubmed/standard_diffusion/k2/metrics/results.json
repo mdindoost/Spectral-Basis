@@ -1,0 +1,22 @@
+{
+  "dataset": "pubmed",
+  "diffusion_type": "standard",
+  "k": 2,
+  "num_seeds": 3,
+  "num_splits": 3,
+  "avg_diffusion_time": 0.11095523834228516,
+  "results": {
+    "a_raw_std": {
+      "mean": 0.8474194142553543,
+      "std": 0.006362298850469712
+    },
+    "b_restricted_std": {
+      "mean": 0.8373901049296061,
+      "std": 0.002752532046370924
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.83313610818651,
+      "std": 0.004496279462154804
+    }
+  }
+}

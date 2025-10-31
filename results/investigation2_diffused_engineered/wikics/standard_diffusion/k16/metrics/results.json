@@ -1,0 +1,22 @@
+{
+  "dataset": "wikics",
+  "diffusion_type": "standard",
+  "k": 16,
+  "num_seeds": 3,
+  "num_splits": 3,
+  "avg_diffusion_time": 0.7882294654846191,
+  "results": {
+    "a_raw_std": {
+      "mean": 0.5230433212386237,
+      "std": 0.0048556426857381116
+    },
+    "b_restricted_std": {
+      "mean": 0.7883145610491434,
+      "std": 0.0036438496423169117
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.7422753440009222,
+      "std": 0.0028784590317752876
+    }
+  }
+}

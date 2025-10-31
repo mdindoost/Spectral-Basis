@@ -1,0 +1,19 @@
+{
+  "dataset": "wikics",
+  "num_seeds": 3,
+  "num_splits": 3,
+  "results": {
+    "a_raw_std": {
+      "mean": 0.7924438450071546,
+      "std": 0.0044184063794429
+    },
+    "b_restricted_std": {
+      "mean": 0.769139462047153,
+      "std": 0.007338538675332359
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.735155893696679,
+      "std": 0.004950296096599794
+    }
+  }
+}
