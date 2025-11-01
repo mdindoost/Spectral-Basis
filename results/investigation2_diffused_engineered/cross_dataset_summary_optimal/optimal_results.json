@@ -1,0 +1,580 @@
+{
+  "optimal_configurations": {
+    "amazon-computers": {
+      "baseline_c": 81.0412413544125,
+      "standard": {
+        "optimal_k": 16,
+        "optimal_acc": 85.96874078114828,
+        "abs_improvement": 4.927499426735778,
+        "rel_improvement": 6.080236857659496,
+        "all_k_values": [
+          [
+            2,
+            84.92669529385037
+          ],
+          [
+            4,
+            85.05594266785515
+          ],
+          [
+            8,
+            85.77487336264717
+          ],
+          [
+            16,
+            85.96874078114828
+          ]
+        ]
+      },
+      "cmg": {
+        "optimal_k": 16,
+        "optimal_acc": 85.99297669198779,
+        "abs_improvement": 4.951735337575286,
+        "rel_improvement": 6.110142508701436,
+        "all_k_values": [
+          [
+            2,
+            78.54517896970114
+          ],
+          [
+            4,
+            84.01389718055725
+          ],
+          [
+            8,
+            85.66582202911377
+          ],
+          [
+            16,
+            85.99297669198779
+          ]
+        ]
+      }
+    },
+    "citeseer": {
+      "baseline_c": 68.08475255966187,
+      "standard": {
+        "optimal_k": 4,
+        "optimal_acc": 68.20153594017029,
+        "abs_improvement": 0.11678338050842285,
+        "rel_improvement": 0.17152648150712888,
+        "all_k_values": [
+          [
+            2,
+            68.0513858795166
+          ],
+          [
+            4,
+            68.20153594017029
+          ],
+          [
+            8,
+            67.95128583908081
+          ],
+          [
+            16,
+            66.66666865348816
+          ]
+        ]
+      },
+      "cmg": {
+        "optimal_k": 4,
+        "optimal_acc": 67.98465251922607,
+        "abs_improvement": -0.10010004043579102,
+        "rel_improvement": -0.14702269843468188,
+        "all_k_values": [
+          [
+            2,
+            67.91791915893555
+          ],
+          [
+            4,
+            67.98465251922607
+          ],
+          [
+            8,
+            67.6843523979187
+          ],
+          [
+            16,
+            67.20053553581238
+          ]
+        ]
+      }
+    },
+    "coauthor-cs": {
+      "baseline_c": 84.22088556819493,
+      "standard": {
+        "optimal_k": 2,
+        "optimal_acc": 81.67938590049744,
+        "abs_improvement": -2.5414996676974937,
+        "rel_improvement": -3.0176596346040587,
+        "all_k_values": [
+          [
+            2,
+            81.67938590049744
+          ],
+          [
+            4,
+            79.2378498448266
+          ],
+          [
+            8,
+            79.84066075748868
+          ],
+          [
+            16,
+            79.82551521725125
+          ]
+        ]
+      },
+      "cmg": {
+        "optimal_k": 16,
+        "optimal_acc": 80.40409154362148,
+        "abs_improvement": -3.816794024573454,
+        "rel_improvement": -4.531885409211161,
+        "all_k_values": [
+          [
+            2,
+            71.09535535176596
+          ],
+          [
+            4,
+            77.92014678319296
+          ],
+          [
+            8,
+            80.39197524388632
+          ],
+          [
+            16,
+            80.40409154362148
+          ]
+        ]
+      }
+    },
+    "coauthor-physics": {
+      "baseline_c": 90.29790361722311,
+      "standard": {
+        "optimal_k": 2,
+        "optimal_acc": 92.1320405271318,
+        "abs_improvement": 1.8341369099086933,
+        "rel_improvement": 2.0312065246649382,
+        "all_k_values": [
+          [
+            2,
+            92.1320405271318
+          ],
+          [
+            4,
+            91.27213690016004
+          ],
+          [
+            8,
+            90.8969369199541
+          ],
+          [
+            16,
+            90.76489210128784
+          ]
+        ]
+      },
+      "cmg": {
+        "optimal_k": 16,
+        "optimal_acc": 90.6666616598765,
+        "abs_improvement": 0.36875804265338274,
+        "rel_improvement": 0.40837940625572516,
+        "all_k_values": [
+          [
+            2,
+            84.94846688376532
+          ],
+          [
+            4,
+            89.53944908248054
+          ],
+          [
+            8,
+            90.587756368849
+          ],
+          [
+            16,
+            90.6666616598765
+          ]
+        ]
+      }
+    },
+    "cora": {
+      "baseline_c": 75.60875879393684,
+      "standard": {
+        "optimal_k": 2,
+        "optimal_acc": 81.52240779664783,
+        "abs_improvement": 5.913649002710983,
+        "rel_improvement": 7.821380878408501,
+        "all_k_values": [
+          [
+            2,
+            81.52240779664783
+          ],
+          [
+            4,
+            80.7448340786828
+          ],
+          [
+            8,
+            80.94945881101819
+          ],
+          [
+            16,
+            80.64252204365201
+          ]
+        ]
+      },
+      "cmg": {
+        "optimal_k": 8,
+        "optimal_acc": 82.68876738018459,
+        "abs_improvement": 7.080008586247743,
+        "rel_improvement": 9.364005836339025,
+        "all_k_values": [
+          [
+            2,
+            79.61939904424878
+          ],
+          [
+            4,
+            82.01350702179802
+          ],
+          [
+            8,
+            82.68876738018459
+          ],
+          [
+            16,
+            81.93165726131863
+          ]
+        ]
+      }
+    },
+    "ogbn-arxiv": {
+      "baseline_c": 55.740249156951904,
+      "standard": {
+        "optimal_k": 8,
+        "optimal_acc": 69.57156525717842,
+        "abs_improvement": 13.831316100226516,
+        "rel_improvement": 24.813875627431564,
+        "all_k_values": [
+          [
+            2,
+            67.00685752762688
+          ],
+          [
+            4,
+            68.82787346839905
+          ],
+          [
+            8,
+            69.57156525717842
+          ],
+          [
+            16,
+            69.24974719683328
+          ]
+        ]
+      },
+      "cmg": {
+        "optimal_k": 16,
+        "optimal_acc": 68.57068008846706,
+        "abs_improvement": 12.830430931515153,
+        "rel_improvement": 23.018251847758282,
+        "all_k_values": [
+          [
+            2,
+            59.042418003082275
+          ],
+          [
+            4,
+            65.43778644667731
+          ],
+          [
+            8,
+            67.91982452074686
+          ],
+          [
+            16,
+            68.57068008846706
+          ]
+        ]
+      }
+    },
+    "pubmed": {
+      "baseline_c": 39.98478551705678,
+      "standard": {
+        "optimal_k": 2,
+        "optimal_acc": 83.313610818651,
+        "abs_improvement": 43.32882530159422,
+        "rel_improvement": 108.36328053607025,
+        "all_k_values": [
+          [
+            2,
+            83.313610818651
+          ],
+          [
+            4,
+            81.1894284354316
+          ],
+          [
+            8,
+            79.9273133277893
+          ],
+          [
+            16,
+            81.62328004837036
+          ]
+        ]
+      },
+      "cmg": {
+        "optimal_k": 16,
+        "optimal_acc": 81.66272044181824,
+        "abs_improvement": 41.67793492476146,
+        "rel_improvement": 104.234484156436,
+        "all_k_values": [
+          [
+            2,
+            76.85091031922234
+          ],
+          [
+            4,
+            80.12170195579529
+          ],
+          [
+            8,
+            81.35846124755012
+          ],
+          [
+            16,
+            81.66272044181824
+          ]
+        ]
+      }
+    },
+    "wikics": {
+      "baseline_c": 73.5155893696679,
+      "standard": {
+        "optimal_k": 8,
+        "optimal_acc": 74.42213495572409,
+        "abs_improvement": 0.9065455860561968,
+        "rel_improvement": 1.233133807168024,
+        "all_k_values": [
+          [
+            2,
+            73.16436171531677
+          ],
+          [
+            4,
+            73.87156354056465
+          ],
+          [
+            8,
+            74.42213495572409
+          ],
+          [
+            16,
+            74.22753440009222
+          ]
+        ]
+      },
+      "cmg": {
+        "optimal_k": 16,
+        "optimal_acc": 75.4710680908627,
+        "abs_improvement": 1.9554787211948081,
+        "rel_improvement": 2.6599510905936192,
+        "all_k_values": [
+          [
+            2,
+            72.96976380878024
+          ],
+          [
+            4,
+            73.78612955411276
+          ],
+          [
+            8,
+            74.6879286236233
+          ],
+          [
+            16,
+            75.4710680908627
+          ]
+        ]
+      }
+    }
+  },
+  "summary_table": [
+    {
+      "dataset": "amazon-computers",
+      "baseline": 81.0412413544125,
+      "std_optimal_k": 16,
+      "std_optimal_acc": 85.96874078114828,
+      "std_delta": 4.927499426735778,
+      "cmg_optimal_k": 16,
+      "cmg_optimal_acc": 85.99297669198779,
+      "cmg_delta": 4.951735337575286
+    },
+    {
+      "dataset": "citeseer",
+      "baseline": 68.08475255966187,
+      "std_optimal_k": 4,
+      "std_optimal_acc": 68.20153594017029,
+      "std_delta": 0.11678338050842285,
+      "cmg_optimal_k": 4,
+      "cmg_optimal_acc": 67.98465251922607,
+      "cmg_delta": -0.10010004043579102
+    },
+    {
+      "dataset": "coauthor-cs",
+      "baseline": 84.22088556819493,
+      "std_optimal_k": 2,
+      "std_optimal_acc": 81.67938590049744,
+      "std_delta": -2.5414996676974937,
+      "cmg_optimal_k": 16,
+      "cmg_optimal_acc": 80.40409154362148,
+      "cmg_delta": -3.816794024573454
+    },
+    {
+      "dataset": "coauthor-physics",
+      "baseline": 90.29790361722311,
+      "std_optimal_k": 2,
+      "std_optimal_acc": 92.1320405271318,
+      "std_delta": 1.8341369099086933,
+      "cmg_optimal_k": 16,
+      "cmg_optimal_acc": 90.6666616598765,
+      "cmg_delta": 0.36875804265338274
+    },
+    {
+      "dataset": "cora",
+      "baseline": 75.60875879393684,
+      "std_optimal_k": 2,
+      "std_optimal_acc": 81.52240779664783,
+      "std_delta": 5.913649002710983,
+      "cmg_optimal_k": 8,
+      "cmg_optimal_acc": 82.68876738018459,
+      "cmg_delta": 7.080008586247743
+    },
+    {
+      "dataset": "ogbn-arxiv",
+      "baseline": 55.740249156951904,
+      "std_optimal_k": 8,
+      "std_optimal_acc": 69.57156525717842,
+      "std_delta": 13.831316100226516,
+      "cmg_optimal_k": 16,
+      "cmg_optimal_acc": 68.57068008846706,
+      "cmg_delta": 12.830430931515153
+    },
+    {
+      "dataset": "pubmed",
+      "baseline": 39.98478551705678,
+      "std_optimal_k": 2,
+      "std_optimal_acc": 83.313610818651,
+      "std_delta": 43.32882530159422,
+      "cmg_optimal_k": 16,
+      "cmg_optimal_acc": 81.66272044181824,
+      "cmg_delta": 41.67793492476146
+    },
+    {
+      "dataset": "wikics",
+      "baseline": 73.5155893696679,
+      "std_optimal_k": 8,
+      "std_optimal_acc": 74.42213495572409,
+      "std_delta": 0.9065455860561968,
+      "cmg_optimal_k": 16,
+      "cmg_optimal_acc": 75.4710680908627,
+      "cmg_delta": 1.9554787211948081
+    }
+  ],
+  "rankings": {
+    "standard": [
+      {
+        "dataset": "pubmed",
+        "improvement": 43.32882530159422,
+        "optimal_k": 2
+      },
+      {
+        "dataset": "ogbn-arxiv",
+        "improvement": 13.831316100226516,
+        "optimal_k": 8
+      },
+      {
+        "dataset": "cora",
+        "improvement": 5.913649002710983,
+        "optimal_k": 2
+      },
+      {
+        "dataset": "amazon-computers",
+        "improvement": 4.927499426735778,
+        "optimal_k": 16
+      },
+      {
+        "dataset": "coauthor-physics",
+        "improvement": 1.8341369099086933,
+        "optimal_k": 2
+      },
+      {
+        "dataset": "wikics",
+        "improvement": 0.9065455860561968,
+        "optimal_k": 8
+      },
+      {
+        "dataset": "citeseer",
+        "improvement": 0.11678338050842285,
+        "optimal_k": 4
+      },
+      {
+        "dataset": "coauthor-cs",
+        "improvement": -2.5414996676974937,
+        "optimal_k": 2
+      }
+    ],
+    "cmg": [
+      {
+        "dataset": "pubmed",
+        "improvement": 41.67793492476146,
+        "optimal_k": 16
+      },
+      {
+        "dataset": "ogbn-arxiv",
+        "improvement": 12.830430931515153,
+        "optimal_k": 16
+      },
+      {
+        "dataset": "cora",
+        "improvement": 7.080008586247743,
+        "optimal_k": 8
+      },
+      {
+        "dataset": "amazon-computers",
+        "improvement": 4.951735337575286,
+        "optimal_k": 16
+      },
+      {
+        "dataset": "wikics",
+        "improvement": 1.9554787211948081,
+        "optimal_k": 16
+      },
+      {
+        "dataset": "coauthor-physics",
+        "improvement": 0.36875804265338274,
+        "optimal_k": 16
+      },
+      {
+        "dataset": "citeseer",
+        "improvement": -0.10010004043579102,
+        "optimal_k": 4
+      },
+      {
+        "dataset": "coauthor-cs",
+        "improvement": -3.816794024573454,
+        "optimal_k": 16
+      }
+    ]
+  }
+}

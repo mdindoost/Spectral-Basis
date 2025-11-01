@@ -1,0 +1,22 @@
+{
+  "dataset": "coauthor-cs",
+  "diffusion_type": "cmg",
+  "k": 4,
+  "num_seeds": 3,
+  "num_splits": 3,
+  "avg_diffusion_time": NaN,
+  "results": {
+    "a_raw_std": {
+      "mean": 0.8806494209501478,
+      "std": 0.004825476823308076
+    },
+    "b_restricted_std": {
+      "mean": 0.6025384465853373,
+      "std": 0.01152665416698297
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.7792014678319296,
+      "std": 0.002679774894475916
+    }
+  }
+}

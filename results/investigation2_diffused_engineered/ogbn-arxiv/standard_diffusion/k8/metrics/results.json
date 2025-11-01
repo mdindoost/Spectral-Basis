@@ -1,0 +1,22 @@
+{
+  "dataset": "ogbn-arxiv",
+  "diffusion_type": "standard",
+  "k": 8,
+  "num_seeds": 3,
+  "num_splits": 3,
+  "avg_diffusion_time": 2.059591293334961,
+  "results": {
+    "a_raw_std": {
+      "mean": 0.6963455147213405,
+      "std": 0.0018529732654906995
+    },
+    "b_restricted_std": {
+      "mean": 0.709946546289656,
+      "std": 0.0017371975038832064
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.6957156525717841,
+      "std": 0.00346634728591269
+    }
+  }
+}

@@ -4,7 +4,7 @@
   "k": 4,
   "num_seeds": 3,
   "num_splits": 3,
-  "avg_diffusion_time": 0.25469970703125,
+  "avg_diffusion_time": 0.2088925838470459,
   "results": {
     "a_raw_std": {
       "mean": 0.8140395548608569,

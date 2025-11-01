@@ -1,0 +1,22 @@
+{
+  "dataset": "coauthor-physics",
+  "diffusion_type": "standard",
+  "k": 16,
+  "num_seeds": 3,
+  "num_splits": 3,
+  "avg_diffusion_time": 38.14653563499451,
+  "results": {
+    "a_raw_std": {
+      "mean": 0.9501609868473477,
+      "std": 0.0020895506841707794
+    },
+    "b_restricted_std": {
+      "mean": 0.8287761410077413,
+      "std": 0.0022639519109773866
+    },
+    "c_restricted_rownorm": {
+      "mean": 0.9076489210128784,
+      "std": 0.003766947598944424
+    }
+  }
+}
