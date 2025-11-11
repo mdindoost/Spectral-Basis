@@ -1,0 +1,154 @@
+====================================================================================================
+FEATURE MATRIX RANKS ACROSS ALL DATASETS
+====================================================================================================
+
+Dataset                   Nodes   Features       Rank   Deficiency     Rank %      Cond. #
+----------------------------------------------------------------------------------------------------
+ogbn-arxiv               169343        128        128            0     100.0%     8.01e+01
+cora                       2708       1433       1432          *1*      99.9%     1.57e+02
+citeseer                   3327       3703       3327        *376*      89.8%     1.69e+03
+pubmed                    19717        500        500            0     100.0%     3.05e+01
+wikics                    11701        300        300            0     100.0%     2.80e+02
+amazon-computers          13752        767        767            0     100.0%     5.41e+01
+coauthor-cs               18333       6805       6805            0     100.0%     5.01e+02
+coauthor-physics          34493       8415       8164        *251*      97.0%     2.99e+03
+====================================================================================================
+* Indicates rank deficiency (rank < num_features)
+
+
+DETAILED STATISTICS
+====================================================================================================
+
+OGBN-ARXIV
+----------------------------------------------------------------------
+  Nodes: 169343
+  Features: 128
+  Rank (QR): 128 (100.00%)
+  Rank (SVD): 128
+  Rank deficiency: 0
+  Condition number: 8.01e+01
+  Effective rank (>1% max): 128
+  Singular values:
+    Max: 953.0967
+    Min: 1.19e+01
+    Mean: 48.0248
+    Median: 34.4951
+    Near-zero (<1e-10): 0
+
+CORA
+----------------------------------------------------------------------
+  Nodes: 2708
+  Features: 1433
+  Rank (QR): 1432 (99.93%)
+  Rank (SVD): 1431
+  WARNING: Methods disagree!
+  Rank deficiency: 1
+  Condition number: 1.57e+02
+  Effective rank (>1% max): 1428
+  Singular values:
+    Max: 57.9890
+    Min: 2.49e-14
+    Mean: 4.4581
+    Median: 3.3265
+    Near-zero (<1e-10): 2
+
+CITESEER
+----------------------------------------------------------------------
+  Nodes: 3327
+  Features: 3703
+  Rank (QR): 3327 (89.85%)
+  Rank (SVD): 3302
+  WARNING: Methods disagree!
+  Rank deficiency: 376
+  Condition number: 1.69e+03
+  Effective rank (>1% max): 2816
+  Singular values:
+    Max: 71.8367
+    Min: 1.52e-15
+    Mean: 3.8621
+    Median: 2.6186
+    Near-zero (<1e-10): 25
+
+PUBMED
+----------------------------------------------------------------------
+  Nodes: 19717
+  Features: 500
+  Rank (QR): 500 (100.00%)
+  Rank (SVD): 500
+  Rank deficiency: 0
+  Condition number: 3.05e+01
+  Effective rank (>1% max): 500
+  Singular values:
+    Max: 14.1735
+    Min: 4.64e-01
+    Mean: 2.2478
+    Median: 1.9445
+    Near-zero (<1e-10): 0
+
+WIKICS
+----------------------------------------------------------------------
+  Nodes: 11701
+  Features: 300
+  Rank (QR): 300 (100.00%)
+  Rank (SVD): 300
+  Rank deficiency: 0
+  Condition number: 2.80e+02
+  Effective rank (>1% max): 237
+  Singular values:
+    Max: 269.7951
+    Min: 9.64e-01
+    Mean: 6.4507
+    Median: 3.8996
+    Near-zero (<1e-10): 0
+
+AMAZON-COMPUTERS
+----------------------------------------------------------------------
+  Nodes: 13752
+  Features: 767
+  Rank (QR): 767 (100.00%)
+  Rank (SVD): 767
+  Rank deficiency: 0
+  Condition number: 5.41e+01
+  Effective rank (>1% max): 767
+  Singular values:
+    Max: 1456.7500
+    Min: 2.69e+01
+    Mean: 44.7546
+    Median: 41.0904
+    Near-zero (<1e-10): 0
+
+COAUTHOR-CS
+----------------------------------------------------------------------
+  Nodes: 18333
+  Features: 6805
+  Rank (QR): 6805 (100.00%)
+  Rank (SVD): 6803
+  WARNING: Methods disagree!
+  Rank deficiency: 0
+  Condition number: 5.01e+02
+  Effective rank (>1% max): 5440
+  Singular values:
+    Max: 309.7378
+    Min: 9.43e-16
+    Mean: 8.6503
+    Median: 5.8992
+    Near-zero (<1e-10): 2
+
+COAUTHOR-PHYSICS
+----------------------------------------------------------------------
+  Nodes: 34493
+  Features: 8415
+  Rank (QR): 8164 (97.02%)
+  Rank (SVD): 7701
+  WARNING: Methods disagree!
+  Rank deficiency: 251
+  Condition number: 2.99e+03
+  Effective rank (>1% max): 3740
+  Singular values:
+    Max: 312.8580
+    Min: 7.93e-16
+    Mean: 6.1404
+    Median: 2.7139
+    Near-zero (<1e-10): 714
+
+====================================================================================================

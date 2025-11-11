@@ -1,0 +1,9 @@
+Dataset,K Values,Avg SGC,Avg RowNorm,Avg Δ,Best Δ,Worst Δ
+amazon-computers,2-10,80.77%,86.97%,+6.21pp,+12.14pp,-0.85pp
+citeseer,2-10,75.27%,26.09%,-49.18pp,-48.72pp,-49.86pp
+coauthor-cs,2-10,91.17%,69.79%,-21.38pp,-20.16pp,-22.39pp
+coauthor-physics,2-10,94.95%,82.49%,-12.46pp,-11.70pp,-13.16pp
+cora,2-10,87.76%,62.61%,-25.16pp,-23.87pp,-26.08pp
+ogbn-arxiv,2-10,55.10%,67.13%,+12.03pp,+18.67pp,+4.18pp
+pubmed,2-10,77.21%,84.15%,+6.93pp,+9.13pp,+4.73pp
+wikics,2-10,65.45%,78.13%,+12.68pp,+24.84pp,-1.95pp

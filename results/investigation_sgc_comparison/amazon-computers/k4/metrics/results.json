@@ -1,0 +1,28 @@
+{
+  "dataset": "amazon-computers",
+  "k": 4,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs": 25,
+  "precompute_time": 0.299166202545166,
+  "sgc_baseline": {
+    "test_acc_mean": 0.8382988333702087,
+    "test_acc_std": 0.006733899622912948,
+    "val_acc_mean": 0.8409454369544983,
+    "val_acc_std": 0.007242120982157333,
+    "train_time_mean": 0.03586167335510254,
+    "train_time_std": 0.00064855862535438
+  },
+  "rownorm_variant": {
+    "test_acc_mean": 0.8724827647209168,
+    "test_acc_std": 0.006655212110268193,
+    "val_acc_mean": 0.8732508873939514,
+    "val_acc_std": 0.0031968239680830275,
+    "train_time_mean": 0.04466526985168457,
+    "train_time_std": 0.007262056766469589
+  },
+  "improvement": {
+    "absolute_pp": 3.4183931350708074,
+    "relative_percent": 4.077773938116858
+  }
+}

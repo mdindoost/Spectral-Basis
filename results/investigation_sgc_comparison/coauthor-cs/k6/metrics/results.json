@@ -1,0 +1,28 @@
+{
+  "dataset": "coauthor-cs",
+  "k": 6,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs": 25,
+  "precompute_time": 2.206454038619995,
+  "sgc_baseline": {
+    "test_acc_mean": 0.9091493654251098,
+    "test_acc_std": 0.0023162510113303022,
+    "val_acc_mean": 0.9100927567481994,
+    "val_acc_std": 0.0025530535334087113,
+    "train_time_mean": 0.1467039680480957,
+    "train_time_std": 0.00042475848153892165
+  },
+  "rownorm_variant": {
+    "test_acc_mean": 0.6954307174682617,
+    "test_acc_std": 0.003598433019557729,
+    "val_acc_mean": 0.70521550655365,
+    "val_acc_std": 0.007204913772057892,
+    "train_time_mean": 0.3410878562927246,
+    "train_time_std": 0.0003352708465923316
+  },
+  "improvement": {
+    "absolute_pp": -21.371864795684814,
+    "relative_percent": -23.507539694197032
+  }
+}

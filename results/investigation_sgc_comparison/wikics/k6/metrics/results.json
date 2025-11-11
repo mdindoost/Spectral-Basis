@@ -1,0 +1,28 @@
+{
+  "dataset": "wikics",
+  "k": 6,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs": 25,
+  "precompute_time": 0.20011067390441895,
+  "sgc_baseline": {
+    "test_acc_mean": 0.6491242837905884,
+    "test_acc_std": 0.006851747228254875,
+    "val_acc_mean": 0.6426324796676636,
+    "val_acc_std": 0.007723846844085782,
+    "train_time_mean": 0.03826401710510254,
+    "train_time_std": 0.004322117518124544
+  },
+  "rownorm_variant": {
+    "test_acc_mean": 0.7920204758644104,
+    "test_acc_std": 0.003985860360953023,
+    "val_acc_mean": 0.7875384664535523,
+    "val_acc_std": 0.007958973660935047,
+    "train_time_mean": 0.046509437561035157,
+    "train_time_std": 0.010198068441304635
+  },
+  "improvement": {
+    "absolute_pp": 14.289619207382199,
+    "relative_percent": 22.013687616086976
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "dataset": "citeseer",
+  "k": 8,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs": 25,
+  "precompute_time": 0.21659421920776367,
+  "sgc_baseline": {
+    "test_acc_mean": 0.7532733011245728,
+    "test_acc_std": 0.011774828643475406,
+    "val_acc_mean": 0.7447819590568543,
+    "val_acc_std": 0.012599451458842692,
+    "train_time_mean": 0.04041390419006348,
+    "train_time_std": 0.004331080304716867
+  },
+  "rownorm_variant": {
+    "test_acc_mean": 0.26606607139110566,
+    "test_acc_std": 0.022968558925521118,
+    "val_acc_mean": 0.2571428596973419,
+    "val_acc_std": 0.028547677874903855,
+    "train_time_mean": 0.043367233276367184,
+    "train_time_std": 0.003815513409617565
+  },
+  "improvement": {
+    "absolute_pp": -48.72072297334672,
+    "relative_percent": -64.67868023546146
+  }
+}
