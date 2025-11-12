@@ -12,7 +12,7 @@ If you use this code in your research, please cite:
 @misc{spectral-basis-mlp-2024,
   author = {Dindoost, Mohammad},
   title = {MLP Sensitivity to Spectral Basis Representations},
-  year = {2024},
+  year = {2025},
   publisher = {GitHub},
   journal = {GitHub repository},
   howpublished = {\url{https://github.com/mdindoost/Spectral-Basis}}
@@ -24,7 +24,7 @@ If you use this code in your research, please cite:
 ## Contact
 
 **Mohammad Dindoost**  
-PhD Student, New Jersey Institute of Technology  
+PhD Candidate, New Jersey Institute of Technology  
 Email: md724@njit.edu  
 GitHub: [@mdindoost](https://github.com/mdindoost)
 
@@ -38,4 +38,4 @@ MIT License - See LICENSE file for details
 ---
 
 
-**First Updated**: Oct - 2025
+**First Updated**: May - 2025
