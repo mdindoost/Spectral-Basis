@@ -1,0 +1,76 @@
+================================================================================
+DETAILED ANALYSIS: SGC VS LOGISTIC VS MLP
+================================================================================
+
+EXPERIMENTAL SETUP
+--------------------------------------------------------------------------------
+Three methods compared:
+
+1. SGC Baseline (Wu et al., ICML 2019):
+   X → A^k @ X → Logistic Regression (with bias)
+   - Simple diffusion + linear classifier
+   - Fast and effective baseline
+
+2. RowNorm Logistic (Investigation SGC Comparison):
+   X → A^k @ X → Restricted Eigenvectors → Row Norm → Logistic (no bias)
+   - Restricted eigenvectors provide "better basis"
+   - Row normalization exploits geometry
+   - No bias term (most restrictive)
+
+3. RowNorm MLP (Investigation SGC RowNorm):
+   X → A^k @ X → Restricted Eigenvectors → Row Norm → MLP (256 hidden)
+   - Same preprocessing as Logistic
+   - Adds nonlinearity (2-layer MLP, hidden_dim=256)
+   - CosineAnnealingLR scheduler
+
+================================================================================
+
+KEY FINDINGS
+--------------------------------------------------------------------------------
+
+1. MLP HELPS (5 datasets):
+   citeseer             Logistic: -48.72pp → MLP:  -5.79pp (gain: +42.94pp)
+   cora                 Logistic: -23.87pp → MLP:  -7.19pp (gain: +16.64pp)
+   coauthor-cs          Logistic: -22.39pp → MLP: -11.26pp (gain: +10.98pp)
+   coauthor-physics     Logistic: -13.16pp → MLP:  -3.63pp (gain: +9.54pp)
+   ogbn-arxiv           Logistic: +18.67pp → MLP: +23.02pp (gain: +3.96pp)
+
+   Interpretation: Nonlinearity helps compensate for numerical instability
+   in restricted eigenvectors on these datasets.
+
+2. MLP HURTS (0 datasets):
+   None
+
+3. MLP NEUTRAL (3 datasets):
+   pubmed               Logistic:  +4.73pp → MLP:  +6.78pp (Δ: +0.76pp)
+   wikics               Logistic: +24.84pp → MLP:  +2.74pp (Δ: -0.92pp)
+   amazon-computers     Logistic:  +3.42pp → MLP:  +0.43pp (Δ: +0.68pp)
+
+   Interpretation: Minimal difference—either logistic is sufficient or both fail.
+
+================================================================================
+
+OVERALL ASSESSMENT
+--------------------------------------------------------------------------------
+
+Success Rate (>2pp improvement over SGC):
+  Logistic: 4/8 = 50.0%
+  MLP:      3/8 = 37.5%
+
+Average Performance vs SGC:
+  Logistic: -7.06pp
+  MLP:      +0.64pp
+  MLP Gain: +10.57pp
+
+Conclusion: MLP consistently outperforms Logistic across datasets.
+
+================================================================================
+
+RECOMMENDATIONS FOR THURSDAY MEETING
+--------------------------------------------------------------------------------
+
+1. SGC comparison may not be the right direction for the paper.
+2. Consider returning to Investigation 1 (true eigenvectors) where results are stronger.
+3. Focus on "understanding eigenvector geometry" rather than beating SGC.
+
+================================================================================

@@ -1,0 +1,50 @@
+========================================================================================================================
+COMPLETE SGC COMPARISON: LOGISTIC VS MLP
+========================================================================================================================
+
+Comparison of three methods:
+  1. SGC Baseline: X → A^k @ X → Logistic Regression (with bias)
+  2. RowNorm Logistic: X → A^k @ X → Restricted Eigs → Row Norm → Logistic (no bias)
+  3. RowNorm MLP: X → A^k @ X → Restricted Eigs → Row Norm → MLP (256 hidden)
+
+========================================================================================================================
+Dataset              k*    SGC          Logistic     MLP          Δ(Log)     Δ(MLP)     MLP Gain  
+------------------------------------------------------------------------------------------------------------------------
+ogbn-arxiv           8     49.34%       68.40%       72.36%       +18.67pp   +23.02pp   +3.96pp   
+cora                 8     86.77%       62.94%       79.58%       -23.87pp   -7.19pp    +16.64pp  
+citeseer             6     75.34%       26.61%       69.55%       -48.72pp   -5.79pp    +42.94pp  
+pubmed               2     79.81%       85.82%       86.59%       +4.73pp    +6.78pp    +0.76pp   
+wikics               2     76.04%       79.70%       78.78%       +24.84pp   +2.74pp    -0.92pp   
+amazon-computers     2     87.51%       87.25%       87.93%       +3.42pp    +0.43pp    +0.68pp   
+coauthor-cs          2     93.50%       71.25%       82.23%       -22.39pp   -11.26pp   +10.98pp  
+coauthor-physics     2     96.00%       82.83%       92.37%       -13.16pp   -3.63pp    +9.54pp   
+========================================================================================================================
+
+Legend:
+  k* = Optimal propagation steps
+  Δ(Log) = Logistic improvement over SGC
+  Δ(MLP) = MLP improvement over SGC
+  MLP Gain = MLP improvement over Logistic
+
+SUMMARY STATISTICS
+========================================================================================================================
+
+Logistic vs SGC:
+  Mean improvement: -7.06pp
+  Datasets improved: 4/8
+  Best: +24.84pp
+  Worst: -48.72pp
+
+MLP vs SGC:
+  Mean improvement: 0.64pp
+  Datasets improved: 4/8
+  Best: +23.02pp
+  Worst: -11.26pp
+
+MLP vs Logistic:
+  Mean gain: 10.57pp
+  Datasets improved: 7/8
+  Best gain: +42.94pp
+  Worst: -0.92pp
+
+========================================================================================================================
