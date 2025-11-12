@@ -68,7 +68,7 @@ def compute_rank_statistics(X, tolerance=1e-10):
     """
     n, d = X.shape
     
-    # Method 1: QR decomposition (same as your compute_restricted_eigenvectors)
+    # Method 1: QR decomposition (same as old compute_restricted_eigenvectors)
     print(f'  Computing rank via QR decomposition...')
     from scipy import linalg as la
     Q, R = la.qr(X, mode='economic')
