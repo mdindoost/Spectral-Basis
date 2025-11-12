@@ -1,0 +1,28 @@
+{
+  "dataset": "ogbn-arxiv",
+  "k": 10,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs": 25,
+  "precompute_time": 6.525261402130127,
+  "sgc_baseline": {
+    "test_acc_mean": 0.4576758277416229,
+    "test_acc_std": 0.0030563126466220066,
+    "val_acc_mean": 0.4587232744693756,
+    "val_acc_std": 0.003954681149543447,
+    "train_time_mean": 0.18971531867980956,
+    "train_time_std": 0.08655018040726137
+  },
+  "rownorm_mlp": {
+    "test_acc_mean": 0.7229879117012024,
+    "test_acc_std": 0.0024898277601435414,
+    "val_acc_mean": 0.7251328682899475,
+    "val_acc_std": 0.0014372498967200583,
+    "train_time_mean": 3.159010763168335,
+    "train_time_std": 0.45075664617217565
+  },
+  "improvement": {
+    "absolute_pp": 26.531208395957943,
+    "relative_percent": 57.969433358267544
+  }
+}

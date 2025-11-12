@@ -1,0 +1,28 @@
+{
+  "dataset": "coauthor-physics",
+  "k": 4,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs": 25,
+  "precompute_time": 6.757426023483276,
+  "sgc_baseline": {
+    "test_acc_mean": 0.9522666192054748,
+    "test_acc_std": 0.0014187391534150042,
+    "val_acc_mean": 0.9510176706314087,
+    "val_acc_std": 0.001851229958173843,
+    "train_time_mean": 0.6617735290527343,
+    "train_time_std": 0.0642053602355259
+  },
+  "rownorm_mlp": {
+    "test_acc_mean": 0.9172173476219178,
+    "test_acc_std": 0.006960511153499168,
+    "val_acc_mean": 0.924563639163971,
+    "val_acc_std": 0.0033665098411515644,
+    "train_time_mean": 2.946827211380005,
+    "train_time_std": 0.049091672473878745
+  },
+  "improvement": {
+    "absolute_pp": -3.5049271583557084,
+    "relative_percent": -3.6806153735390312
+  }
+}

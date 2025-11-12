@@ -1,0 +1,28 @@
+{
+  "dataset": "pubmed",
+  "k": 10,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs": 25,
+  "precompute_time": 0.9453079700469971,
+  "sgc_baseline": {
+    "test_acc_mean": 0.7216226959228516,
+    "test_acc_std": 0.005819916011887575,
+    "val_acc_mean": 0.7274359941482544,
+    "val_acc_std": 0.008217256069999969,
+    "train_time_mean": 0.12318087577819824,
+    "train_time_std": 0.01566477550993266
+  },
+  "rownorm_mlp": {
+    "test_acc_mean": 0.811024317741394,
+    "test_acc_std": 0.004126379670974327,
+    "val_acc_mean": 0.833223466873169,
+    "val_acc_std": 0.006208935934337841,
+    "train_time_mean": 0.37217766761779786,
+    "train_time_std": 0.02589694077417837
+  },
+  "improvement": {
+    "absolute_pp": 8.94016218185425,
+    "relative_percent": 12.38897034747648
+  }
+}

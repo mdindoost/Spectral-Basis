@@ -1,0 +1,28 @@
+{
+  "dataset": "cora",
+  "k": 10,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs": 25,
+  "precompute_time": 0.0337984561920166,
+  "sgc_baseline": {
+    "test_acc_mean": 0.860331506729126,
+    "test_acc_std": 0.008393922689161596,
+    "val_acc_mean": 0.8697227454185485,
+    "val_acc_std": 0.016166055357429737,
+    "train_time_mean": 0.07598431587219238,
+    "train_time_std": 0.007677016532164168
+  },
+  "rownorm_mlp": {
+    "test_acc_mean": 0.78850830078125,
+    "test_acc_std": 0.0220852015870736,
+    "val_acc_mean": 0.8405915069580078,
+    "val_acc_std": 0.020458551840159767,
+    "train_time_mean": 0.17112802505493163,
+    "train_time_std": 0.01972420373055403
+  },
+  "improvement": {
+    "absolute_pp": -7.182320594787594,
+    "relative_percent": -8.34831752482702
+  }
+}
