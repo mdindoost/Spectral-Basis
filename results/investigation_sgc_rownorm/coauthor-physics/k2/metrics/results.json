@@ -4,22 +4,22 @@
   "num_splits": 5,
   "num_seeds": 5,
   "total_runs": 25,
-  "precompute_time": 4.459043741226196,
+  "precompute_time": 4.333736419677734,
   "sgc_baseline": {
     "test_acc_mean": 0.9599941563606262,
     "test_acc_std": 0.0015247013556739075,
     "val_acc_mean": 0.9597274470329284,
     "val_acc_std": 0.0019800907118375823,
-    "train_time_mean": 0.7909658908843994,
-    "train_time_std": 0.3090463821552531
+    "train_time_mean": 0.627898588180542,
+    "train_time_std": 0.041980290212609295
   },
   "rownorm_mlp": {
     "test_acc_mean": 0.9237332892417908,
     "test_acc_std": 0.007850127473907403,
     "val_acc_mean": 0.9347404956817627,
     "val_acc_std": 0.00413479542987998,
-    "train_time_mean": 3.221339616775513,
-    "train_time_std": 0.7665570200996262
+    "train_time_mean": 2.936984224319458,
+    "train_time_std": 0.06582402362829239
   },
   "improvement": {
     "absolute_pp": -3.626086711883547,

@@ -1,0 +1,80 @@
+{
+  "dataset": "pubmed",
+  "num_components": 1,
+  "k_diffusion": 4,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs": 25,
+  "precompute_time": 0.5025172233581543,
+  "metadata": {
+    "k_full": 499,
+    "k_nclasses": 3,
+    "k_2nclasses": 6
+  },
+  "results": {
+    "sgc_baseline": {
+      "test_acc_mean": 0.7694218897819519,
+      "test_acc_std": 0.00701412703437571,
+      "val_acc_mean": 0.77533860206604,
+      "val_acc_std": 0.008829169298506452,
+      "train_time_mean": 0.18891092300415038,
+      "train_time_std": 0.13524518029214247
+    },
+    "full_logistic": {
+      "test_acc_mean": 0.8302231049537658,
+      "test_acc_std": 0.0055919042385842894,
+      "val_acc_mean": 0.8328582620620728,
+      "val_acc_std": 0.008519159244648402,
+      "train_time_mean": 0.19165766716003418,
+      "train_time_std": 0.13906979379493392
+    },
+    "full_mlp": {
+      "test_acc_mean": 0.8276064705848694,
+      "test_acc_std": 0.00689129728122676,
+      "val_acc_mean": 0.8487243580818177,
+      "val_acc_std": 0.004383999790935325,
+      "train_time_mean": 0.3771164321899414,
+      "train_time_std": 0.019224810450355175
+    },
+    "nclasses_logistic": {
+      "test_acc_mean": 0.3513691592216492,
+      "test_acc_std": 0.01429642623288208,
+      "val_acc_mean": 0.380563040971756,
+      "val_acc_std": 0.02061756398493149,
+      "train_time_mean": 0.13504796028137206,
+      "train_time_std": 0.025942363559224284
+    },
+    "nclasses_mlp": {
+      "test_acc_mean": 0.4587626624107361,
+      "test_acc_std": 0.008784646519155394,
+      "val_acc_mean": 0.4637281441688538,
+      "val_acc_std": 0.003182318478161145,
+      "train_time_mean": 0.33814119338989257,
+      "train_time_std": 0.03187482850033564
+    },
+    "2nclasses_logistic": {
+      "test_acc_mean": 0.3447261559963226,
+      "test_acc_std": 0.015225145544394001,
+      "val_acc_mean": 0.3566015815734863,
+      "val_acc_std": 0.008495702641613001,
+      "train_time_mean": 0.12667482376098632,
+      "train_time_std": 0.05863405462891111
+    },
+    "2nclasses_mlp": {
+      "test_acc_mean": 0.4781338608264923,
+      "test_acc_std": 0.004796466537239366,
+      "val_acc_mean": 0.4887141990661621,
+      "val_acc_std": 0.006403539997284952,
+      "train_time_mean": 0.41042491912841794,
+      "train_time_std": 0.16447700340848814
+    }
+  },
+  "improvements": {
+    "full_logistic": 6.080121517181391,
+    "full_mlp": 5.8184580802917445,
+    "nclasses_logistic": -41.80527305603027,
+    "nclasses_mlp": -31.065922737121582,
+    "2nclasses_logistic": -42.46957337856293,
+    "2nclasses_mlp": -29.128802895545963
+  }
+}
