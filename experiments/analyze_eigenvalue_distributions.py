@@ -2,588 +2,769 @@
 Eigenvalue Distribution Analysis
 =================================
 
-Purpose: Analyze eigenvalue distributions of restricted eigenproblems
-to understand when RowNorm works vs fails.
+Purpose: Investigate the relationship between eigenvalue distribution properties
+and RowNorm MLP performance across all experiments.
 
-Research Questions:
-1. How are eigenvalues distributed in restricted eigenproblems?
-2. How does diffusion change eigenvalue distributions?
-3. Can eigenvalue properties predict RowNorm success?
+Research Question:
+Does eigenvalue distribution (spread, condition number, participation ratio)
+correlate with RowNorm MLP performance advantage over Standard MLP?
 
-Outputs:
-- Eigenvalue spectrum plots (before/after diffusion)
-- Distribution histograms
-- Statistical metrics (spread, clustering, condition)
-- Correlation with baseline performance
+Metrics Computed:
+- Eigenvalue Spread (Δ): λ_max - λ_min
+- Condition Number (κ): λ_max / λ_min  
+- Participation Ratio (PR): (Σλ_i)² / Σλ_i²
+
+IMPORTANT: Eigenvalue Sources
+-----------------------------
+Investigation 1: True eigenvectors from graph Laplacian (compute: eigh(L, D))
+Investigation 2a: Restricted eigenvectors from X (compute: restricted_eigenproblem(X, L, D))
+Investigation 2b: Random subspaces (compute: restricted_eigenproblem(R, L, D))
+
+If eigenvalues are not in your JSON files, you'll need to:
+1. Run this script once to identify missing eigenvalues
+2. Compute them using the helper functions below
+3. Cache them (manually_add_eigenvalues_to_cache())
+4. Rerun this script
 
 Usage:
-    python analyze_eigenvalue_distributions.py
+    # First run (will identify missing eigenvalues)
+    python experiments/analyze_eigenvalue_distributions.py
     
-    # Analyze specific datasets
-    python analyze_eigenvalue_distributions.py --datasets ogbn-arxiv pubmed cora
+    # If eigenvalues missing, compute them with helper script generated
+    python results/eigenvalue_analysis/compute_missing_eigenvalues.py
     
-    # Test specific k values
-    python analyze_eigenvalue_distributions.py --k_values 2 4 8
+    # Then rerun analysis
+    python experiments/analyze_eigenvalue_distributions.py
 """
 
 import os
 import sys
 import json
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import scipy.linalg as la
-import scipy.sparse as sp
-from scipy.sparse.linalg import eigsh
-import torch
-import pandas as pd
-import networkx as nx
-from collections import defaultdict
-
-# Fix for PyTorch 2.6 + OGB compatibility
-_original_torch_load = torch.load
-def _patched_torch_load(*args, **kwargs):
-    if 'weights_only' not in kwargs:
-        kwargs['weights_only'] = False
-    return _original_torch_load(*args, **kwargs)
-torch.load = _patched_torch_load
-
-from utils import load_dataset, build_graph_matrices
+from scipy.stats import pearsonr, spearmanr
+from pathlib import Path
+import warnings
+warnings.filterwarnings('ignore')
 
 # ============================================================================
 # Configuration
 # ============================================================================
 
-# Parse arguments
-DATASETS = ['ogbn-arxiv', 'cora', 'citeseer', 'pubmed', 
-            'wikics', 'amazon-computers', 'coauthor-cs', 'coauthor-physics']
-
-if '--datasets' in sys.argv:
-    idx = sys.argv.index('--datasets')
-    DATASETS = sys.argv[idx+1:idx+1+len([x for x in sys.argv[idx+1:] if not x.startswith('--')])]
-
-K_VALUES = [2, 4, 6, 8, 10]  # Diffusion steps to test
-if '--k_values' in sys.argv:
-    idx = sys.argv.index('--k_values')
-    K_VALUES = [int(x) for x in sys.argv[idx+1:idx+1+3] if x.isdigit()]
-
 # Output directory
 OUTPUT_DIR = 'results/eigenvalue_analysis'
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 os.makedirs(f'{OUTPUT_DIR}/plots', exist_ok=True)
-os.makedirs(f'{OUTPUT_DIR}/data', exist_ok=True)
+
+# Path to store/load eigenvalues cache (if eigenvalues need to be recomputed)
+EIGENVALUE_CACHE_DIR = f'{OUTPUT_DIR}/eigenvalue_cache'
+os.makedirs(EIGENVALUE_CACHE_DIR, exist_ok=True)
+
+# Experiments to analyze - UPDATED WITH ACTUAL PATHS
+EXPERIMENTS = {
+    'inv1_true_eigs_fixed': {
+        'name': 'True Eigenvectors (fixed)',
+        'path_pattern': 'results/investigation1_v2/{dataset}/fixed-splits/metrics/results_aggregated.json',
+        'split_type': 'fixed',
+        'datasets': ['ogbn-arxiv', 'cora', 'citeseer', 'pubmed']
+    },
+    'inv1_true_eigs_random': {
+        'name': 'True Eigenvectors (random)',
+        'path_pattern': 'results/investigation1_v2/{dataset}/random-splits/metrics/results_aggregated.json',
+        'split_type': 'random',
+        'datasets': ['ogbn-arxiv', 'cora', 'citeseer', 'pubmed']
+    },
+    'inv2a_restricted_fixed': {
+        'name': 'Restricted Eigenvectors (fixed)',
+        'path_pattern': 'results/investigation2_directions_AB/{dataset}/fixed_splits/metrics/results_aggregated.json',
+        'split_type': 'fixed',
+        'datasets': ['ogbn-arxiv', 'cora', 'citeseer', 'pubmed', 
+                     'amazon-computers', 'coauthor-cs', 'coauthor-physics', 'wikics']
+    },
+    'inv2a_restricted_random': {
+        'name': 'Restricted Eigenvectors (random)',
+        'path_pattern': 'results/investigation2_directions_AB/{dataset}/random_splits/metrics/results_aggregated.json',
+        'split_type': 'random',
+        'datasets': ['ogbn-arxiv', 'cora', 'citeseer', 'pubmed', 
+                     'amazon-computers', 'coauthor-cs', 'coauthor-physics', 'wikics']
+    },
+    'inv2b_random_subspace_fixed': {
+        'name': 'Random Subspaces (fixed)',
+        'path_pattern': 'results/investigation2_random_subspaces/{dataset}/fixed_splits/metrics/results_complete.json',
+        'split_type': 'fixed',
+        'datasets': ['ogbn-arxiv', 'cora', 'citeseer', 'pubmed', 
+                     'amazon-computers', 'coauthor-cs', 'coauthor-physics', 'wikics']
+    }
+}
+
+# Visual styling
+plt.style.use('seaborn-v0_8-darkgrid')
+COLORS = {
+    'True Eigenvectors': '#2E7D32',
+    'Restricted Eigenvectors': '#C62828',
+    'Diffused Random (k=16)': '#1565C0',
+    'Diffused Random (k=32)': '#6A1B9A',
+    'Diffused Engineered': '#F57C00'
+}
 
 print('='*80)
 print('EIGENVALUE DISTRIBUTION ANALYSIS')
 print('='*80)
-print(f'Datasets: {DATASETS}')
-print(f'Diffusion steps to test: {K_VALUES}')
-print(f'Output: {OUTPUT_DIR}')
-print('='*80)
+print(f'Output directory: {OUTPUT_DIR}')
+print(f'Experiments: {len(EXPERIMENTS)}')
 
-# Set style
-sns.set_style('whitegrid')
-plt.rcParams['figure.dpi'] = 150
+# Debug mode: Test on one configuration first
+DEBUG_MODE = False  # Set to True to test on one dataset first
+if DEBUG_MODE:
+    print('\n⚠ DEBUG MODE: Testing on ogbn-arxiv only')
+    for exp_config in EXPERIMENTS.values():
+        exp_config['datasets'] = ['ogbn-arxiv']
+
+print('='*80)
 
 # ============================================================================
 # Helper Functions
 # ============================================================================
 
-def compute_normalized_adjacency(adj, D):
-    """Compute symmetric normalized adjacency for diffusion"""
-    deg = np.array(D.diagonal())
-    deg_inv_sqrt = 1.0 / np.sqrt(deg)
-    deg_inv_sqrt[np.isinf(deg_inv_sqrt)] = 0.0
-    
-    D_inv_sqrt = sp.diags(deg_inv_sqrt)
-    A_norm = D_inv_sqrt @ adj @ D_inv_sqrt
-    
-    return A_norm
-
-def apply_diffusion(A_norm, X, k, verbose=False):
-    """Apply k-step graph diffusion"""
-    X_diffused = X.copy()
-    for i in range(k):
-        X_diffused = A_norm @ X_diffused
-        if verbose and (i+1) % max(1, k//4) == 0:
-            print(f'    Diffusion step {i+1}/{k}')
-    return X_diffused
-
-def compute_restricted_eigenvalues(X, L, D, num_components=0, eps_base=1e-8):
+def manually_add_eigenvalues_to_cache(experiment_id, dataset, eigenvalues):
     """
-    Compute eigenvalues of restricted eigenproblem
+    Manually add eigenvalues to cache.
+    
+    Usage:
+        eigenvalues = compute_my_eigenvalues(...)
+        manually_add_eigenvalues_to_cache('inv1_true_eigs_fixed', 'ogbn-arxiv', eigenvalues)
+    """
+    cache_file = f'{EIGENVALUE_CACHE_DIR}/{experiment_id}_{dataset}.npy'
+    np.save(cache_file, eigenvalues)
+    print(f"✓ Cached {len(eigenvalues)} eigenvalues for {experiment_id}/{dataset}")
+    return cache_file
+
+def compute_eigenvalue_metrics(eigenvalues, threshold=1e-10):
+    """
+    Compute eigenvalue distribution metrics.
     
     Args:
-        X: Feature matrix
-        L: Laplacian matrix
-        D: Degree matrix
-        num_components: Number of connected components (eigenvalues to drop)
-        eps_base: Regularization base
+        eigenvalues: numpy array of eigenvalues
+        threshold: minimum eigenvalue to consider (excludes near-zero from components)
     
     Returns:
-        eigenvalues_all: All sorted eigenvalues (including near-zero)
-        eigenvalues_valid: Valid eigenvalues (after dropping components)
-        condition_number: max/min eigenvalue ratio (using valid eigenvalues)
-        effective_rank: rank after QR
-        num_near_zero: number of near-zero eigenvalues
+        dict with spread, condition, participation_ratio, n_valid, n_dropped
     """
-    # QR decomposition
-    Q, R = la.qr(X, mode='economic')
-    rank_X = np.linalg.matrix_rank(R, tol=1e-10)
+    # Filter near-zero eigenvalues (from disconnected components)
+    valid_eigs = eigenvalues[eigenvalues > threshold]
+    dropped = len(eigenvalues) - len(valid_eigs)
     
-    if rank_X < X.shape[1]:
-        Q = Q[:, :rank_X]
-    
-    d_eff = rank_X
-    
-    # Project Laplacian
-    L_r = Q.T @ (L @ Q)
-    D_r = Q.T @ (D @ Q)
-    
-    # Symmetrize
-    L_r = 0.5 * (L_r + L_r.T)
-    D_r = 0.5 * (D_r + D_r.T)
-    
-    # Regularize
-    eps = eps_base * np.trace(D_r) / d_eff
-    D_r = D_r + eps * np.eye(d_eff)
-    
-    # Solve
-    eigenvalues_all, _ = la.eigh(L_r, D_r)
-    eigenvalues_all = np.sort(eigenvalues_all)
-    
-    # Count near-zero eigenvalues (likely from connected components)
-    ZERO_THRESHOLD = 1e-8
-    num_near_zero = np.sum(eigenvalues_all < ZERO_THRESHOLD)
-    
-    # Drop near-zero eigenvalues (connected component eigenvalues)
-    # Use the maximum of: detected components OR computed near-zero eigenvalues
-    num_to_drop = max(num_components, num_near_zero)
-    
-    if num_to_drop > 0:
-        eigenvalues_valid = eigenvalues_all[num_to_drop:]
-    else:
-        eigenvalues_valid = eigenvalues_all
-    
-    # Condition number (using valid eigenvalues only)
-    if len(eigenvalues_valid) > 0 and eigenvalues_valid[-1] > ZERO_THRESHOLD:
-        condition = eigenvalues_valid[-1] / eigenvalues_valid[0]
-    else:
-        condition = np.inf
-    
-    return eigenvalues_all, eigenvalues_valid, condition, d_eff, num_near_zero
-
-def compute_eigenvalue_statistics(eigenvalues):
-    """
-    Compute comprehensive statistics on eigenvalue distribution
-    
-    Args:
-        eigenvalues: VALID eigenvalues (near-zero already removed)
-    
-    Note: This function expects eigenvalues that have already been cleaned
-          (near-zero/component eigenvalues removed)
-    """
-    eigs = eigenvalues  # Assume already filtered
-    
-    if len(eigs) == 0:
+    if len(valid_eigs) == 0:
         return {
-            'mean': 0, 'median': 0, 'std': 0, 'min': 0, 'max': 0,
-            'range': 0, 'iqr': 0, 'skewness': 0, 'gap_ratio': 0,
-            'num_valid': 0, 'condition': np.inf
+            'spread': np.nan,
+            'condition': np.nan,
+            'participation_ratio': np.nan,
+            'n_eigenvalues_total': len(eigenvalues),
+            'n_eigenvalues_valid': 0,
+            'n_eigenvalues_dropped': dropped,
+            'lambda_min': np.nan,
+            'lambda_max': np.nan
         }
     
-    stats = {
-        'mean': float(np.mean(eigs)),
-        'median': float(np.median(eigs)),
-        'std': float(np.std(eigs)),
-        'min': float(np.min(eigs)),
-        'max': float(np.max(eigs)),
-        'range': float(np.max(eigs) - np.min(eigs)),
-        'iqr': float(np.percentile(eigs, 75) - np.percentile(eigs, 25)),
-        'num_valid': int(len(eigs)),
-        'condition': float(np.max(eigs) / np.min(eigs)) if np.min(eigs) > 0 else np.inf
+    lambda_min = valid_eigs.min()
+    lambda_max = valid_eigs.max()
+    
+    # Eigenvalue spread: Δ = λ_max - λ_min
+    spread = lambda_max - lambda_min
+    
+    # Condition number: κ = λ_max / λ_min
+    condition = lambda_max / lambda_min if lambda_min > 0 else np.inf
+    
+    # Participation ratio: PR = (Σλ_i)² / Σλ_i²
+    sum_eigs = valid_eigs.sum()
+    sum_sq_eigs = (valid_eigs**2).sum()
+    participation_ratio = (sum_eigs**2) / sum_sq_eigs if sum_sq_eigs > 0 else np.nan
+    
+    return {
+        'spread': float(spread),
+        'condition': float(condition),
+        'participation_ratio': float(participation_ratio),
+        'n_eigenvalues_total': len(eigenvalues),
+        'n_eigenvalues_valid': len(valid_eigs),
+        'n_eigenvalues_dropped': dropped,
+        'lambda_min': float(lambda_min),
+        'lambda_max': float(lambda_max)
     }
-    
-    # Skewness (measure of clustering)
-    if stats['std'] > 0:
-        stats['skewness'] = float(np.mean(((eigs - stats['mean']) / stats['std'])**3))
-    else:
-        stats['skewness'] = 0
-    
-    # Gap ratio (largest gap / median gap)
-    if len(eigs) > 1:
-        gaps = np.diff(eigs)
-        if len(gaps) > 0 and np.median(gaps) > 0:
-            stats['gap_ratio'] = float(np.max(gaps) / np.median(gaps))
-        else:
-            stats['gap_ratio'] = 0
-    else:
-        stats['gap_ratio'] = 0
-    
-    return stats
 
-# ============================================================================
-# Main Analysis Loop
-# ============================================================================
-
-all_results = {}
-
-for dataset_name in DATASETS:
-    print(f'\n{"="*80}')
-    print(f'ANALYZING: {dataset_name.upper()}')
-    print(f'{"="*80}')
+def load_eigenvalues_from_experiment(dataset, experiment_config, experiment_id):
+    """
+    Load eigenvalues from saved experiment results or cache.
+    
+    Strategy:
+    1. Check cache first (eigenvalue_cache/{experiment_id}_{dataset}.npy)
+    2. Try to load from JSON if saved
+    3. If not available, return None (will need manual computation)
+    """
+    # Check cache first
+    cache_file = f'{EIGENVALUE_CACHE_DIR}/{experiment_id}_{dataset}.npy'
+    if os.path.exists(cache_file):
+        try:
+            eigenvalues = np.load(cache_file)
+            return eigenvalues
+        except:
+            pass
+    
+    # Try to load from JSON
+    path = experiment_config['path_pattern'].format(dataset=dataset)
+    
+    if not os.path.exists(path):
+        print(f"  ⚠ File not found: {path}")
+        return None
     
     try:
-        # Load dataset
-        print('[1/5] Loading dataset...')
-        data_tuple = load_dataset(dataset_name)
-        edge_index, X_raw, labels, num_nodes, num_classes, train_idx, val_idx, test_idx = data_tuple
+        with open(path, 'r') as f:
+            data = json.load(f)
         
-        if X_raw is None:
-            print(f'⚠️  Skipping {dataset_name}: no node features')
-            continue
+        # Search for eigenvalues in various possible locations
+        eigenvalues = None
         
-        if torch.is_tensor(X_raw):
-            X_raw = X_raw.numpy()
+        # Common patterns
+        search_keys = [
+            'eigenvalues',
+            'restricted_eigenvalues', 
+            'graph_eigenvalues',
+            'lambda',
+            'eigs'
+        ]
         
-        X = X_raw.astype(np.float64)
+        # Try direct access
+        for key in search_keys:
+            if key in data:
+                eigenvalues = np.array(data[key])
+                break
         
-        print(f'  Nodes: {num_nodes:,}')
-        print(f'  Features: {X.shape[1]}')
-        print(f'  Classes: {num_classes}')
+        # Try nested access
+        if eigenvalues is None:
+            for parent_key in data:
+                if isinstance(data[parent_key], dict):
+                    for key in search_keys:
+                        if key in data[parent_key]:
+                            eigenvalues = np.array(data[parent_key][key])
+                            break
+                    if eigenvalues is not None:
+                        break
         
-        # Build graph matrices
-        print('[2/5] Building graph matrices...')
-        adj, L, D = build_graph_matrices(edge_index, num_nodes)
-        A_norm = compute_normalized_adjacency(adj, D)
+        # If found, cache it
+        if eigenvalues is not None:
+            np.save(cache_file, eigenvalues)
+            return eigenvalues
         
-        # Count connected components
-        print('[2.5/5] Detecting connected components...')
-        G = nx.from_scipy_sparse_array(adj)
-        num_components = nx.number_connected_components(G)
-        print(f'  Number of connected components: {num_components}')
-        if num_components > 1:
-            print(f'  ⚠️  Graph is disconnected! Will drop {num_components} eigenvalues.')
-        
-        # Store results for this dataset
-        dataset_results = {
-            'metadata': {
-                'num_nodes': num_nodes,
-                'num_features': X.shape[1],
-                'num_classes': num_classes,
-                'num_components': num_components
-            },
-            'baseline': {},
-            'diffused': {}
-        }
-        
-        # Analyze baseline (no diffusion)
-        print('[3/5] Analyzing baseline restricted eigenproblem...')
-        eigs_all, eigs_valid, cond_baseline, rank_baseline, num_near_zero = \
-            compute_restricted_eigenvalues(X, L, D, num_components)
-        stats_baseline = compute_eigenvalue_statistics(eigs_valid)
-        
-        dataset_results['baseline'] = {
-            'eigenvalues_all': eigs_all.tolist(),
-            'eigenvalues_valid': eigs_valid.tolist(),
-            'num_near_zero': int(num_near_zero),
-            'num_dropped': max(num_components, num_near_zero),
-            'condition': float(cond_baseline),
-            'rank': int(rank_baseline),
-            'statistics': stats_baseline
-        }
-        
-        print(f'  Total eigenvalues computed: {len(eigs_all)}')
-        print(f'  Near-zero eigenvalues: {num_near_zero}')
-        print(f'  Components: {num_components}')
-        print(f'  Eigenvalues dropped: {max(num_components, num_near_zero)}')
-        print(f'  Valid eigenvalues: {len(eigs_valid)}')
-        print(f'  Baseline condition number: {cond_baseline:.2e}')
-        print(f'  Eigenvalue range (valid): [{stats_baseline["min"]:.6f}, {stats_baseline["max"]:.6f}]')
-        print(f'  Eigenvalue spread (std): {stats_baseline["std"]:.6f}')
-        
-        # Analyze with diffusion
-        print('[4/5] Analyzing with diffusion...')
-        for k in K_VALUES:
-            print(f'  k={k}:')
-            X_diffused = apply_diffusion(A_norm, X, k, verbose=False)
-            eigs_all_d, eigs_valid_d, cond_diffused, rank_diffused, num_near_zero_d = \
-                compute_restricted_eigenvalues(X_diffused, L, D, num_components)
-            stats_diffused = compute_eigenvalue_statistics(eigs_valid_d)
-            
-            dataset_results['diffused'][k] = {
-                'eigenvalues_all': eigs_all_d.tolist(),
-                'eigenvalues_valid': eigs_valid_d.tolist(),
-                'num_near_zero': int(num_near_zero_d),
-                'num_dropped': max(num_components, num_near_zero_d),
-                'condition': float(cond_diffused),
-                'rank': int(rank_diffused),
-                'statistics': stats_diffused
-            }
-            
-            # Compare to baseline
-            cond_change = (cond_diffused - cond_baseline) / cond_baseline * 100
-            spread_change = (stats_diffused['std'] - stats_baseline['std']) / stats_baseline['std'] * 100
-            
-            print(f'    Valid eigenvalues: {len(eigs_valid_d)}')
-            print(f'    Condition: {cond_diffused:.2e} ({cond_change:+.1f}%)')
-            print(f'    Spread: {stats_diffused["std"]:.6f} ({spread_change:+.1f}%)')
-        
-        all_results[dataset_name] = dataset_results
-        
-        # Create visualizations
-        print('[5/5] Creating visualizations...')
-        
-        # Get valid eigenvalues for plotting
-        eigs_baseline_plot = np.array(dataset_results['baseline']['eigenvalues_valid'])
-        
-        # Figure 1: Eigenvalue Spectra (VALID eigenvalues only)
-        fig, axes = plt.subplots(1, len(K_VALUES)+1, figsize=(4*(len(K_VALUES)+1), 4))
-        
-        # Baseline
-        ax = axes[0]
-        ax.plot(eigs_baseline_plot, 'o-', markersize=3, linewidth=1, alpha=0.7)
-        ax.set_xlabel('Index')
-        ax.set_ylabel('Eigenvalue')
-        num_dropped = dataset_results['baseline']['num_dropped']
-        title_baseline = f'Baseline\nκ={cond_baseline:.1e}'
-        if num_dropped > 0:
-            title_baseline += f'\n({num_dropped} dropped)'
-        ax.set_title(title_baseline)
-        ax.grid(True, alpha=0.3)
-        
-        # Diffused
-        for i, k in enumerate(K_VALUES):
-            ax = axes[i+1]
-            eigs = np.array(dataset_results['diffused'][k]['eigenvalues_valid'])
-            cond = dataset_results['diffused'][k]['condition']
-            num_dropped_k = dataset_results['diffused'][k]['num_dropped']
-            ax.plot(eigs, 'o-', markersize=3, linewidth=1, alpha=0.7, color='C1')
-            ax.set_xlabel('Index')
-            title_k = f'Diffused k={k}\nκ={cond:.1e}'
-            if num_dropped_k > 0:
-                title_k += f'\n({num_dropped_k} dropped)'
-            ax.set_title(title_k)
-            ax.grid(True, alpha=0.3)
-        
-        suptitle = f'{dataset_name}: Eigenvalue Spectra'
-        if num_components > 1:
-            suptitle += f' ({num_components} components)'
-        plt.suptitle(suptitle, fontsize=14, fontweight='bold')
-        plt.tight_layout()
-        plt.savefig(f'{OUTPUT_DIR}/plots/{dataset_name}_spectra.png', dpi=150, bbox_inches='tight')
-        plt.close()
-        
-        # Figure 2: Distributions
-        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-        
-        # Top left: Baseline histogram
-        ax = axes[0, 0]
-        if len(eigs_baseline_plot) > 0:
-            ax.hist(eigs_baseline_plot, bins=50, alpha=0.7, edgecolor='black')
-        ax.set_xlabel('Eigenvalue')
-        ax.set_ylabel('Count')
-        title = 'Baseline Distribution'
-        if num_dropped > 0:
-            title += f' ({num_dropped} near-zero dropped)'
-        ax.set_title(title)
-        ax.grid(True, alpha=0.3)
-        
-        # Top right: Best diffused histogram
-        ax = axes[0, 1]
-        best_k = K_VALUES[-1]
-        eigs_diffused_plot = np.array(dataset_results['diffused'][best_k]['eigenvalues_valid'])
-        num_dropped_best = dataset_results['diffused'][best_k]['num_dropped']
-        if len(eigs_diffused_plot) > 0:
-            ax.hist(eigs_diffused_plot, bins=50, alpha=0.7, edgecolor='black', color='C1')
-        ax.set_xlabel('Eigenvalue')
-        title = f'Diffused k={best_k} Distribution'
-        if num_dropped_best > 0:
-            title += f' ({num_dropped_best} dropped)'
-        ax.set_title(title)
-        ax.grid(True, alpha=0.3)
-        
-        # Bottom left: Log-scale spectra comparison
-        ax = axes[1, 0]
-        ax.semilogy(eigs_baseline_plot, 'o-', markersize=3, linewidth=1, alpha=0.7, label='Baseline')
-        for k in K_VALUES:
-            eigs = np.array(dataset_results['diffused'][k]['eigenvalues_valid'])
-            ax.semilogy(eigs, 'o-', markersize=3, linewidth=1, alpha=0.5, label=f'k={k}')
-        ax.set_xlabel('Index')
-        ax.set_ylabel('Eigenvalue (log scale)')
-        ax.set_title('Spectra Comparison (Log Scale, valid eigenvalues)')
-        ax.legend()
-        ax.grid(True, alpha=0.3)
-        
-        # Bottom right: Condition number evolution
-        ax = axes[1, 1]
-        cond_nums = [cond_baseline] + [dataset_results['diffused'][k]['condition'] for k in K_VALUES]
-        k_vals = [0] + K_VALUES
-        ax.plot(k_vals, cond_nums, 'o-', markersize=8, linewidth=2)
-        ax.set_xlabel('Diffusion Steps (k)')
-        ax.set_ylabel('Condition Number')
-        ax.set_title('Condition Number vs Diffusion')
-        ax.grid(True, alpha=0.3)
-        ax.set_yscale('log')
-        
-        suptitle = f'{dataset_name}: Eigenvalue Analysis'
-        if num_components > 1:
-            suptitle += f' ({num_components} components)'
-        plt.suptitle(suptitle, fontsize=14, fontweight='bold')
-        plt.tight_layout()
-        plt.savefig(f'{OUTPUT_DIR}/plots/{dataset_name}_analysis.png', dpi=150, bbox_inches='tight')
-        plt.close()
-        
-        print(f'✓ Saved plots for {dataset_name}')
+        # Eigenvalues not found in JSON
+        print(f"  ⚠ Eigenvalues not found in {path}")
+        print(f"     You'll need to compute them separately")
+        return None
         
     except Exception as e:
-        print(f'❌ Error processing {dataset_name}: {e}')
-        import traceback
-        traceback.print_exc()
+        print(f"  ✗ Error loading {path}: {e}")
+        return None
+
+def load_performance_from_experiment(dataset, experiment_config):
+    """
+    Load RowNorm and Standard MLP performance from saved results.
+    
+    Expected structure in results_aggregated.json:
+    {
+        "a_raw_std": {"test_acc_mean": 0.55, ...},
+        "b_restricted_std": {"test_acc_mean": 0.54, ...},
+        "c_restricted_rownorm": {"test_acc_mean": 0.47, ...}
+    }
+    """
+    path = experiment_config['path_pattern'].format(dataset=dataset)
+    
+    if not os.path.exists(path):
+        return None
+    
+    try:
+        with open(path, 'r') as f:
+            data = json.load(f)
+        
+        performance = {}
+        
+        # Investigation 1 & 2a structure (directions AB)
+        if 'c_restricted_rownorm' in data:
+            # Experiment (c): RowNorm MLP on restricted eigenvectors
+            performance['rownorm'] = data['c_restricted_rownorm'].get('test_acc_mean', 
+                                    data['c_restricted_rownorm'].get('test_acc', None))
+        
+        # Try different keys for Standard MLP
+        if 'a_raw_std' in data:
+            # Experiment (a): Standard MLP on raw features X
+            performance['standard'] = data['a_raw_std'].get('test_acc_mean',
+                                     data['a_raw_std'].get('test_acc', None))
+        elif 'b_restricted_std' in data:
+            # Experiment (b): Standard MLP on restricted eigenvectors
+            performance['standard'] = data['b_restricted_std'].get('test_acc_mean',
+                                     data['b_restricted_std'].get('test_acc', None))
+        
+        # Investigation 2b/2c structure (diffused features)
+        if not performance and 'graph_diffused' in data:
+            perf_data = data['graph_diffused']
+            if 'c_restricted_rownorm' in perf_data:
+                performance['rownorm'] = perf_data['c_restricted_rownorm'].get('mean', None)
+            if 'a_raw_std' in perf_data:
+                performance['standard'] = perf_data['a_raw_std'].get('mean', None)
+        
+        # Try flattened structure
+        if not performance:
+            for key in ['rownorm_test_acc', 'rownorm_acc', 'test_acc_rownorm']:
+                if key in data:
+                    performance['rownorm'] = data[key]
+                    break
+            
+            for key in ['standard_test_acc', 'standard_acc', 'test_acc_standard']:
+                if key in data:
+                    performance['standard'] = data[key]
+                    break
+        
+        # Validate
+        if not performance or 'rownorm' not in performance or 'standard' not in performance:
+            print(f"  ⚠ Incomplete performance data in: {path}")
+            print(f"     Found keys: {list(data.keys())}")
+            return None
+        
+        return performance
+        
+    except Exception as e:
+        print(f"  ✗ Error loading performance from {path}: {e}")
+        return None
+
+# ============================================================================
+# Main Analysis
+# ============================================================================
+
+print('\n[1/4] Loading data and computing metrics...\n')
+
+results = []
+failed = []
+missing_eigenvalues = []
+
+for exp_id, exp_config in EXPERIMENTS.items():
+    print(f"{'='*80}")
+    print(f"Experiment: {exp_config['name']}")
+    print(f"{'='*80}")
+    
+    for dataset in exp_config['datasets']:
+        print(f"\n  Processing {dataset}...", end=' ')
+        
+        try:
+            # Load eigenvalues
+            eigenvalues = load_eigenvalues_from_experiment(dataset, exp_config, exp_id)
+            if eigenvalues is None:
+                missing_eigenvalues.append((exp_id, dataset))
+                failed.append((exp_id, dataset, "eigenvalues not available"))
+                print("✗ (no eigenvalues)")
+                continue
+            
+            # Load performance
+            performance = load_performance_from_experiment(dataset, exp_config)
+            if performance is None:
+                failed.append((exp_id, dataset, "performance not found"))
+                print("✗ (no performance)")
+                continue
+            
+            # Compute metrics
+            metrics = compute_eigenvalue_metrics(eigenvalues)
+            
+            # Compute RowNorm advantage
+            if 'rownorm' in performance and 'standard' in performance:
+                rownorm_advantage = (performance['rownorm'] - performance['standard']) * 100
+            else:
+                rownorm_advantage = np.nan
+            
+            # Store result
+            result = {
+                'experiment_id': exp_id,
+                'experiment_name': exp_config['name'],
+                'dataset': dataset,
+                'split_type': exp_config.get('split_type', 'unknown'),
+                'rownorm_acc': performance.get('rownorm', np.nan),
+                'standard_acc': performance.get('standard', np.nan),
+                'rownorm_advantage': rownorm_advantage,
+                **metrics
+            }
+            
+            results.append(result)
+            
+            print(f"✓ κ={metrics['condition']:.2e}, Δ={metrics['spread']:.4e}, " + 
+                  f"RowNorm adv={rownorm_advantage:+.2f}%")
+            
+        except Exception as e:
+            failed.append((exp_id, dataset, str(e)))
+            print(f"✗ Error: {e}")
+
+# Convert to DataFrame
+df = pd.DataFrame(results)
+
+print(f"\n{'='*80}")
+print(f"Data collection complete: {len(results)} configurations, {len(failed)} failed")
+print(f"{'='*80}")
+
+if len(missing_eigenvalues) > 0:
+    print(f"\n⚠ WARNING: {len(missing_eigenvalues)} configurations missing eigenvalues")
+    print("You need to compute eigenvalues separately. See helper script below.")
+    print("\nMissing eigenvalues for:")
+    for exp_id, dataset in missing_eigenvalues[:10]:  # Show first 10
+        print(f"  • {exp_id}/{dataset}")
+    if len(missing_eigenvalues) > 10:
+        print(f"  ... and {len(missing_eigenvalues) - 10} more")
+
+if len(failed) > 0:
+    print("\nAll failed configurations:")
+    for exp_id, dataset, reason in failed:
+        print(f"  • {exp_id}/{dataset}: {reason}")
+
+# Save raw data
+df.to_csv(f'{OUTPUT_DIR}/eigenvalue_metrics_raw.csv', index=False)
+print(f"\n✓ Raw data saved: {OUTPUT_DIR}/eigenvalue_metrics_raw.csv")
+
+# ============================================================================
+# Statistical Analysis
+# ============================================================================
+
+print(f"\n{'='*80}")
+print('[2/4] Statistical Analysis')
+print(f"{'='*80}")
+
+metrics_to_analyze = ['spread', 'condition', 'participation_ratio']
+correlation_results = {}
+
+for metric in metrics_to_analyze:
+    print(f"\n{metric.upper().replace('_', ' ')}")
+    print("-" * 60)
+    
+    # Filter valid data
+    valid_data = df[[metric, 'rownorm_advantage']].dropna()
+    
+    if len(valid_data) < 3:
+        print(f"  ⚠ Insufficient data (N={len(valid_data)})")
         continue
+    
+    # Compute correlations
+    r_pearson, p_pearson = pearsonr(valid_data[metric], valid_data['rownorm_advantage'])
+    r_spearman, p_spearman = spearmanr(valid_data[metric], valid_data['rownorm_advantage'])
+    
+    # Store results
+    correlation_results[metric] = {
+        'pearson_r': r_pearson,
+        'pearson_p': p_pearson,
+        'spearman_rho': r_spearman,
+        'spearman_p': p_spearman,
+        'n_samples': len(valid_data)
+    }
+    
+    print(f"  Pearson correlation:  r = {r_pearson:+.3f}, p = {p_pearson:.4f}")
+    print(f"  Spearman correlation: ρ = {r_spearman:+.3f}, p = {p_spearman:.4f}")
+    print(f"  Sample size: N = {len(valid_data)}")
+    
+    # Interpretation
+    if abs(r_pearson) > 0.7 and p_pearson < 0.01:
+        print(f"  → Strong correlation (|r| > 0.7, p < 0.01)")
+    elif abs(r_pearson) > 0.4 and p_pearson < 0.05:
+        print(f"  → Moderate correlation (|r| > 0.4, p < 0.05)")
+    else:
+        print(f"  → Weak/no significant correlation")
+
+# Per-experiment analysis
+print(f"\n{'='*80}")
+print("PER-EXPERIMENT CORRELATION ANALYSIS")
+print(f"{'='*80}")
+
+for exp_name in df['experiment_name'].unique():
+    exp_data = df[df['experiment_name'] == exp_name]
+    
+    print(f"\n{exp_name}")
+    print("-" * 60)
+    
+    for metric in metrics_to_analyze:
+        valid = exp_data[[metric, 'rownorm_advantage']].dropna()
+        
+        if len(valid) < 3:
+            print(f"  {metric}: Insufficient data (N={len(valid)})")
+            continue
+        
+        r, p = pearsonr(valid[metric], valid['rownorm_advantage'])
+        print(f"  {metric}: r = {r:+.3f}, p = {p:.4f}, N = {len(valid)}")
+
+# Save correlation results
+with open(f'{OUTPUT_DIR}/correlation_results.json', 'w') as f:
+    json.dump(correlation_results, f, indent=2)
 
 # ============================================================================
-# Cross-Dataset Analysis
+# Visualizations
 # ============================================================================
 
-print(f'\n{"="*80}')
-print('CROSS-DATASET ANALYSIS')
-print(f'{"="*80}')
+print(f"\n{'='*80}")
+print('[3/4] Generating visualizations...')
+print(f"{'='*80}")
 
-if len(all_results) > 0:
-    # Create summary table
-    summary_data = []
+# Set style
+sns.set_style("whitegrid")
+sns.set_context("paper", font_scale=1.2)
+
+# Plot 1: Correlation scatter plots
+print("\n  Creating scatter plots...")
+fig, axes = plt.subplots(1, 3, figsize=(20, 6))
+
+for idx, (ax, metric) in enumerate(zip(axes, metrics_to_analyze)):
+    # Filter valid data
+    valid_df = df[[metric, 'rownorm_advantage', 'experiment_name', 'dataset']].dropna()
     
-    for dataset_name, results in all_results.items():
-        row = {
-            'Dataset': dataset_name,
-            'Nodes': results['metadata']['num_nodes'],
-            'Features': results['metadata']['num_features'],
-            'Components': results['metadata']['num_components'],
-            'Dropped_Eigs': results['baseline']['num_dropped'],
-            'Valid_Eigs': len(results['baseline']['eigenvalues_valid']),
-            'Baseline_Cond': results['baseline']['condition'],
-            'Baseline_Spread': results['baseline']['statistics']['std'],
-            'Baseline_Skewness': results['baseline']['statistics']['skewness'],
-        }
+    if len(valid_df) == 0:
+        ax.text(0.5, 0.5, 'No valid data', ha='center', va='center', 
+                transform=ax.transAxes, fontsize=14)
+        continue
+    
+    # Plot points by experiment type
+    for exp_name in valid_df['experiment_name'].unique():
+        subset = valid_df[valid_df['experiment_name'] == exp_name]
+        color = COLORS.get(exp_name, '#666666')
         
-        # Add diffusion results
-        for k in K_VALUES:
-            if k in results['diffused']:
-                row[f'k{k}_Cond'] = results['diffused'][k]['condition']
-                row[f'k{k}_Spread'] = results['diffused'][k]['statistics']['std']
+        ax.scatter(subset[metric], subset['rownorm_advantage'], 
+                  label=exp_name, color=color, alpha=0.7, s=100, edgecolors='black', linewidth=0.5)
         
-        summary_data.append(row)
+        # Add dataset labels for interesting points
+        for _, row in subset.iterrows():
+            if abs(row['rownorm_advantage']) > 20 or row['condition'] > 50:  # Label outliers
+                ax.annotate(row['dataset'], 
+                           (row[metric], row['rownorm_advantage']),
+                           fontsize=8, alpha=0.7, xytext=(5, 5),
+                           textcoords='offset points')
     
-    df = pd.DataFrame(summary_data)
+    # Add trend line (overall)
+    if len(valid_df) > 2:
+        z = np.polyfit(valid_df[metric], valid_df['rownorm_advantage'], 1)
+        p = np.poly1d(z)
+        x_line = np.linspace(valid_df[metric].min(), valid_df[metric].max(), 100)
+        ax.plot(x_line, p(x_line), "r--", alpha=0.5, linewidth=2, label='Trend')
     
-    # Save summary table
-    df.to_csv(f'{OUTPUT_DIR}/data/summary_table.csv', index=False)
-    print(f'✓ Saved summary table')
+    # Add correlation text
+    if metric in correlation_results:
+        r = correlation_results[metric]['pearson_r']
+        p_val = correlation_results[metric]['pearson_p']
+        ax.text(0.05, 0.95, f'r = {r:+.3f}\np = {p_val:.4f}',
+               transform=ax.transAxes, fontsize=11, verticalalignment='top',
+               bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
     
-    # Print summary
-    print('\nCONDITION NUMBERS (Lower = Better Conditioned):')
-    print('-'*80)
-    print(f'{"Dataset":<20s} {"Components":>5s} {"Dropped":>8s} {"Valid":>6s} {"Condition":>12s}')
-    print('-'*80)
-    for _, row in df.iterrows():
-        print(f"{row['Dataset']:20s} {row['Components']:>5d} {row['Dropped_Eigs']:>8d} "
-              f"{row['Valid_Eigs']:>6d} {row['Baseline_Cond']:>12.2e}")
-    print('-'*80)
-    
-    # Warn about highly disconnected graphs
-    high_component_datasets = df[df['Components'] > 10]['Dataset'].tolist()
-    if high_component_datasets:
-        print(f'\n⚠️  WARNING: Highly disconnected graphs detected:')
-        for ds in high_component_datasets:
-            n_comp = df[df['Dataset']==ds]['Components'].iloc[0]
-            print(f'    {ds}: {n_comp} components')
-        print(f'   These datasets may have unreliable eigenvalue statistics.')
-    
-    # Create summary visualization
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    
-    # Plot 1: Condition numbers
-    ax = axes[0, 0]
-    datasets = df['Dataset'].tolist()
-    baseline_conds = df['Baseline_Cond'].tolist()
-    x_pos = np.arange(len(datasets))
-    
-    colors = ['green' if c < 100 else 'orange' if c < 1000 else 'red' for c in baseline_conds]
-    ax.bar(x_pos, baseline_conds, color=colors, alpha=0.7, edgecolor='black')
-    ax.set_xticks(x_pos)
-    ax.set_xticklabels(datasets, rotation=45, ha='right')
-    ax.set_ylabel('Condition Number (log scale)')
-    ax.set_yscale('log')
-    ax.set_title('Baseline Condition Numbers')
-    ax.grid(True, alpha=0.3, axis='y')
-    
-    # Add color legend
-    from matplotlib.patches import Patch
-    legend_elements = [
-        Patch(facecolor='green', alpha=0.7, label='Well-conditioned (<100)'),
-        Patch(facecolor='orange', alpha=0.7, label='Moderate (100-1000)'),
-        Patch(facecolor='red', alpha=0.7, label='Ill-conditioned (>1000)')
-    ]
-    ax.legend(handles=legend_elements, loc='upper left', fontsize=8)
-    
-    # Plot 2: Spread (std of eigenvalues)
-    ax = axes[0, 1]
-    spreads = df['Baseline_Spread'].tolist()
-    ax.bar(x_pos, spreads, color='steelblue', alpha=0.7, edgecolor='black')
-    ax.set_xticks(x_pos)
-    ax.set_xticklabels(datasets, rotation=45, ha='right')
-    ax.set_ylabel('Eigenvalue Spread (std)')
-    ax.set_title('Baseline Eigenvalue Spread')
-    ax.grid(True, alpha=0.3, axis='y')
-    
-    # Plot 3: Diffusion effect on condition
-    ax = axes[1, 0]
-    for i, dataset in enumerate(datasets):
-        conds = [df.loc[i, 'Baseline_Cond']]
-        for k in K_VALUES:
-            col = f'k{k}_Cond'
-            if col in df.columns:
-                conds.append(df.loc[i, col])
-        k_vals = [0] + K_VALUES[:len(conds)-1]
-        ax.plot(k_vals, conds, 'o-', label=dataset, markersize=6, linewidth=1.5, alpha=0.7)
-    
-    ax.set_xlabel('Diffusion Steps (k)')
-    ax.set_ylabel('Condition Number (log scale)')
-    ax.set_yscale('log')
-    ax.set_title('Condition Number Evolution with Diffusion')
-    ax.legend(fontsize=8, ncol=2)
+    # Formatting
+    ax.set_xlabel(metric.replace('_', ' ').title(), fontsize=13, fontweight='bold')
+    ax.set_ylabel('RowNorm Advantage (%)', fontsize=13, fontweight='bold')
+    ax.axhline(0, color='black', linestyle=':', alpha=0.3, linewidth=1)
     ax.grid(True, alpha=0.3)
     
-    # Plot 4: Feature dimension vs condition
-    ax = axes[1, 1]
-    dims = df['Features'].tolist()
-    ax.scatter(dims, baseline_conds, s=100, alpha=0.7, edgecolor='black')
-    for i, dataset in enumerate(datasets):
-        ax.annotate(dataset, (dims[i], baseline_conds[i]), 
-                   fontsize=8, ha='center', va='bottom')
-    ax.set_xlabel('Feature Dimension')
-    ax.set_ylabel('Condition Number (log scale)')
-    ax.set_yscale('log')
-    ax.set_xscale('log')
-    ax.set_title('Feature Dimension vs Condition')
-    ax.grid(True, alpha=0.3)
-    
-    plt.suptitle('Cross-Dataset Eigenvalue Analysis', fontsize=14, fontweight='bold')
-    plt.tight_layout()
-    plt.savefig(f'{OUTPUT_DIR}/plots/cross_dataset_summary.png', dpi=150, bbox_inches='tight')
-    plt.close()
-    
-    print(f'✓ Saved cross-dataset summary')
+    if idx == 0:
+        ax.legend(loc='best', fontsize=9, framealpha=0.9)
 
-# Save all results
-results_file = f'{OUTPUT_DIR}/data/eigenvalue_analysis_complete.json'
-with open(results_file, 'w') as f:
-    json.dump(all_results, f, indent=2)
+plt.suptitle('Eigenvalue Distribution vs. RowNorm Performance', 
+             fontsize=16, fontweight='bold', y=1.02)
+plt.tight_layout()
+plt.savefig(f'{OUTPUT_DIR}/plots/correlation_scatter.png', dpi=300, bbox_inches='tight')
+print(f"  ✓ Saved: {OUTPUT_DIR}/plots/correlation_scatter.png")
+plt.close()
 
-print(f'\n{"="*80}')
+# Plot 2: Box plots by experiment
+print("  Creating box plots...")
+fig, axes = plt.subplots(1, 3, figsize=(20, 6))
+
+for ax, metric in zip(axes, metrics_to_analyze):
+    valid_df = df[[metric, 'experiment_name']].dropna()
+    
+    if len(valid_df) == 0:
+        continue
+    
+    # Create box plot
+    exp_names = valid_df['experiment_name'].unique()
+    data_to_plot = [valid_df[valid_df['experiment_name'] == exp][metric].values 
+                    for exp in exp_names]
+    
+    bp = ax.boxplot(data_to_plot, labels=exp_names, patch_artist=True)
+    
+    # Color boxes
+    for patch, exp_name in zip(bp['boxes'], exp_names):
+        patch.set_facecolor(COLORS.get(exp_name, '#CCCCCC'))
+        patch.set_alpha(0.7)
+    
+    ax.set_ylabel(metric.replace('_', ' ').title(), fontsize=13, fontweight='bold')
+    ax.set_xticklabels(exp_names, rotation=45, ha='right', fontsize=10)
+    ax.grid(True, alpha=0.3, axis='y')
+
+plt.suptitle('Eigenvalue Metrics by Experiment Type', 
+             fontsize=16, fontweight='bold', y=1.02)
+plt.tight_layout()
+plt.savefig(f'{OUTPUT_DIR}/plots/boxplot_by_experiment.png', dpi=300, bbox_inches='tight')
+print(f"  ✓ Saved: {OUTPUT_DIR}/plots/boxplot_by_experiment.png")
+plt.close()
+
+# Plot 3: Heatmap of correlations
+print("  Creating correlation heatmap...")
+corr_matrix = df[['spread', 'condition', 'participation_ratio', 
+                   'rownorm_advantage', 'rownorm_acc']].corr()
+
+fig, ax = plt.subplots(figsize=(10, 8))
+sns.heatmap(corr_matrix, annot=True, fmt='.3f', cmap='RdBu_r', center=0,
+            square=True, linewidths=1, cbar_kws={"shrink": 0.8},
+            vmin=-1, vmax=1, ax=ax)
+
+plt.title('Correlation Matrix: Eigenvalue Metrics vs. Performance', 
+          fontsize=14, fontweight='bold', pad=20)
+plt.tight_layout()
+plt.savefig(f'{OUTPUT_DIR}/plots/correlation_heatmap.png', dpi=300, bbox_inches='tight')
+print(f"  ✓ Saved: {OUTPUT_DIR}/plots/correlation_heatmap.png")
+plt.close()
+
+# Plot 4: Dataset comparison table
+print("  Creating dataset comparison table...")
+fig, ax = plt.subplots(figsize=(16, 10))
+ax.axis('tight')
+ax.axis('off')
+
+# Prepare summary table
+summary_data = []
+for dataset in df['dataset'].unique():
+    dataset_data = df[df['dataset'] == dataset]
+    
+    # Average across experiments
+    summary_data.append([
+        dataset,
+        f"{dataset_data['condition'].mean():.2f}",
+        f"{dataset_data['spread'].mean():.4f}",
+        f"{dataset_data['participation_ratio'].mean():.1f}",
+        f"{dataset_data['rownorm_advantage'].mean():+.2f}%",
+        f"{dataset_data['n_eigenvalues_valid'].iloc[0]}" if len(dataset_data) > 0 else "N/A"
+    ])
+
+table = ax.table(cellText=summary_data,
+                colLabels=['Dataset', 'Condition (κ)', 'Spread (Δ)', 'Part. Ratio', 
+                          'RowNorm Adv.', 'Valid Eigs'],
+                cellLoc='center',
+                loc='center',
+                colWidths=[0.15, 0.15, 0.15, 0.15, 0.15, 0.12])
+
+table.auto_set_font_size(False)
+table.set_fontsize(10)
+table.scale(1.2, 2)
+
+# Color header
+for i in range(6):
+    table[(0, i)].set_facecolor('#4CAF50')
+    table[(0, i)].set_text_props(weight='bold', color='white')
+
+# Color rows alternately
+for i in range(1, len(summary_data) + 1):
+    for j in range(6):
+        if i % 2 == 0:
+            table[(i, j)].set_facecolor('#F0F0F0')
+
+plt.title('Dataset Summary: Eigenvalue Metrics and Performance', 
+          fontsize=14, fontweight='bold', pad=20)
+plt.savefig(f'{OUTPUT_DIR}/plots/dataset_summary_table.png', dpi=300, bbox_inches='tight')
+print(f"  ✓ Saved: {OUTPUT_DIR}/plots/dataset_summary_table.png")
+plt.close()
+
+# ============================================================================
+# Summary Report
+# ============================================================================
+
+print(f"\n{'='*80}")
+print('[4/4] Generating summary report...')
+print(f"{'='*80}")
+
+report = f"""
+EIGENVALUE DISTRIBUTION ANALYSIS - SUMMARY REPORT
+{'='*80}
+
+OVERVIEW
+--------
+Total configurations analyzed: {len(results)}
+Failed configurations: {len(failed)}
+Datasets: {df['dataset'].nunique()}
+Experiments: {df['experiment_name'].nunique()}
+
+CORRELATION ANALYSIS
+-------------------
+"""
+
+for metric, results_dict in correlation_results.items():
+    r = results_dict['pearson_r']
+    p = results_dict['pearson_p']
+    n = results_dict['n_samples']
+    
+    interpretation = "Strong" if abs(r) > 0.7 and p < 0.01 else \
+                    "Moderate" if abs(r) > 0.4 and p < 0.05 else "Weak/None"
+    
+    report += f"""
+{metric.upper().replace('_', ' ')}:
+  Pearson r = {r:+.3f} (p = {p:.4f})
+  N = {n}
+  Interpretation: {interpretation} correlation
+"""
+
+report += f"""
+{'='*80}
+
+KEY FINDINGS
+-----------
+"""
+
+# Find extreme cases
+max_condition = df.loc[df['condition'].idxmax()] if len(df) > 0 else None
+min_condition = df.loc[df['condition'].idxmin()] if len(df) > 0 else None
+max_advantage = df.loc[df['rownorm_advantage'].idxmax()] if len(df) > 0 else None
+min_advantage = df.loc[df['rownorm_advantage'].idxmin()] if len(df) > 0 else None
+
+if max_condition is not None:
+    report += f"""
+Highest condition number:
+  {max_condition['dataset']} ({max_condition['experiment_name']})
+  κ = {max_condition['condition']:.2f}
+  RowNorm advantage = {max_condition['rownorm_advantage']:+.2f}%
+
+Lowest condition number:
+  {min_condition['dataset']} ({min_condition['experiment_name']})
+  κ = {min_condition['condition']:.2f}
+  RowNorm advantage = {min_condition['rownorm_advantage']:+.2f}%
+
+Best RowNorm performance:
+  {max_advantage['dataset']} ({max_advantage['experiment_name']})
+  RowNorm advantage = {max_advantage['rownorm_advantage']:+.2f}%
+  κ = {max_advantage['condition']:.2f}
+
+Worst RowNorm performance:
+  {min_advantage['dataset']} ({min_advantage['experiment_name']})
+  RowNorm advantage = {min_advantage['rownorm_advantage']:+.2f}%
+  κ = {min_advantage['condition']:.2f}
+
+{'='*80}
+
+FILES GENERATED
+--------------
+- {OUTPUT_DIR}/eigenvalue_metrics_raw.csv
+- {OUTPUT_DIR}/correlation_results.json
+- {OUTPUT_DIR}/plots/correlation_scatter.png
+- {OUTPUT_DIR}/plots/boxplot_by_experiment.png
+- {OUTPUT_DIR}/plots/correlation_heatmap.png
+- {OUTPUT_DIR}/plots/dataset_summary_table.png
+- {OUTPUT_DIR}/summary_report.txt
+
+{'='*80}
+"""
+
+# Save report
+with open(f'{OUTPUT_DIR}/summary_report.txt', 'w') as f:
+    f.write(report)
+
+print(report)
+print(f"✓ Summary report saved: {OUTPUT_DIR}/summary_report.txt")
+
+print(f"\n{'='*80}")
 print('ANALYSIS COMPLETE')
-print(f'{"="*80}')
-print(f'Results saved to: {OUTPUT_DIR}')
-print(f'Plots: {OUTPUT_DIR}/plots/')
-print(f'Data: {OUTPUT_DIR}/data/')
-print(f'{"="*80}')
+print(f"{'='*80}")
+print(f"Results saved to: {OUTPUT_DIR}/")
+print(f"Review plots in: {OUTPUT_DIR}/plots/")
+print(f"{'='*80}\n")

@@ -1,0 +1,68 @@
+{
+  "dataset": "cora",
+  "split_type": "random",
+  "component_type": "lcc",
+  "num_components": 1,
+  "k_diffusion": 10,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs": 25,
+  "precompute_time": 0.12678217887878418,
+  "metadata": {
+    "k_full": 1426,
+    "k_nclasses": 7,
+    "k_2nclasses": 14
+  },
+  "results": {
+    "sgc_baseline": {
+      "test_acc_mean": 0.8636619281768799,
+      "test_acc_std": 0.007045816030673807,
+      "test_acc_min": 0.8450704216957092,
+      "test_acc_max": 0.8712273240089417
+    },
+    "full_logistic": {
+      "test_acc_mean": 0.7579074239730835,
+      "test_acc_std": 0.01741780297176759,
+      "test_acc_min": 0.728370189666748,
+      "test_acc_max": 0.7867202758789062
+    },
+    "full_mlp": {
+      "test_acc_mean": 0.8147283458709716,
+      "test_acc_std": 0.012004108317085267,
+      "test_acc_min": 0.790744423866272,
+      "test_acc_max": 0.8410462737083435
+    },
+    "nclasses_logistic": {
+      "test_acc_mean": 0.2347686058282852,
+      "test_acc_std": 0.03896037493596925,
+      "test_acc_min": 0.13883298635482788,
+      "test_acc_max": 0.2756539285182953
+    },
+    "nclasses_mlp": {
+      "test_acc_mean": 0.3486519002914429,
+      "test_acc_std": 0.018879372850603822,
+      "test_acc_min": 0.31589534878730774,
+      "test_acc_max": 0.39034202694892883
+    },
+    "2nclasses_logistic": {
+      "test_acc_mean": 0.24080482125282288,
+      "test_acc_std": 0.02849890293998855,
+      "test_acc_min": 0.1690140813589096,
+      "test_acc_max": 0.28370219469070435
+    },
+    "2nclasses_mlp": {
+      "test_acc_mean": 0.43179072737693786,
+      "test_acc_std": 0.022165696902482074,
+      "test_acc_min": 0.39034202694892883,
+      "test_acc_max": 0.47887322306632996
+    }
+  },
+  "improvements": {
+    "full_logistic": -10.575450420379639,
+    "full_mlp": -4.893358230590827,
+    "nclasses_logistic": -62.889332234859474,
+    "nclasses_mlp": -51.5010027885437,
+    "2nclasses_logistic": -62.28571069240571,
+    "2nclasses_mlp": -43.18712007999421
+  }
+}

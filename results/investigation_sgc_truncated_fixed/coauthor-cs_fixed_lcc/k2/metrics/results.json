@@ -1,0 +1,68 @@
+{
+  "dataset": "coauthor-cs",
+  "split_type": "fixed",
+  "component_type": "lcc",
+  "num_components": 1,
+  "k_diffusion": 2,
+  "num_splits": 1,
+  "num_seeds": 5,
+  "total_runs": 5,
+  "precompute_time": 6.052179574966431,
+  "metadata": {
+    "k_full": 6802,
+    "k_nclasses": 15,
+    "k_2nclasses": 30
+  },
+  "results": {
+    "sgc_baseline": {
+      "test_acc_mean": 0.9417120695114136,
+      "test_acc_std": 0.001306357991002842,
+      "test_acc_min": 0.9402943849563599,
+      "test_acc_max": 0.9435659646987915
+    },
+    "full_logistic": {
+      "test_acc_mean": 0.8834786891937256,
+      "test_acc_std": 0.0011385169142372783,
+      "test_acc_min": 0.8822246193885803,
+      "test_acc_max": 0.8852235078811646
+    },
+    "full_mlp": {
+      "test_acc_mean": 0.8140130519866944,
+      "test_acc_std": 0.015557886844159548,
+      "test_acc_min": 0.7917120456695557,
+      "test_acc_max": 0.837240993976593
+    },
+    "nclasses_logistic": {
+      "test_acc_mean": 0.13064339756965637,
+      "test_acc_std": 0.003727733703734798,
+      "test_acc_min": 0.12595419585704803,
+      "test_acc_max": 0.1357688009738922
+    },
+    "nclasses_mlp": {
+      "test_acc_mean": 0.22737185657024384,
+      "test_acc_std": 0.0,
+      "test_acc_min": 0.22737185657024384,
+      "test_acc_max": 0.22737185657024384
+    },
+    "2nclasses_logistic": {
+      "test_acc_mean": 0.138604137301445,
+      "test_acc_std": 0.0036438467400128328,
+      "test_acc_min": 0.13331514596939087,
+      "test_acc_max": 0.14258450269699097
+    },
+    "2nclasses_mlp": {
+      "test_acc_mean": 0.2578516811132431,
+      "test_acc_std": 0.037402512440356646,
+      "test_acc_min": 0.22737185657024384,
+      "test_acc_max": 0.307251900434494
+    }
+  },
+  "improvements": {
+    "full_logistic": -5.823338031768799,
+    "full_mlp": -12.769901752471924,
+    "nclasses_logistic": -81.10686719417572,
+    "nclasses_mlp": -71.43402129411697,
+    "2nclasses_logistic": -80.31079322099686,
+    "2nclasses_mlp": -68.38603883981705
+  }
+}

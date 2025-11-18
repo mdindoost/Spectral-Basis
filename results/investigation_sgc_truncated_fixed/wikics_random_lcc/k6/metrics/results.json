@@ -1,0 +1,68 @@
+{
+  "dataset": "wikics",
+  "split_type": "random",
+  "component_type": "lcc",
+  "num_components": 1,
+  "k_diffusion": 6,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs": 25,
+  "precompute_time": 0.3662569522857666,
+  "metadata": {
+    "k_full": 299,
+    "k_nclasses": 10,
+    "k_2nclasses": 20
+  },
+  "results": {
+    "sgc_baseline": {
+      "test_acc_mean": 0.674573564529419,
+      "test_acc_std": 0.013030974472381447,
+      "test_acc_min": 0.6526734232902527,
+      "test_acc_max": 0.6955369114875793
+    },
+    "full_logistic": {
+      "test_acc_mean": 0.7181086921691895,
+      "test_acc_std": 0.010259435059356248,
+      "test_acc_min": 0.6959787607192993,
+      "test_acc_max": 0.736632764339447
+    },
+    "full_mlp": {
+      "test_acc_mean": 0.7889703750610352,
+      "test_acc_std": 0.010606919326768556,
+      "test_acc_min": 0.7680070400238037,
+      "test_acc_max": 0.807335376739502
+    },
+    "nclasses_logistic": {
+      "test_acc_mean": 0.2781617271900177,
+      "test_acc_std": 0.009542496864459904,
+      "test_acc_min": 0.2593901753425598,
+      "test_acc_max": 0.29120635986328125
+    },
+    "nclasses_mlp": {
+      "test_acc_mean": 0.5553689670562744,
+      "test_acc_std": 0.007966796588433135,
+      "test_acc_min": 0.5430843830108643,
+      "test_acc_max": 0.5695978403091431
+    },
+    "2nclasses_logistic": {
+      "test_acc_mean": 0.3175077307224274,
+      "test_acc_std": 0.011501485986778108,
+      "test_acc_min": 0.29871851205825806,
+      "test_acc_max": 0.3371630609035492
+    },
+    "2nclasses_mlp": {
+      "test_acc_mean": 0.6685461616516113,
+      "test_acc_std": 0.007422636933116943,
+      "test_acc_min": 0.6566504240036011,
+      "test_acc_max": 0.6827220320701599
+    }
+  },
+  "improvements": {
+    "full_logistic": 4.353512763977053,
+    "full_mlp": 11.439681053161621,
+    "nclasses_logistic": -39.641183733940125,
+    "nclasses_mlp": -11.92045974731446,
+    "2nclasses_logistic": -35.70658338069916,
+    "2nclasses_mlp": -0.6027402877807675
+  }
+}

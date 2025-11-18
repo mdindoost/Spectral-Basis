@@ -1,0 +1,68 @@
+{
+  "dataset": "coauthor-cs",
+  "split_type": "random",
+  "component_type": "lcc",
+  "num_components": 1,
+  "k_diffusion": 10,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs": 25,
+  "precompute_time": 7.171877861022949,
+  "metadata": {
+    "k_full": 6802,
+    "k_nclasses": 15,
+    "k_2nclasses": 30
+  },
+  "results": {
+    "sgc_baseline": {
+      "test_acc_mean": 0.8971537256240845,
+      "test_acc_std": 0.0014056105715221118,
+      "test_acc_min": 0.8953107595443726,
+      "test_acc_max": 0.8994001746177673
+    },
+    "full_logistic": {
+      "test_acc_mean": 0.864623737335205,
+      "test_acc_std": 0.0044095588896014195,
+      "test_acc_min": 0.8585059642791748,
+      "test_acc_max": 0.8702289462089539
+    },
+    "full_mlp": {
+      "test_acc_mean": 0.7940130543708801,
+      "test_acc_std": 0.015134792216200317,
+      "test_acc_min": 0.7647218704223633,
+      "test_acc_max": 0.8274263739585876
+    },
+    "nclasses_logistic": {
+      "test_acc_mean": 0.13256269901990891,
+      "test_acc_std": 0.005475026423380344,
+      "test_acc_min": 0.11913848668336868,
+      "test_acc_max": 0.14258450269699097
+    },
+    "nclasses_mlp": {
+      "test_acc_mean": 0.22279170155525208,
+      "test_acc_std": 0.005529445668395544,
+      "test_acc_min": 0.21455833315849304,
+      "test_acc_max": 0.2314612716436386
+    },
+    "2nclasses_logistic": {
+      "test_acc_mean": 0.12956379026174544,
+      "test_acc_std": 0.0066424124914525855,
+      "test_acc_min": 0.11941111832857132,
+      "test_acc_max": 0.14013086259365082
+    },
+    "2nclasses_mlp": {
+      "test_acc_mean": 0.24777534246444702,
+      "test_acc_std": 0.06985307737615219,
+      "test_acc_min": 0.21455833315849304,
+      "test_acc_max": 0.44329333305358887
+    }
+  },
+  "improvements": {
+    "full_logistic": -3.252998828887943,
+    "full_mlp": -10.314067125320436,
+    "nclasses_logistic": -76.45910266041756,
+    "nclasses_mlp": -67.43620240688324,
+    "2nclasses_logistic": -76.7589935362339,
+    "2nclasses_mlp": -64.93783831596375
+  }
+}

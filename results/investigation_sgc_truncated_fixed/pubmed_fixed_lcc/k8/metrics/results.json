@@ -1,0 +1,68 @@
+{
+  "dataset": "pubmed",
+  "split_type": "fixed",
+  "component_type": "lcc",
+  "num_components": 1,
+  "k_diffusion": 8,
+  "num_splits": 1,
+  "num_seeds": 5,
+  "total_runs": 5,
+  "precompute_time": 0.33493685722351074,
+  "metadata": {
+    "k_full": 499,
+    "k_nclasses": 3,
+    "k_2nclasses": 6
+  },
+  "results": {
+    "sgc_baseline": {
+      "test_acc_mean": 0.7134000539779664,
+      "test_acc_std": 0.024872476600439064,
+      "test_acc_min": 0.6810000538825989,
+      "test_acc_max": 0.7500000596046448
+    },
+    "full_logistic": {
+      "test_acc_mean": 0.44180001616477965,
+      "test_acc_std": 0.006305550762389112,
+      "test_acc_min": 0.43400001525878906,
+      "test_acc_max": 0.453000009059906
+    },
+    "full_mlp": {
+      "test_acc_mean": 0.4730000257492065,
+      "test_acc_std": 0.0035213654306080404,
+      "test_acc_min": 0.46800002455711365,
+      "test_acc_max": 0.4790000319480896
+    },
+    "nclasses_logistic": {
+      "test_acc_mean": 0.34720001816749574,
+      "test_acc_std": 0.01282810018595425,
+      "test_acc_min": 0.3320000171661377,
+      "test_acc_max": 0.36400002241134644
+    },
+    "nclasses_mlp": {
+      "test_acc_mean": 0.3470000267028809,
+      "test_acc_std": 0.022653919164266855,
+      "test_acc_min": 0.31300002336502075,
+      "test_acc_max": 0.3750000298023224
+    },
+    "2nclasses_logistic": {
+      "test_acc_mean": 0.3498000204563141,
+      "test_acc_std": 0.01290580896321543,
+      "test_acc_min": 0.3320000171661377,
+      "test_acc_max": 0.3720000088214874
+    },
+    "2nclasses_mlp": {
+      "test_acc_mean": 0.36100001335144044,
+      "test_acc_std": 0.004604347337087923,
+      "test_acc_min": 0.3540000021457672,
+      "test_acc_max": 0.36500000953674316
+    }
+  },
+  "improvements": {
+    "full_logistic": -27.16000378131867,
+    "full_mlp": -24.040002822875984,
+    "nclasses_logistic": -36.62000358104706,
+    "nclasses_mlp": -36.640002727508545,
+    "2nclasses_logistic": -36.36000335216523,
+    "2nclasses_mlp": -35.24000406265259
+  }
+}

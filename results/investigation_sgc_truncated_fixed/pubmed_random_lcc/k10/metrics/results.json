@@ -1,0 +1,68 @@
+{
+  "dataset": "pubmed",
+  "split_type": "random",
+  "component_type": "lcc",
+  "num_components": 1,
+  "k_diffusion": 10,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs": 25,
+  "precompute_time": 0.46944379806518555,
+  "metadata": {
+    "k_full": 499,
+    "k_nclasses": 3,
+    "k_2nclasses": 6
+  },
+  "results": {
+    "sgc_baseline": {
+      "test_acc_mean": 0.7469168138504029,
+      "test_acc_std": 0.02126139473548769,
+      "test_acc_min": 0.648326575756073,
+      "test_acc_max": 0.7596348524093628
+    },
+    "full_logistic": {
+      "test_acc_mean": 0.83079106092453,
+      "test_acc_std": 0.006287569467470937,
+      "test_acc_min": 0.8156693577766418,
+      "test_acc_max": 0.8384888172149658
+    },
+    "full_mlp": {
+      "test_acc_mean": 0.8349188470840454,
+      "test_acc_std": 0.005860421581427138,
+      "test_acc_min": 0.827332615852356,
+      "test_acc_max": 0.8478701710700989
+    },
+    "nclasses_logistic": {
+      "test_acc_mean": 0.3494117546081543,
+      "test_acc_std": 0.020481407186504392,
+      "test_acc_min": 0.3062880337238312,
+      "test_acc_max": 0.3881845772266388
+    },
+    "nclasses_mlp": {
+      "test_acc_mean": 0.46404664278030394,
+      "test_acc_std": 0.008252797623163591,
+      "test_acc_min": 0.44878295063972473,
+      "test_acc_max": 0.4799695611000061
+    },
+    "2nclasses_logistic": {
+      "test_acc_mean": 0.36093305468559267,
+      "test_acc_std": 0.01605129512804296,
+      "test_acc_min": 0.32403650879859924,
+      "test_acc_max": 0.3884381353855133
+    },
+    "2nclasses_mlp": {
+      "test_acc_mean": 0.5238032305240631,
+      "test_acc_std": 0.011916362531409683,
+      "test_acc_min": 0.4918864071369171,
+      "test_acc_max": 0.5441176295280457
+    }
+  },
+  "improvements": {
+    "full_logistic": 8.387424707412716,
+    "full_mlp": 8.800203323364252,
+    "nclasses_logistic": -39.75050592422485,
+    "nclasses_mlp": -28.287017107009895,
+    "2nclasses_logistic": -38.59837591648102,
+    "2nclasses_mlp": -22.31135833263398
+  }
+}

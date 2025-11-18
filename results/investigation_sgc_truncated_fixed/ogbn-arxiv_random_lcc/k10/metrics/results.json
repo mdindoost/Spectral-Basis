@@ -1,0 +1,68 @@
+{
+  "dataset": "ogbn-arxiv",
+  "split_type": "random",
+  "component_type": "lcc",
+  "num_components": 1,
+  "k_diffusion": 10,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs": 25,
+  "precompute_time": 3.4120659828186035,
+  "metadata": {
+    "k_full": 127,
+    "k_nclasses": 40,
+    "k_2nclasses": 80
+  },
+  "results": {
+    "sgc_baseline": {
+      "test_acc_mean": 0.48361736893653867,
+      "test_acc_std": 0.002756765441201921,
+      "test_acc_min": 0.4791851341724396,
+      "test_acc_max": 0.49002066254615784
+    },
+    "full_logistic": {
+      "test_acc_mean": 0.5942131781578064,
+      "test_acc_std": 0.00282941214527631,
+      "test_acc_min": 0.5892825722694397,
+      "test_acc_max": 0.5981990098953247
+    },
+    "full_mlp": {
+      "test_acc_mean": 0.7228686308860779,
+      "test_acc_std": 0.0027220603557803957,
+      "test_acc_min": 0.7184234261512756,
+      "test_acc_max": 0.727664589881897
+    },
+    "nclasses_logistic": {
+      "test_acc_mean": 0.4699758017063141,
+      "test_acc_std": 0.0012981165095966999,
+      "test_acc_min": 0.4674343168735504,
+      "test_acc_max": 0.47230589389801025
+    },
+    "nclasses_mlp": {
+      "test_acc_mean": 0.686164767742157,
+      "test_acc_std": 0.0026817010882377724,
+      "test_acc_min": 0.682521402835846,
+      "test_acc_max": 0.6918807625770569
+    },
+    "2nclasses_logistic": {
+      "test_acc_mean": 0.5398559284210205,
+      "test_acc_std": 0.0027778450136707105,
+      "test_acc_min": 0.5346028804779053,
+      "test_acc_max": 0.5449070334434509
+    },
+    "2nclasses_mlp": {
+      "test_acc_mean": 0.713829357624054,
+      "test_acc_std": 0.0033565804747947374,
+      "test_acc_min": 0.7071744799613953,
+      "test_acc_max": 0.7204015254974365
+    }
+  },
+  "improvements": {
+    "full_logistic": 11.059580922126772,
+    "full_mlp": 23.925126194953922,
+    "nclasses_logistic": -1.3641567230224583,
+    "nclasses_mlp": 20.25473988056183,
+    "2nclasses_logistic": 5.623855948448181,
+    "2nclasses_mlp": 23.02119886875153
+  }
+}

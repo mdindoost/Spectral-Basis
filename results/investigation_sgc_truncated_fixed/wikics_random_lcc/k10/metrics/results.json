@@ -1,0 +1,68 @@
+{
+  "dataset": "wikics",
+  "split_type": "random",
+  "component_type": "lcc",
+  "num_components": 1,
+  "k_diffusion": 10,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs": 25,
+  "precompute_time": 0.5940051078796387,
+  "metadata": {
+    "k_full": 299,
+    "k_nclasses": 10,
+    "k_2nclasses": 20
+  },
+  "results": {
+    "sgc_baseline": {
+      "test_acc_mean": 0.57267343044281,
+      "test_acc_std": 0.012315048982512337,
+      "test_acc_min": 0.5567830204963684,
+      "test_acc_max": 0.5996464490890503
+    },
+    "full_logistic": {
+      "test_acc_mean": 0.7351480221748352,
+      "test_acc_std": 0.01123960419194735,
+      "test_acc_min": 0.7198408842086792,
+      "test_acc_max": 0.7534246444702148
+    },
+    "full_mlp": {
+      "test_acc_mean": 0.7911444854736328,
+      "test_acc_std": 0.010943121840921341,
+      "test_acc_min": 0.774193525314331,
+      "test_acc_max": 0.8113123774528503
+    },
+    "nclasses_logistic": {
+      "test_acc_mean": 0.2698541712760925,
+      "test_acc_std": 0.011922693951297175,
+      "test_acc_min": 0.2461334466934204,
+      "test_acc_max": 0.295183390378952
+    },
+    "nclasses_mlp": {
+      "test_acc_mean": 0.6195139074325562,
+      "test_acc_std": 0.007625647439762533,
+      "test_acc_min": 0.602739691734314,
+      "test_acc_max": 0.6336721181869507
+    },
+    "2nclasses_logistic": {
+      "test_acc_mean": 0.3715068435668945,
+      "test_acc_std": 0.007251888035400353,
+      "test_acc_min": 0.3561643660068512,
+      "test_acc_max": 0.3862129747867584
+    },
+    "2nclasses_mlp": {
+      "test_acc_mean": 0.711374261379242,
+      "test_acc_std": 0.007793021764591344,
+      "test_acc_min": 0.6959787607192993,
+      "test_acc_max": 0.7286787033081055
+    }
+  },
+  "improvements": {
+    "full_logistic": 16.247459173202515,
+    "full_mlp": 21.847105503082275,
+    "nclasses_logistic": -30.281925916671753,
+    "nclasses_mlp": 4.684047698974614,
+    "2nclasses_logistic": -20.116658687591553,
+    "2nclasses_mlp": 13.870083093643192
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "dataset": "amazon-computers",
+  "split_type": "fixed",
+  "component_type": "lcc",
+  "num_components": 1,
+  "k_diffusion": 10,
+  "num_splits": 1,
+  "num_seeds": 5,
+  "total_runs": 5,
+  "precompute_time": 2.1965177059173584,
+  "metadata": {
+    "k_full": 766,
+    "k_nclasses": 10,
+    "k_2nclasses": 20
+  },
+  "results": {
+    "sgc_baseline": {
+      "test_acc_mean": 0.7580310463905334,
+      "test_acc_std": 0.007887137168391633,
+      "test_acc_min": 0.7427830696105957,
+      "test_acc_max": 0.7646187543869019
+    },
+    "full_logistic": {
+      "test_acc_mean": 0.8695780634880066,
+      "test_acc_std": 0.00037744008849432866,
+      "test_acc_min": 0.8689858913421631,
+      "test_acc_max": 0.8700962066650391
+    },
+    "full_mlp": {
+      "test_acc_mean": 0.903997004032135,
+      "test_acc_std": 0.002494775405631271,
+      "test_acc_min": 0.9000740051269531,
+      "test_acc_max": 0.9074758887290955
+    },
+    "nclasses_logistic": {
+      "test_acc_mean": 0.34404144287109373,
+      "test_acc_std": 0.006204387559333357,
+      "test_acc_min": 0.33345669507980347,
+      "test_acc_max": 0.3504811227321625
+    },
+    "nclasses_mlp": {
+      "test_acc_mean": 0.6087342500686646,
+      "test_acc_std": 0.0032719557895538745,
+      "test_acc_min": 0.6054773926734924,
+      "test_acc_max": 0.6147298216819763
+    },
+    "2nclasses_logistic": {
+      "test_acc_mean": 0.33604736328125,
+      "test_acc_std": 0.0019583678415512934,
+      "test_acc_min": 0.33345669507980347,
+      "test_acc_max": 0.3393782377243042
+    },
+    "2nclasses_mlp": {
+      "test_acc_mean": 0.7547001957893371,
+      "test_acc_std": 0.006484180946458205,
+      "test_acc_min": 0.7461139559745789,
+      "test_acc_max": 0.7649888396263123
+    }
+  },
+  "improvements": {
+    "full_logistic": 11.154701709747316,
+    "full_mlp": 14.596595764160158,
+    "nclasses_logistic": -41.39896035194397,
+    "nclasses_mlp": -14.929679632186888,
+    "2nclasses_logistic": -42.198368310928345,
+    "2nclasses_mlp": -0.3330850601196311
+  }
+}

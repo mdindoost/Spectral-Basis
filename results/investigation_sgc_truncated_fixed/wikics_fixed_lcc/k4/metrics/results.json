@@ -1,0 +1,68 @@
+{
+  "dataset": "wikics",
+  "split_type": "fixed",
+  "component_type": "lcc",
+  "num_components": 1,
+  "k_diffusion": 4,
+  "num_splits": 1,
+  "num_seeds": 5,
+  "total_runs": 5,
+  "precompute_time": 0.2349412441253662,
+  "metadata": {
+    "k_full": 299,
+    "k_nclasses": 10,
+    "k_2nclasses": 20
+  },
+  "results": {
+    "sgc_baseline": {
+      "test_acc_mean": 0.719780421257019,
+      "test_acc_std": 0.002604058714726472,
+      "test_acc_min": 0.7148928642272949,
+      "test_acc_max": 0.7225075364112854
+    },
+    "full_logistic": {
+      "test_acc_mean": 0.5266867399215698,
+      "test_acc_std": 0.00313276034237149,
+      "test_acc_min": 0.5216929316520691,
+      "test_acc_max": 0.5305472016334534
+    },
+    "full_mlp": {
+      "test_acc_mean": 0.5785018682479859,
+      "test_acc_std": 0.009835113294393032,
+      "test_acc_min": 0.5611829161643982,
+      "test_acc_max": 0.591110348701477
+    },
+    "nclasses_logistic": {
+      "test_acc_mean": 0.22146272659301758,
+      "test_acc_std": 0.004049948862433344,
+      "test_acc_min": 0.21533557772636414,
+      "test_acc_max": 0.22737736999988556
+    },
+    "nclasses_mlp": {
+      "test_acc_mean": 0.35880998969078065,
+      "test_acc_std": 0.0036367667700809,
+      "test_acc_min": 0.3539932668209076,
+      "test_acc_max": 0.36426421999931335
+    },
+    "2nclasses_logistic": {
+      "test_acc_mean": 0.231839919090271,
+      "test_acc_std": 0.004502842381786767,
+      "test_acc_min": 0.2268461138010025,
+      "test_acc_max": 0.23853373527526855
+    },
+    "2nclasses_mlp": {
+      "test_acc_mean": 0.45259430408477785,
+      "test_acc_std": 0.0055745562854325175,
+      "test_acc_min": 0.4464317560195923,
+      "test_acc_max": 0.4609527289867401
+    }
+  },
+  "improvements": {
+    "full_logistic": -19.309368133544925,
+    "full_mlp": -14.127855300903313,
+    "nclasses_logistic": -49.83176946640015,
+    "nclasses_mlp": -36.09704315662384,
+    "2nclasses_logistic": -48.7940502166748,
+    "2nclasses_mlp": -26.718611717224118
+  }
+}

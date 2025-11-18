@@ -1,0 +1,68 @@
+{
+  "dataset": "ogbn-arxiv",
+  "split_type": "fixed",
+  "component_type": "lcc",
+  "num_components": 1,
+  "k_diffusion": 10,
+  "num_splits": 1,
+  "num_seeds": 5,
+  "total_runs": 5,
+  "precompute_time": 4.232342481613159,
+  "metadata": {
+    "k_full": 127,
+    "k_nclasses": 40,
+    "k_2nclasses": 80
+  },
+  "results": {
+    "sgc_baseline": {
+      "test_acc_mean": 0.42023332715034484,
+      "test_acc_std": 0.0026399019682976327,
+      "test_acc_min": 0.41678497195243835,
+      "test_acc_max": 0.424541711807251
+    },
+    "full_logistic": {
+      "test_acc_mean": 0.5260580778121948,
+      "test_acc_std": 0.0012091983911250623,
+      "test_acc_min": 0.5238771438598633,
+      "test_acc_max": 0.5275806188583374
+    },
+    "full_mlp": {
+      "test_acc_mean": 0.7056519389152527,
+      "test_acc_std": 0.0009447740033239971,
+      "test_acc_min": 0.7041129469871521,
+      "test_acc_max": 0.7070757150650024
+    },
+    "nclasses_logistic": {
+      "test_acc_mean": 0.44148715734481814,
+      "test_acc_std": 0.002001899001880211,
+      "test_acc_min": 0.4388000965118408,
+      "test_acc_max": 0.4438614845275879
+    },
+    "nclasses_mlp": {
+      "test_acc_mean": 0.6769705653190613,
+      "test_acc_std": 0.001365843869073252,
+      "test_acc_min": 0.6749172210693359,
+      "test_acc_max": 0.6786000728607178
+    },
+    "2nclasses_logistic": {
+      "test_acc_mean": 0.48988335132598876,
+      "test_acc_std": 0.002399288692536713,
+      "test_acc_min": 0.4873773455619812,
+      "test_acc_max": 0.493837833404541
+    },
+    "2nclasses_mlp": {
+      "test_acc_mean": 0.6983478546142579,
+      "test_acc_std": 0.0015926376156457176,
+      "test_acc_min": 0.6963356137275696,
+      "test_acc_max": 0.7009649872779846
+    }
+  },
+  "improvements": {
+    "full_logistic": 10.582475066185,
+    "full_mlp": 28.541861176490784,
+    "nclasses_logistic": 2.12538301944733,
+    "nclasses_mlp": 25.673723816871647,
+    "2nclasses_logistic": 6.965002417564392,
+    "2nclasses_mlp": 27.811452746391303
+  }
+}
