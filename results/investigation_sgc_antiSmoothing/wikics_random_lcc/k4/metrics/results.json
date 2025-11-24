@@ -1,0 +1,130 @@
+{
+  "dataset": "wikics",
+  "split_type": "random",
+  "component_type": "lcc",
+  "num_components": 1,
+  "k_diffusion": 4,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs": 25,
+  "precompute_time": 2.701043128967285,
+  "metadata": {
+    "d_full": 299,
+    "ortho_error": 1.0816182394179918e-09
+  },
+  "results": {
+    "sgc_baseline": {
+      "val_acc_mean": 0.7419275116920471,
+      "val_acc_std": 0.014074904184470221,
+      "test_acc_mean": 0.740857253074646,
+      "test_acc_std": 0.011311788221978513,
+      "train_time_mean": 0.5615806293487549,
+      "train_time_std": 0.41510119813088636
+    },
+    "sgc_mlp_baseline": {
+      "val_acc_mean": 0.8424933815002441,
+      "val_acc_std": 0.00675049710537995,
+      "test_acc_mean": 0.8340609645843506,
+      "test_acc_std": 0.011750735121293909,
+      "train_time_mean": 0.8422871398925781,
+      "train_time_std": 0.5773265833855931
+    },
+    "full_rownorm_mlp": {
+      "val_acc_mean": 0.7997170853614807,
+      "val_acc_std": 0.009684407745571832,
+      "test_acc_mean": 0.7894299435615539,
+      "test_acc_std": 0.012068804765887089,
+      "train_time_mean": 1.0498020553588867,
+      "train_time_std": 0.9101550387954431
+    },
+    "jl_binary_nc": {
+      "val_acc_mean": 0.49816093206405637,
+      "val_acc_std": 0.011647403827292773,
+      "test_acc_mean": 0.48719398260116575,
+      "test_acc_std": 0.01109639257032639,
+      "train_time_mean": 1.1574431228637696,
+      "train_time_std": 0.806333978998795
+    },
+    "jl_binary_2nc": {
+      "val_acc_mean": 0.5937754392623902,
+      "val_acc_std": 0.009515713055308152,
+      "test_acc_mean": 0.5833318424224854,
+      "test_acc_std": 0.007841218538342114,
+      "train_time_mean": 1.2057303237915038,
+      "train_time_std": 0.6874834868833882
+    },
+    "jl_binary_4nc": {
+      "val_acc_mean": 0.6479752588272095,
+      "val_acc_std": 0.010335011043013698,
+      "test_acc_mean": 0.6392222595214844,
+      "test_acc_std": 0.01079089116592489,
+      "train_time_mean": 1.020196828842163,
+      "train_time_std": 0.6720889096299234
+    },
+    "jl_ortho_nc": {
+      "val_acc_mean": 0.509814338684082,
+      "val_acc_std": 0.009657334644643089,
+      "test_acc_mean": 0.5004330444335937,
+      "test_acc_std": 0.010458638458867226,
+      "train_time_mean": 0.9097925567626953,
+      "train_time_std": 0.7094026209901455
+    },
+    "jl_ortho_2nc": {
+      "val_acc_mean": 0.5814500617980957,
+      "val_acc_std": 0.011706058211510561,
+      "test_acc_mean": 0.5736632680892945,
+      "test_acc_std": 0.011426457388828233,
+      "train_time_mean": 1.3391483592987061,
+      "train_time_std": 0.6746320908033331
+    },
+    "jl_ortho_4nc": {
+      "val_acc_mean": 0.6489124846458435,
+      "val_acc_std": 0.01122215922897064,
+      "test_acc_mean": 0.6342200541496277,
+      "test_acc_std": 0.008900603492696352,
+      "train_time_mean": 1.2677069282531739,
+      "train_time_std": 0.670837380580768
+    }
+  },
+  "improvements": {
+    "full_rownorm_mlp": {
+      "vs_sgc": 4.857269048690793,
+      "vs_sgc_mlp": -4.46310210227967
+    },
+    "jl_binary_nc": {
+      "vs_sgc": -25.366327047348026,
+      "vs_sgc_mlp": -34.68669819831849
+    },
+    "jl_binary_2nc": {
+      "vs_sgc": -15.752541065216064,
+      "vs_sgc_mlp": -25.072912216186527
+    },
+    "jl_binary_4nc": {
+      "vs_sgc": -10.163499355316164,
+      "vs_sgc_mlp": -19.483870506286628
+    },
+    "jl_ortho_nc": {
+      "vs_sgc": -24.042420864105228,
+      "vs_sgc_mlp": -33.36279201507569
+    },
+    "jl_ortho_2nc": {
+      "vs_sgc": -16.719398498535153,
+      "vs_sgc_mlp": -26.03976964950562
+    },
+    "jl_ortho_4nc": {
+      "vs_sgc": -10.663719892501833,
+      "vs_sgc_mlp": -19.984091043472297
+    }
+  },
+  "parameter_counts": {
+    "sgc_baseline": 3000,
+    "sgc_mlp_baseline": 144896,
+    "full_rownorm_mlp": 144640,
+    "jl_binary_nc": 70656,
+    "jl_ortho_nc": 70656,
+    "jl_binary_2nc": 73216,
+    "jl_ortho_2nc": 73216,
+    "jl_binary_4nc": 78336,
+    "jl_ortho_4nc": 78336
+  }
+}

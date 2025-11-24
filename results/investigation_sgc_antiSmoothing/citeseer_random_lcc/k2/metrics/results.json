@@ -1,0 +1,130 @@
+{
+  "dataset": "citeseer",
+  "split_type": "random",
+  "component_type": "lcc",
+  "num_components": 1,
+  "k_diffusion": 2,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs": 25,
+  "precompute_time": 0.1097569465637207,
+  "metadata": {
+    "d_full": 2022,
+    "ortho_error": 2.555553857419568e-08
+  },
+  "results": {
+    "sgc_baseline": {
+      "val_acc_mean": 0.7860377550125122,
+      "val_acc_std": 0.014804404648775605,
+      "test_acc_mean": 0.7761320900917054,
+      "test_acc_std": 0.021115227354569478,
+      "train_time_mean": 0.4102357578277588,
+      "train_time_std": 0.16401033807151177
+    },
+    "sgc_mlp_baseline": {
+      "val_acc_mean": 0.7216037845611573,
+      "val_acc_std": 0.02321866557785824,
+      "test_acc_mean": 0.7148113322257995,
+      "test_acc_std": 0.023631271026203163,
+      "train_time_mean": 0.6394178199768067,
+      "train_time_std": 0.3608715976889893
+    },
+    "full_rownorm_mlp": {
+      "val_acc_mean": 0.7491509485244751,
+      "val_acc_std": 0.01708406851130288,
+      "test_acc_mean": 0.7398113346099854,
+      "test_acc_std": 0.023676421405464068,
+      "train_time_mean": 1.182717580795288,
+      "train_time_std": 0.7567716149109986
+    },
+    "jl_binary_nc": {
+      "val_acc_mean": 0.3737735903263092,
+      "val_acc_std": 0.007250046488062193,
+      "test_acc_mean": 0.3439622700214386,
+      "test_acc_std": 0.015496990318991379,
+      "train_time_mean": 0.9736056804656983,
+      "train_time_std": 0.3963525722695384
+    },
+    "jl_binary_2nc": {
+      "val_acc_mean": 0.44075472474098204,
+      "val_acc_std": 0.02255604784267876,
+      "test_acc_mean": 0.4114151036739349,
+      "test_acc_std": 0.018655406742581482,
+      "train_time_mean": 1.009541826248169,
+      "train_time_std": 0.5768757019439499
+    },
+    "jl_binary_4nc": {
+      "val_acc_mean": 0.5326415157318115,
+      "val_acc_std": 0.014640585876018216,
+      "test_acc_mean": 0.5193396294116974,
+      "test_acc_std": 0.0212630698841593,
+      "train_time_mean": 1.1210441303253174,
+      "train_time_std": 0.6171300212904033
+    },
+    "jl_ortho_nc": {
+      "val_acc_mean": 0.3294339680671692,
+      "val_acc_std": 0.011354513151973942,
+      "test_acc_mean": 0.33292453646659853,
+      "test_acc_std": 0.019751483845342237,
+      "train_time_mean": 1.3829640388488769,
+      "train_time_std": 0.8504757149942445
+    },
+    "jl_ortho_2nc": {
+      "val_acc_mean": 0.4322641575336456,
+      "val_acc_std": 0.015393844703855358,
+      "test_acc_mean": 0.3884905707836151,
+      "test_acc_std": 0.019339851244846967,
+      "train_time_mean": 1.0839412212371826,
+      "train_time_std": 0.5384246665804133
+    },
+    "jl_ortho_4nc": {
+      "val_acc_mean": 0.5232075536251068,
+      "val_acc_std": 0.018970001917700687,
+      "test_acc_mean": 0.5109433996677398,
+      "test_acc_std": 0.026964306188130314,
+      "train_time_mean": 0.8282489013671875,
+      "train_time_std": 0.577079870967617
+    }
+  },
+  "improvements": {
+    "full_rownorm_mlp": {
+      "vs_sgc": -3.632075548171998,
+      "vs_sgc_mlp": 2.500000238418587
+    },
+    "jl_binary_nc": {
+      "vs_sgc": -43.21698200702668,
+      "vs_sgc_mlp": -37.08490622043609
+    },
+    "jl_binary_2nc": {
+      "vs_sgc": -36.471698641777046,
+      "vs_sgc_mlp": -30.33962285518646
+    },
+    "jl_binary_4nc": {
+      "vs_sgc": -25.679246068000793,
+      "vs_sgc_mlp": -19.54717028141021
+    },
+    "jl_ortho_nc": {
+      "vs_sgc": -44.32075536251068,
+      "vs_sgc_mlp": -38.1886795759201
+    },
+    "jl_ortho_2nc": {
+      "vs_sgc": -38.76415193080903,
+      "vs_sgc_mlp": -32.632076144218445
+    },
+    "jl_ortho_4nc": {
+      "vs_sgc": -26.518869042396553,
+      "vs_sgc_mlp": -20.38679325580597
+    }
+  },
+  "parameter_counts": {
+    "sgc_baseline": 22218,
+    "sgc_mlp_baseline": 1015040,
+    "full_rownorm_mlp": 584704,
+    "jl_binary_nc": 68608,
+    "jl_ortho_nc": 68608,
+    "jl_binary_2nc": 70144,
+    "jl_ortho_2nc": 70144,
+    "jl_binary_4nc": 73216,
+    "jl_ortho_4nc": 73216
+  }
+}

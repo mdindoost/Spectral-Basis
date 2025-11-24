@@ -1,0 +1,130 @@
+{
+  "dataset": "amazon-photo",
+  "split_type": "fixed",
+  "component_type": "lcc",
+  "num_components": 1,
+  "k_diffusion": 10,
+  "num_splits": 1,
+  "num_seeds": 5,
+  "total_runs": 5,
+  "precompute_time": 0.9699039459228516,
+  "metadata": {
+    "d_full": 744,
+    "ortho_error": 2.4672446308215967e-09
+  },
+  "results": {
+    "sgc_baseline": {
+      "val_acc_mean": 0.8795454740524292,
+      "val_acc_std": 0.0005002087297410636,
+      "test_acc_mean": 0.8734803318977356,
+      "test_acc_std": 0.00032724656519140095,
+      "train_time_mean": 0.13852305412292482,
+      "train_time_std": 0.014344350380367302
+    },
+    "sgc_mlp_baseline": {
+      "val_acc_mean": 0.9193850517272949,
+      "val_acc_std": 0.0024138338206278935,
+      "test_acc_mean": 0.9054108619689941,
+      "test_acc_std": 0.0037455770184183146,
+      "train_time_mean": 0.1624204158782959,
+      "train_time_std": 0.011376906829779954
+    },
+    "full_rownorm_mlp": {
+      "val_acc_mean": 0.9116310238838196,
+      "val_acc_std": 0.003444944422200103,
+      "test_acc_mean": 0.9050100684165955,
+      "test_acc_std": 0.004337398246582329,
+      "train_time_mean": 0.3118472099304199,
+      "train_time_std": 0.026468990450597103
+    },
+    "jl_binary_nc": {
+      "val_acc_mean": 0.6419786214828491,
+      "val_acc_std": 0.005273544332423316,
+      "test_acc_mean": 0.610955274105072,
+      "test_acc_std": 0.010891516440990817,
+      "train_time_mean": 0.2081902027130127,
+      "train_time_std": 0.011458114036341734
+    },
+    "jl_binary_2nc": {
+      "val_acc_mean": 0.7889037489891052,
+      "val_acc_std": 0.003202983226830159,
+      "test_acc_mean": 0.7624583005905151,
+      "test_acc_std": 0.004937803625503021,
+      "train_time_mean": 0.29182257652282717,
+      "train_time_std": 0.01043247392735942
+    },
+    "jl_binary_4nc": {
+      "val_acc_mean": 0.8389037609100342,
+      "val_acc_std": 0.005463325327262459,
+      "test_acc_mean": 0.8315297484397888,
+      "test_acc_std": 0.002651888464921732,
+      "train_time_mean": 0.22002429962158204,
+      "train_time_std": 0.025880775523672548
+    },
+    "jl_ortho_nc": {
+      "val_acc_mean": 0.6394385099411011,
+      "val_acc_std": 0.006178728667541581,
+      "test_acc_mean": 0.6076152563095093,
+      "test_acc_std": 0.006160132727828577,
+      "train_time_mean": 0.2944331645965576,
+      "train_time_std": 0.010265684243535652
+    },
+    "jl_ortho_2nc": {
+      "val_acc_mean": 0.7874331831932068,
+      "val_acc_std": 0.005125737038482617,
+      "test_acc_mean": 0.7664662837982178,
+      "test_acc_std": 0.0045620200377572894,
+      "train_time_mean": 0.203214693069458,
+      "train_time_std": 0.005184783066833531
+    },
+    "jl_ortho_4nc": {
+      "val_acc_mean": 0.8360962629318237,
+      "val_acc_std": 0.0046772358129662205,
+      "test_acc_mean": 0.8327321767807007,
+      "test_acc_std": 0.004382414930640437,
+      "train_time_mean": 0.20027217864990235,
+      "train_time_std": 0.006023750485632805
+    }
+  },
+  "improvements": {
+    "full_rownorm_mlp": {
+      "vs_sgc": 3.152973651885993,
+      "vs_sgc_mlp": -0.04007935523986372
+    },
+    "jl_binary_nc": {
+      "vs_sgc": -26.252505779266354,
+      "vs_sgc_mlp": -29.445558786392212
+    },
+    "jl_binary_2nc": {
+      "vs_sgc": -11.102203130722044,
+      "vs_sgc_mlp": -14.2952561378479
+    },
+    "jl_binary_4nc": {
+      "vs_sgc": -4.195058345794678,
+      "vs_sgc_mlp": -7.388111352920534
+    },
+    "jl_ortho_nc": {
+      "vs_sgc": -26.586507558822625,
+      "vs_sgc_mlp": -29.779560565948483
+    },
+    "jl_ortho_2nc": {
+      "vs_sgc": -10.701404809951775,
+      "vs_sgc_mlp": -13.894457817077633
+    },
+    "jl_ortho_4nc": {
+      "vs_sgc": -4.074815511703489,
+      "vs_sgc_mlp": -7.267868518829346
+    }
+  },
+  "parameter_counts": {
+    "sgc_baseline": 5960,
+    "sgc_mlp_baseline": 258304,
+    "full_rownorm_mlp": 258048,
+    "jl_binary_nc": 69632,
+    "jl_ortho_nc": 69632,
+    "jl_binary_2nc": 71680,
+    "jl_ortho_2nc": 71680,
+    "jl_binary_4nc": 75776,
+    "jl_ortho_4nc": 75776
+  }
+}

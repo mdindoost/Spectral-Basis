@@ -1,0 +1,130 @@
+{
+  "dataset": "citeseer",
+  "split_type": "random",
+  "component_type": "lcc",
+  "num_components": 1,
+  "k_diffusion": 8,
+  "num_splits": 5,
+  "num_seeds": 5,
+  "total_runs": 25,
+  "precompute_time": 0.3062307834625244,
+  "metadata": {
+    "d_full": 2015,
+    "ortho_error": 2.1950295026051947e-08
+  },
+  "results": {
+    "sgc_baseline": {
+      "val_acc_mean": 0.7864151048660278,
+      "val_acc_std": 0.0170214382917291,
+      "test_acc_mean": 0.7683018851280212,
+      "test_acc_std": 0.018764816107173125,
+      "train_time_mean": 0.1935792064666748,
+      "train_time_std": 0.06717513776685313
+    },
+    "sgc_mlp_baseline": {
+      "val_acc_mean": 0.7451886892318725,
+      "val_acc_std": 0.019362381641205937,
+      "test_acc_mean": 0.7328302001953125,
+      "test_acc_std": 0.023381382424030157,
+      "train_time_mean": 0.2940395927429199,
+      "train_time_std": 0.16080253469545427
+    },
+    "full_rownorm_mlp": {
+      "val_acc_mean": 0.7545283174514771,
+      "val_acc_std": 0.017188464860345296,
+      "test_acc_mean": 0.7377358603477479,
+      "test_acc_std": 0.02103159486766658,
+      "train_time_mean": 0.39684443473815917,
+      "train_time_std": 0.1107774282552243
+    },
+    "jl_binary_nc": {
+      "val_acc_mean": 0.3439622688293457,
+      "val_acc_std": 0.011758063253683119,
+      "test_acc_mean": 0.3243396270275116,
+      "test_acc_std": 0.01514026066905076,
+      "train_time_mean": 0.3395661640167236,
+      "train_time_std": 0.1262441132978932
+    },
+    "jl_binary_2nc": {
+      "val_acc_mean": 0.43641510128974914,
+      "val_acc_std": 0.01970411470984059,
+      "test_acc_mean": 0.4041509485244751,
+      "test_acc_std": 0.019205469637849745,
+      "train_time_mean": 0.42990455627441404,
+      "train_time_std": 0.1638420706724678
+    },
+    "jl_binary_4nc": {
+      "val_acc_mean": 0.5101886880397797,
+      "val_acc_std": 0.016322662537353084,
+      "test_acc_mean": 0.5011320805549622,
+      "test_acc_std": 0.019484273242488016,
+      "train_time_mean": 0.3198099136352539,
+      "train_time_std": 0.07108064940424184
+    },
+    "jl_ortho_nc": {
+      "val_acc_mean": 0.35132076144218444,
+      "val_acc_std": 0.02274426564195729,
+      "test_acc_mean": 0.31811321020126343,
+      "test_acc_std": 0.027140640500416258,
+      "train_time_mean": 0.4015655994415283,
+      "train_time_std": 0.1879393083024328
+    },
+    "jl_ortho_2nc": {
+      "val_acc_mean": 0.4162264227867126,
+      "val_acc_std": 0.01662520563312341,
+      "test_acc_mean": 0.3779245328903198,
+      "test_acc_std": 0.021432750949588082,
+      "train_time_mean": 0.3952786922454834,
+      "train_time_std": 0.21617436476038224
+    },
+    "jl_ortho_4nc": {
+      "val_acc_mean": 0.5055660450458527,
+      "val_acc_std": 0.01117994231268083,
+      "test_acc_mean": 0.48000000715255736,
+      "test_acc_std": 0.020583775917571517,
+      "train_time_mean": 0.37021766662597655,
+      "train_time_std": 0.2134534507356304
+    }
+  },
+  "improvements": {
+    "full_rownorm_mlp": {
+      "vs_sgc": -3.056602478027337,
+      "vs_sgc_mlp": 0.49056601524353205
+    },
+    "jl_binary_nc": {
+      "vs_sgc": -44.39622581005096,
+      "vs_sgc_mlp": -40.84905731678009
+    },
+    "jl_binary_2nc": {
+      "vs_sgc": -36.415093660354614,
+      "vs_sgc_mlp": -32.86792516708375
+    },
+    "jl_binary_4nc": {
+      "vs_sgc": -26.716980457305905,
+      "vs_sgc_mlp": -23.169811964035038
+    },
+    "jl_ortho_nc": {
+      "vs_sgc": -45.01886749267578,
+      "vs_sgc_mlp": -41.47169899940491
+    },
+    "jl_ortho_2nc": {
+      "vs_sgc": -39.03773522377014,
+      "vs_sgc_mlp": -35.490566730499275
+    },
+    "jl_ortho_4nc": {
+      "vs_sgc": -28.830187797546387,
+      "vs_sgc_mlp": -25.283019304275516
+    }
+  },
+  "parameter_counts": {
+    "sgc_baseline": 22218,
+    "sgc_mlp_baseline": 1015040,
+    "full_rownorm_mlp": 582912,
+    "jl_binary_nc": 68608,
+    "jl_ortho_nc": 68608,
+    "jl_binary_2nc": 70144,
+    "jl_ortho_2nc": 70144,
+    "jl_binary_4nc": 73216,
+    "jl_ortho_4nc": 73216
+  }
+}

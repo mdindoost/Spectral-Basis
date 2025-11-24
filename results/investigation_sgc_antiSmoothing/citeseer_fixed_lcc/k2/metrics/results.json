@@ -1,0 +1,130 @@
+{
+  "dataset": "citeseer",
+  "split_type": "fixed",
+  "component_type": "lcc",
+  "num_components": 1,
+  "k_diffusion": 2,
+  "num_splits": 1,
+  "num_seeds": 5,
+  "total_runs": 5,
+  "precompute_time": 0.17146730422973633,
+  "metadata": {
+    "d_full": 2022,
+    "ortho_error": 2.555553857419568e-08
+  },
+  "results": {
+    "sgc_baseline": {
+      "val_acc_mean": 0.7329267859458923,
+      "val_acc_std": 0.0031091552748712414,
+      "test_acc_mean": 0.7004525065422058,
+      "test_acc_std": 0.0038866057190868773,
+      "train_time_mean": 0.20815320014953614,
+      "train_time_std": 0.06913714737374631
+    },
+    "sgc_mlp_baseline": {
+      "val_acc_mean": 0.5554877758026123,
+      "val_acc_std": 0.0203516137420965,
+      "test_acc_mean": 0.5076923251152039,
+      "test_acc_std": 0.017656734989041172,
+      "train_time_mean": 0.27323241233825685,
+      "train_time_std": 0.006684203269597775
+    },
+    "full_rownorm_mlp": {
+      "val_acc_mean": 0.7304877638816833,
+      "val_acc_std": 0.0024390220642089844,
+      "test_acc_mean": 0.7016591429710388,
+      "test_acc_std": 0.007655249945189359,
+      "train_time_mean": 0.32459282875061035,
+      "train_time_std": 0.10240630710336603
+    },
+    "jl_binary_nc": {
+      "val_acc_mean": 0.308536571264267,
+      "val_acc_std": 0.008043240321912736,
+      "test_acc_mean": 0.2950226366519928,
+      "test_acc_std": 0.006983913250568072,
+      "train_time_mean": 0.3541104793548584,
+      "train_time_std": 0.0017190381586397179
+    },
+    "jl_binary_2nc": {
+      "val_acc_mean": 0.31158535480499266,
+      "val_acc_std": 0.00849292527569709,
+      "test_acc_mean": 0.3001508414745331,
+      "test_acc_std": 0.007571583499233049,
+      "train_time_mean": 0.24719409942626952,
+      "train_time_std": 0.016198508015175906
+    },
+    "jl_binary_4nc": {
+      "val_acc_mean": 0.357317054271698,
+      "val_acc_std": 0.009717915405631996,
+      "test_acc_mean": 0.35384616255760193,
+      "test_acc_std": 0.004223227500915527,
+      "train_time_mean": 0.3564655303955078,
+      "train_time_std": 0.002750994567570485
+    },
+    "jl_ortho_nc": {
+      "val_acc_mean": 0.23048779666423796,
+      "val_acc_std": 0.015497883704695412,
+      "test_acc_mean": 0.19306184351444244,
+      "test_acc_std": 0.015052759223297976,
+      "train_time_mean": 0.35469613075256345,
+      "train_time_std": 0.0021876205857785116
+    },
+    "jl_ortho_2nc": {
+      "val_acc_mean": 0.282317054271698,
+      "val_acc_std": 0.012436633957862714,
+      "test_acc_mean": 0.25248869359493253,
+      "test_acc_std": 0.004826552420855431,
+      "train_time_mean": 0.2948641300201416,
+      "train_time_std": 0.019217989271214767
+    },
+    "jl_ortho_4nc": {
+      "val_acc_mean": 0.3170731604099274,
+      "val_acc_std": 0.009247408119527237,
+      "test_acc_mean": 0.35565611720085144,
+      "test_acc_std": 0.011620729493931635,
+      "train_time_mean": 0.3474095821380615,
+      "train_time_std": 0.005131524498619077
+    }
+  },
+  "improvements": {
+    "full_rownorm_mlp": {
+      "vs_sgc": 0.12066364288330078,
+      "vs_sgc_mlp": 19.396681785583493
+    },
+    "jl_binary_nc": {
+      "vs_sgc": -40.5429869890213,
+      "vs_sgc_mlp": -21.26696884632111
+    },
+    "jl_binary_2nc": {
+      "vs_sgc": -40.03016650676727,
+      "vs_sgc_mlp": -20.75414836406708
+    },
+    "jl_binary_4nc": {
+      "vs_sgc": -34.66063439846039,
+      "vs_sgc_mlp": -15.384616255760196
+    },
+    "jl_ortho_nc": {
+      "vs_sgc": -50.73906630277634,
+      "vs_sgc_mlp": -31.463048160076145
+    },
+    "jl_ortho_2nc": {
+      "vs_sgc": -44.796381294727325,
+      "vs_sgc_mlp": -25.520363152027137
+    },
+    "jl_ortho_4nc": {
+      "vs_sgc": -34.47963893413544,
+      "vs_sgc_mlp": -15.203620791435245
+    }
+  },
+  "parameter_counts": {
+    "sgc_baseline": 22218,
+    "sgc_mlp_baseline": 1015040,
+    "full_rownorm_mlp": 584704,
+    "jl_binary_nc": 68608,
+    "jl_ortho_nc": 68608,
+    "jl_binary_2nc": 70144,
+    "jl_ortho_2nc": 70144,
+    "jl_binary_4nc": 73216,
+    "jl_ortho_4nc": 73216
+  }
+}
