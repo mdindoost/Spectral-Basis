@@ -1,0 +1,10 @@
+Dataset,Best JL Config,k,Accuracy,Parameters,vs SGC,vs Full,Beats SGC,Beats Full
+amazon-computers,Binary 4nc,10,84.61%,"78,336",-4.38pp,-4.28pp,✗,✗
+amazon-photo,Binary 4nc,10,83.38%,"75,776",-10.44pp,-7.37pp,✗,✗
+citeseer,Ortho 4nc,4,52.58%,"73,216",-25.03pp,-21.48pp,✗,✗
+coauthor-cs,Binary 4nc,10,36.54%,"84,736",-57.69pp,-46.86pp,✗,✗
+coauthor-physics,Binary 4nc,10,52.33%,"71,936",-44.00pp,-41.60pp,✗,✗
+cora,Binary 4nc,6,44.43%,"74,496",-44.14pp,-36.88pp,✗,✗
+ogbn-arxiv,Ortho 2nc,10,69.96%,"96,256",+11.30pp,-2.37pp,✓,✗
+pubmed,Ortho 4nc,10,57.82%,"69,376",-24.13pp,-29.54pp,✗,✗
+wikics,Ortho 4nc,10,72.54%,"78,336",-5.18pp,-7.86pp,✗,✗

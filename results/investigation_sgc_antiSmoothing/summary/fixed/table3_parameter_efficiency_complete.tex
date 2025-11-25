@@ -1,0 +1,76 @@
+\begin{tabular}{lllll}
+\toprule
+Dataset & Method & Accuracy (%) & Parameters & Acc/10K Params \\
+\midrule
+amazon-computers & SGC+MLP & 83.83 & 264,448 & 3.1702 \\
+amazon-computers & Full+RowNorm & 90.13 & 264,192 & 3.4114 \\
+amazon-computers & JL Binary (nc) & 70.21 & 70,656 & 9.9375 \\
+amazon-computers & JL Binary (2nc) & 79.94 & 73,216 & 10.9185 \\
+amazon-computers & JL Binary (4nc) & 85.11 & 78,336 & 10.8653 \\
+amazon-computers & JL Ortho (nc) & 70.77 & 70,656 & 10.0161 \\
+amazon-computers & JL Ortho (2nc) & 79.63 & 73,216 & 10.8760 \\
+amazon-computers & JL Ortho (4nc) & 85.36 & 78,336 & 10.8965 \\
+amazon-photo & SGC+MLP & 90.54 & 258,304 & 3.5052 \\
+amazon-photo & Full+RowNorm & 90.50 & 258,048 & 3.5071 \\
+amazon-photo & JL Binary (nc) & 61.10 & 69,632 & 8.7741 \\
+amazon-photo & JL Binary (2nc) & 76.25 & 71,680 & 10.6370 \\
+amazon-photo & JL Binary (4nc) & 83.15 & 75,776 & 10.9735 \\
+amazon-photo & JL Ortho (nc) & 60.76 & 69,632 & 8.7261 \\
+amazon-photo & JL Ortho (2nc) & 76.65 & 71,680 & 10.6929 \\
+amazon-photo & JL Ortho (4nc) & 83.27 & 75,776 & 10.9894 \\
+citeseer & SGC+MLP & 60.18 & 1,015,040 & 0.5929 \\
+citeseer & Full+RowNorm & 69.86 & 567,552 & 1.2310 \\
+citeseer & JL Binary (nc) & 22.56 & 68,608 & 3.2888 \\
+citeseer & JL Binary (2nc) & 23.23 & 70,144 & 3.3114 \\
+citeseer & JL Binary (4nc) & 33.21 & 73,216 & 4.5363 \\
+citeseer & JL Ortho (nc) & 19.43 & 68,608 & 2.8316 \\
+citeseer & JL Ortho (2nc) & 27.75 & 70,144 & 3.9565 \\
+citeseer & JL Ortho (4nc) & 33.33 & 73,216 & 4.5527 \\
+coauthor-cs & SGC+MLP & 91.76 & 1,811,456 & 0.5066 \\
+coauthor-cs & Full+RowNorm & 81.29 & 1,810,688 & 0.4489 \\
+coauthor-cs & JL Binary (nc) & 23.99 & 73,216 & 3.2768 \\
+coauthor-cs & JL Binary (2nc) & 28.52 & 77,056 & 3.7008 \\
+coauthor-cs & JL Binary (4nc) & 36.81 & 84,736 & 4.3441 \\
+coauthor-cs & JL Ortho (nc) & 24.13 & 73,216 & 3.2954 \\
+coauthor-cs & JL Ortho (2nc) & 28.93 & 77,056 & 3.7546 \\
+coauthor-cs & JL Ortho (4nc) & 36.82 & 84,736 & 4.3454 \\
+coauthor-physics & SGC+MLP & 95.17 & 2,221,056 & 0.4285 \\
+coauthor-physics & Full+RowNorm & 91.77 & 2,038,016 & 0.4503 \\
+coauthor-physics & JL Binary (nc) & 49.95 & 68,096 & 7.3349 \\
+coauthor-physics & JL Binary (2nc) & 49.94 & 69,376 & 7.1983 \\
+coauthor-physics & JL Binary (4nc) & 52.18 & 71,936 & 7.2536 \\
+coauthor-physics & JL Ortho (nc) & 49.96 & 68,096 & 7.3362 \\
+coauthor-physics & JL Ortho (2nc) & 49.97 & 69,376 & 7.2029 \\
+coauthor-physics & JL Ortho (4nc) & 51.41 & 71,936 & 7.1464 \\
+cora & SGC+MLP & 75.08 & 434,176 & 1.7293 \\
+cora & Full+RowNorm & 59.19 & 432,384 & 1.3690 \\
+cora & JL Binary (nc) & 19.06 & 69,120 & 2.7575 \\
+cora & JL Binary (2nc) & 22.40 & 70,912 & 3.1595 \\
+cora & JL Binary (4nc) & 23.96 & 74,496 & 3.2158 \\
+cora & JL Ortho (nc) & 17.92 & 69,120 & 2.5931 \\
+cora & JL Ortho (2nc) & 24.31 & 70,912 & 3.4276 \\
+cora & JL Ortho (4nc) & 22.75 & 74,496 & 3.0544 \\
+ogbn-arxiv & SGC+MLP & 70.84 & 108,544 & 6.5265 \\
+ogbn-arxiv & Full+RowNorm & 70.17 & 108,288 & 6.4799 \\
+ogbn-arxiv & JL Binary (nc) & 62.48 & 86,016 & 7.2636 \\
+ogbn-arxiv & JL Binary (2nc) & 67.91 & 96,256 & 7.0550 \\
+ogbn-arxiv & JL Ortho (nc) & 62.32 & 86,016 & 7.2449 \\
+ogbn-arxiv & JL Ortho (2nc) & 67.79 & 96,256 & 7.0429 \\
+pubmed & SGC+MLP & 76.14 & 194,304 & 3.9186 \\
+pubmed & Full+RowNorm & 49.14 & 194,048 & 2.5324 \\
+pubmed & JL Binary (nc) & 42.78 & 67,072 & 6.3782 \\
+pubmed & JL Binary (2nc) & 37.32 & 67,840 & 5.5012 \\
+pubmed & JL Binary (4nc) & 36.98 & 69,376 & 5.3304 \\
+pubmed & JL Ortho (nc) & 34.66 & 67,072 & 5.1676 \\
+pubmed & JL Ortho (2nc) & 35.44 & 67,840 & 5.2241 \\
+pubmed & JL Ortho (4nc) & 38.16 & 69,376 & 5.5005 \\
+wikics & SGC+MLP & 76.08 & 144,896 & 5.2509 \\
+wikics & Full+RowNorm & 65.02 & 144,640 & 4.4954 \\
+wikics & JL Binary (nc) & 46.40 & 70,656 & 6.5675 \\
+wikics & JL Binary (2nc) & 52.79 & 73,216 & 7.2105 \\
+wikics & JL Binary (4nc) & 59.01 & 78,336 & 7.5327 \\
+wikics & JL Ortho (nc) & 46.06 & 70,656 & 6.5189 \\
+wikics & JL Ortho (2nc) & 51.43 & 73,216 & 7.0238 \\
+wikics & JL Ortho (4nc) & 57.75 & 78,336 & 7.3718 \\
+\bottomrule
+\end{tabular}
