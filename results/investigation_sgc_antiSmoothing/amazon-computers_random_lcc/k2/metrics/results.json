@@ -7,8 +7,10 @@
   "num_splits": 5,
   "num_seeds": 5,
   "total_runs": 25,
-  "precompute_time": 0.471498966217041,
+  "precompute_time": 0.35709047317504883,
   "metadata": {
+    "d_restricted_std": 766,
+    "ortho_error_std": 7.329328255423206e-10,
     "d_full": 766,
     "ortho_error": 7.329328255423206e-10
   },
@@ -18,75 +20,87 @@
       "val_acc_std": 0.0045424739547897785,
       "test_acc_mean": 0.8899066329002381,
       "test_acc_std": 0.0043914538464077885,
-      "train_time_mean": 0.3495212745666504,
-      "train_time_std": 0.2030871431132865
+      "train_time_mean": 0.16813735008239747,
+      "train_time_std": 0.04570137575027987
     },
     "sgc_mlp_baseline": {
       "val_acc_mean": 0.9275186920166015,
       "val_acc_std": 0.0050540817897888396,
       "test_acc_mean": 0.9220321536064148,
       "test_acc_std": 0.00589362615300724,
-      "train_time_mean": 0.6676556015014649,
-      "train_time_std": 0.22978752548189618
+      "train_time_mean": 0.37256498336791993,
+      "train_time_std": 0.10381300028169187
+    },
+    "restricted_standard_mlp": {
+      "val_acc_mean": 0.8755007481575012,
+      "val_acc_std": 0.0053024030217450335,
+      "test_acc_mean": 0.8753978610038757,
+      "test_acc_std": 0.004234285554342175,
+      "train_time_mean": 0.4238835620880127,
+      "train_time_std": 0.06184353167097449
     },
     "full_rownorm_mlp": {
       "val_acc_mean": 0.8817787694931031,
       "val_acc_std": 0.004610680864501589,
       "test_acc_mean": 0.8805229997634888,
       "test_acc_std": 0.004035311403804372,
-      "train_time_mean": 1.163356065750122,
-      "train_time_std": 0.5736778519755901
+      "train_time_mean": 0.5177526569366455,
+      "train_time_std": 0.10226874556985094
     },
     "jl_binary_nc": {
       "val_acc_mean": 0.4263677132129669,
       "val_acc_std": 0.008157438870812066,
       "test_acc_mean": 0.42478895545005796,
       "test_acc_std": 0.005399538592882919,
-      "train_time_mean": 1.1268931007385254,
-      "train_time_std": 0.37981746449154813
+      "train_time_mean": 0.3883420658111572,
+      "train_time_std": 0.10765888467588593
     },
     "jl_binary_2nc": {
       "val_acc_mean": 0.5311659240722656,
       "val_acc_std": 0.007047639622526812,
       "test_acc_mean": 0.5256481266021729,
       "test_acc_std": 0.007794049658268532,
-      "train_time_mean": 1.3420534229278565,
-      "train_time_std": 0.8149244970024602
+      "train_time_mean": 0.36632399559020995,
+      "train_time_std": 0.10001135614931919
     },
     "jl_binary_4nc": {
       "val_acc_mean": 0.6178923773765564,
       "val_acc_std": 0.006447566306934317,
       "test_acc_mean": 0.6107583260536193,
       "test_acc_std": 0.009125084791749826,
-      "train_time_mean": 1.349788932800293,
-      "train_time_std": 0.9053320106936341
+      "train_time_mean": 0.37773717880249025,
+      "train_time_std": 0.07911761937907638
     },
     "jl_ortho_nc": {
       "val_acc_mean": 0.4217189824581146,
       "val_acc_std": 0.00792799560444945,
       "test_acc_mean": 0.4226372921466827,
       "test_acc_std": 0.007768454033727146,
-      "train_time_mean": 1.3552234077453613,
-      "train_time_std": 0.9244716454988637
+      "train_time_mean": 0.3435748767852783,
+      "train_time_std": 0.06671961346149649
     },
     "jl_ortho_2nc": {
       "val_acc_mean": 0.5250074744224549,
       "val_acc_std": 0.006415253200770726,
       "test_acc_mean": 0.5167127537727356,
       "test_acc_std": 0.00929254285401792,
-      "train_time_mean": 1.2638937282562255,
-      "train_time_std": 1.025781021073498
+      "train_time_mean": 0.3357555294036865,
+      "train_time_std": 0.08532274432632256
     },
     "jl_ortho_4nc": {
       "val_acc_mean": 0.6133632278442382,
       "val_acc_std": 0.007364582311899696,
       "test_acc_mean": 0.6114307260513305,
       "test_acc_std": 0.011576515571409644,
-      "train_time_mean": 1.1152639770507813,
-      "train_time_std": 0.7011646412615465
+      "train_time_mean": 0.3326002597808838,
+      "train_time_std": 0.10167057575297145
     }
   },
   "improvements": {
+    "restricted_standard_mlp": {
+      "vs_sgc": -1.450877189636235,
+      "vs_sgc_mlp": -4.6634292602539045
+    },
     "full_rownorm_mlp": {
       "vs_sgc": -0.9383633136749281,
       "vs_sgc_mlp": -4.150915384292597
@@ -119,6 +133,7 @@
   "parameter_counts": {
     "sgc_baseline": 7670,
     "sgc_mlp_baseline": 264448,
+    "restricted_standard_mlp": 264192,
     "full_rownorm_mlp": 264192,
     "jl_binary_nc": 70656,
     "jl_ortho_nc": 70656,

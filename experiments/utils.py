@@ -8,20 +8,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import scipy.sparse as sp
-import scipy.linalg as la
 
 # Dataset loaders
 from ogb.nodeproppred import NodePropPredDataset
 from torch_geometric.datasets import Planetoid, WikiCS, Amazon, Coauthor
 from torch_geometric.utils import to_undirected
-
-# Fix for PyTorch 2.6 + OGB compatibility
-_original_torch_load = torch.load
-def _patched_torch_load(*args, **kwargs):
-    if 'weights_only' not in kwargs:
-        kwargs['weights_only'] = False
-    return _original_torch_load(*args, **kwargs)
-torch.load = _patched_torch_load
 
 # ============================================================================
 # Model Architectures
@@ -29,21 +20,11 @@ torch.load = _patched_torch_load
 
 class StandardMLP(nn.Module):
     """Standard MLP with bias and no normalization"""
-    # Fix for PyTorch 2.6 + OGB compatibility
-    import torch
-    _original_torch_load = torch.load
-    def _patched_torch_load(*args, **kwargs):
-        if 'weights_only' not in kwargs:
-            kwargs['weights_only'] = False
-        return _original_torch_load(*args, **kwargs)
-    torch.load = _patched_torch_load
-
-
     def __init__(self, input_dim, hidden_dim, output_dim):
-            super().__init__()
-            self.fc1 = nn.Linear(input_dim, hidden_dim)
-            self.fc2 = nn.Linear(hidden_dim, hidden_dim)
-            self.fc3 = nn.Linear(hidden_dim, output_dim)
+        super().__init__()
+        self.fc1 = nn.Linear(input_dim, hidden_dim)
+        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
+        self.fc3 = nn.Linear(hidden_dim, output_dim)
     
     def forward(self, x):
         x = F.relu(self.fc1(x))
@@ -229,91 +210,7 @@ def load_dataset(dataset_name, root='./dataset'):
         train_idx = indices[:train_size]
         val_idx = indices[train_size:train_size + val_size]
         test_idx = indices[train_size + val_size:]
-    # ========================================================================
-    # OGBN-PRODUCTS
-    # ========================================================================
-    elif dataset_name == 'ogbn-products':
-        print('Loading ogbn-products from OGB...')
-        from ogb.nodeproppred import NodePropPredDataset
-        
-        dataset = NodePropPredDataset(name='ogbn-products', root=root)
-        split_idx = dataset.get_idx_split()
-        
-        train_idx = split_idx['train']
-        val_idx = split_idx['valid']  
-        test_idx = split_idx['test']
-        
-        graph, labels = dataset[0]
-        
-        edge_index = graph['edge_index']
-        node_feat = graph['node_feat']
-        
-        # Convert to dense numpy arrays
-        features = node_feat if isinstance(node_feat, np.ndarray) else node_feat.numpy()
-        labels = labels.squeeze() if isinstance(labels, np.ndarray) else labels.squeeze().numpy()
-        
-        num_nodes = graph['num_nodes']
-        num_classes = dataset.num_classes
-        
-        print(f'  ogbn-products: {num_nodes:,} nodes, {num_classes} classes')
-        print(f'  Features: {features.shape}')
-        print(f'  Train: {len(train_idx):,}, Val: {len(val_idx):,}, Test: {len(test_idx):,}')
-        
-        return (edge_index, features, labels, num_nodes, num_classes,
-                train_idx, val_idx, test_idx)
     
-    # ========================================================================
-    # ADD THIS SECTION FOR OGBN-PROTEINS
-    # ========================================================================
-    elif dataset_name == 'ogbn-proteins':
-        print('Loading ogbn-proteins from OGB...')
-        from ogb.nodeproppred import NodePropPredDataset
-        
-        dataset = NodePropPredDataset(name='ogbn-proteins', root=root)
-        split_idx = dataset.get_idx_split()
-        
-        train_idx = split_idx['train']
-        val_idx = split_idx['valid']
-        test_idx = split_idx['test']
-        
-        graph, labels = dataset[0]
-        
-        edge_index = graph['edge_index']
-        num_nodes = graph['num_nodes']
-        
-        # ogbn-proteins uses edge features - aggregate to node features
-        edge_feat = graph['edge_feat'] if isinstance(graph['edge_feat'], np.ndarray) else graph['edge_feat'].numpy()
-        
-        print(f'  Aggregating edge features to node features...')
-        print(f'  Edge features shape: {edge_feat.shape}')
-        
-        # Aggregate edge features to nodes (mean of incident edges)
-        node_feat = np.zeros((num_nodes, edge_feat.shape[1]), dtype=np.float32)
-        node_count = np.zeros(num_nodes, dtype=np.float32)
-        
-        for i in range(edge_index.shape[1]):
-            src, dst = edge_index[0, i], edge_index[1, i]
-            node_feat[dst] += edge_feat[i]
-            node_count[dst] += 1
-        
-        # Average (avoid division by zero)
-        node_count[node_count == 0] = 1
-        node_feat = node_feat / node_count[:, np.newaxis]
-        
-        features = node_feat
-        
-        # Multi-label classification (112 tasks)
-        labels = labels if isinstance(labels, np.ndarray) else labels.numpy()  # Shape: (num_nodes, 112)
-        num_classes = labels.shape[1]  # Number of tasks
-        
-        print(f'  ogbn-proteins: {num_nodes:,} nodes, {num_classes} tasks (multi-label)')
-        print(f'  Node features: {features.shape}')
-        print(f'  Labels: {labels.shape}')
-        print(f'  Train: {len(train_idx):,}, Val: {len(val_idx):,}, Test: {len(test_idx):,}')
-        print(f'  ⚠ Note: This is multi-label classification (use AUROC metric)')
-        
-        return (edge_index, features, labels, num_nodes, num_classes,
-                train_idx, val_idx, test_idx)
     else:
         raise ValueError(f"Unknown dataset: {dataset_name}")
     
