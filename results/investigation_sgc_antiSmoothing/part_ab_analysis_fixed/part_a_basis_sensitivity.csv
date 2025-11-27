@@ -1,5 +1,10 @@
 Dataset,k,SGC+MLP,Restricted+StandardMLP,Difference (pp),Abs Difference,Sensitivity
 amazon-computers,10,83.83%,89.25%,+5.42,5.418207645416251,Yes
 amazon-photo,10,90.54%,88.16%,-2.38,2.3780906200408958,Yes
+citeseer,10,60.18%,31.31%,-28.87,28.86877954006195,Yes
+coauthor-cs,10,91.76%,79.23%,-12.53,12.529987096786499,Yes
+coauthor-physics,10,95.17%,88.25%,-6.92,6.921740770339968,Yes
+cora,10,75.08%,35.65%,-39.43,39.4316953420639,Yes
 ogbn-arxiv,10,70.84%,70.98%,+0.13,0.13414859771728738,Marginal
+pubmed,10,76.14%,46.98%,-29.16,29.16000068187714,Yes
 wikics,10,76.08%,67.03%,-9.06,9.056135416030886,Yes
