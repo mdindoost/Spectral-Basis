@@ -19,7 +19,7 @@ DATASETS=(
 
 SPLIT_TYPES=("fixed" "random")
 K_VALUES="2 4 6 8 10"
-MAX_PARALLEL_JOBS=3  # Run 3 experiments in parallel (adjust based on your GPU memory)
+MAX_PARALLEL_JOBS=3  # Run 3 experiments in parallel 
 
 # Directories
 SCRIPT_PATH="experiments/investigation_sgc_antiSmoothing_partAB.py"
