@@ -1,0 +1,5 @@
+Dataset,k,SGC+MLP,Restricted+StandardMLP,Difference (pp),Abs Difference,Sensitivity
+amazon-computers,10,83.83%,89.25%,+5.42,5.418207645416251,Yes
+amazon-photo,10,90.54%,88.16%,-2.38,2.3780906200408958,Yes
+ogbn-arxiv,10,70.84%,70.98%,+0.13,0.13414859771728738,Marginal
+wikics,10,76.08%,67.03%,-9.06,9.056135416030886,Yes

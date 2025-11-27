@@ -1,0 +1,5 @@
+Dataset,k,SGC+MLP,Restricted+StandardMLP,Restricted+RowNorm,Part A Gap (pp),Part B Improvement (pp),Final Gap (pp),Pct Fixed,Status
+amazon-computers,10,83.83%,89.25%,90.13%,+5.42,+0.87,+6.29,100.0%,Fully Fixed
+amazon-photo,10,90.54%,88.16%,90.50%,-2.38,+2.34,-0.04,98.3%,Partially Fixed
+ogbn-arxiv,10,70.84%,70.98%,70.17%,+0.13,-0.81,-0.67,100.0%,Partially Fixed
+wikics,10,76.08%,67.03%,65.02%,-9.06,-2.00,-11.06,0.0%,Not Fixed

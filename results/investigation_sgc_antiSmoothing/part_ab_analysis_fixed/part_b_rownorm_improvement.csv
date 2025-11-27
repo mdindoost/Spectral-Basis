@@ -1,0 +1,5 @@
+Dataset,k,Restricted+StandardMLP,Restricted+RowNorm,Improvement (pp),RowNorm Helps?
+amazon-computers,10,89.25%,90.13%,+0.87,Yes
+amazon-photo,10,88.16%,90.50%,+2.34,Yes
+ogbn-arxiv,10,70.98%,70.17%,-0.81,No
+wikics,10,67.03%,65.02%,-2.00,No
