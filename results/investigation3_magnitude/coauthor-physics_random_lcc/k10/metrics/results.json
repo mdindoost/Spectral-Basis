@@ -1,0 +1,103 @@
+{
+  "dataset": "coauthor-physics",
+  "k_diffusion": 10,
+  "split_type": "random",
+  "num_nodes": 34493,
+  "num_classes": 5,
+  "num_seeds": 5,
+  "diagnostics": {
+    "diffused_features": {
+      "overall_mean": 1.8979201706885644,
+      "overall_std": 0.6078996957836081,
+      "overall_min": 0.7574316582154401,
+      "overall_max": 8.145628637280558,
+      "per_class": {
+        "0": {
+          "count": 5750,
+          "mean": 2.2481930247612167,
+          "std": 0.5902770987983057
+        },
+        "1": {
+          "count": 5045,
+          "mean": 1.8257909752652666,
+          "std": 0.509490632167009
+        },
+        "2": {
+          "count": 17426,
+          "mean": 1.8554511661626603,
+          "std": 0.6371305171000173
+        },
+        "3": {
+          "count": 2753,
+          "mean": 1.776528763939919,
+          "std": 0.47417578178201325
+        },
+        "4": {
+          "count": 3519,
+          "mean": 1.7342595556388956,
+          "std": 0.4893810639073163
+        }
+      },
+      "between_class_variance": 0.03414607102823727,
+      "within_class_variance": 0.5400910187509322,
+      "fisher_score": 0.06322280845774263
+    }
+  },
+  "experiments": {
+    "sgc_baseline": {
+      "test_acc_mean": 0.9446956133842468,
+      "test_acc_std": 0.0020849413220775997,
+      "val_acc_mean": 0.943885178565979,
+      "val_acc_std": 0.0015784596023714736
+    },
+    "sgc_mlp_baseline": {
+      "test_acc_mean": 0.9548173475265503,
+      "test_acc_std": 0.00204518309938464,
+      "val_acc_mean": 0.9540910339355468,
+      "val_acc_std": 0.0019191797307179996
+    },
+    "restricted_standard_mlp": {
+      "test_acc_mean": 0.8796695232391357,
+      "test_acc_std": 0.007426453470546137,
+      "val_acc_mean": 0.8844650554656982,
+      "val_acc_std": 0.0070468322648677435
+    },
+    "restricted_rownorm_mlp": {
+      "test_acc_mean": 0.916179666519165,
+      "test_acc_std": 0.006309768848017977,
+      "val_acc_mean": 0.9181443810462951,
+      "val_acc_std": 0.005738283256979114
+    },
+    "magnitude_only": {
+      "test_acc_mean": 0.5177680945396423,
+      "test_acc_std": 0.006256980125927534,
+      "val_acc_mean": 0.523038558959961,
+      "val_acc_std": 0.006807450353327242
+    },
+    "log_magnitude": {
+      "test_acc_mean": 0.9350492334365845,
+      "test_acc_std": 0.0023493203146538453,
+      "val_acc_mean": 0.9381965732574463,
+      "val_acc_std": 0.001990980751561415
+    },
+    "dual_stream": {
+      "test_acc_mean": 0.9307187938690186,
+      "test_acc_std": 0.0027911939988966407,
+      "val_acc_mean": 0.9331574320793152,
+      "val_acc_std": 0.0020078869295664967
+    }
+  },
+  "metadata": {
+    "d_restricted": 7701,
+    "ortho_error": 5.979500894426337e-09
+  },
+  "framework_analysis": {
+    "part_a": -7.514782428741455,
+    "part_b_rownorm": 3.6510143280029297,
+    "part_b_log_magnitude": 5.537971019744873,
+    "part_b_dual_stream": 5.104927062988281,
+    "gap_rownorm": -3.8637681007385254,
+    "gap_log_magnitude": -1.976811408996582,
+    "gap_dual_stream": -2.409855365753174
+  }
+}
