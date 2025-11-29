@@ -1,47 +1,46 @@
 """
-Investigation 3: Magnitude-Preserving Normalization (Enhanced with Diagnostics)
-================================================================================
+===================================================================================
+INVESTIGATION 3: MAGNITUDE PRESERVATION IN SPECTRAL REPRESENTATIONS
+===================================================================================
 
-Tests α-normalization with explicit magnitude channel to address the fundamental
-problem: RowNorm discards magnitude information.
+Research Question: Can we improve Part B by explicitly preserving magnitude 
+information that RowNorm discards?
 
-ENHANCEMENTS:
-- Magnitude channel standardization (fixes ogbn-arxiv failure)
-- Diagnostic analysis (magnitude distributions, learning curves)
-- Optional LCC extraction (like SGC v2)
-- Enhanced logging and visualization
+Hypothesis: x = m · x̂ where m = ||x||₂ (magnitude) and x̂ = x/||x|| (direction)
+RowNorm discards m completely. Can we design classifiers that exploit both?
 
-Usage:
-    # Standard (whole graph, like Investigation 2)
-    python experiments/investigation3_magnitude_preservation.py [dataset]
-    
-    # With LCC extraction (like SGC v2)
-    python experiments/investigation3_magnitude_preservation.py [dataset] --use-lcc
-    
-    # With random splits
-    python experiments/investigation3_magnitude_preservation.py [dataset] --random-splits
-    
-    # Both options
-    python experiments/investigation3_magnitude_preservation.py [dataset] --use-lcc --random-splits
+Framework Extension:
+    Part A: Basis Sensitivity (SGC+MLP vs Restricted+StandardMLP)
+    Part B: RowNorm Improvement (Restricted+StandardMLP vs Restricted+RowNorm)
+    Part B.5: Magnitude-Aware (NEW - Does magnitude preservation help?)
 
-Examples:
-    python experiments/investigation3_magnitude_preservation.py ogbn-arxiv
-    python experiments/investigation3_magnitude_preservation.py cora --use-lcc
+Methods Compared:
+    1. SGC Baseline (logistic regression)
+    2. SGC + MLP (Part A baseline)
+    3. Restricted + StandardMLP (Part A endpoint)
+    4. Restricted + RowNorm (Part B - current best)
+    5. Magnitude-Only MLP (NEW - ablation to test if magnitude is informative)
+    6. Log-Magnitude Augmented MLP (NEW - simple magnitude preservation)
+    7. Dual-Stream MLP (NEW - separate direction/magnitude processing)
+
+Author: Mohammad
+Date: November 2025
+===================================================================================
 """
 
 import os
 import sys
 import json
-import copy
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+import time
+import argparse
 import numpy as np
 import scipy.sparse as sp
 import scipy.linalg as la
-import matplotlib.pyplot as plt
 import networkx as nx
-from torch.utils.data import DataLoader, TensorDataset
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 
 # Fix for PyTorch 2.6 + OGB compatibility
@@ -53,180 +52,179 @@ def _patched_torch_load(*args, **kwargs):
 torch.load = _patched_torch_load
 
 from utils import (
-    StandardMLP,
-    build_graph_matrices, load_dataset
+    load_dataset, build_graph_matrices, StandardMLP, RowNormMLP
 )
 
 # ============================================================================
 # Configuration
 # ============================================================================
-DATASET_NAME = sys.argv[1] if len(sys.argv) > 1 else 'ogbn-arxiv'
-USE_RANDOM_SPLITS = '--random-splits' in sys.argv
-USE_LCC = '--use-lcc' in sys.argv  # NEW: Optional LCC extraction
 
-# Experimental parameters
+parser = argparse.ArgumentParser(description='Investigation 3: Magnitude Preservation')
+parser.add_argument('dataset', type=str, help='Dataset name')
+parser.add_argument('--k', type=int, default=10,
+                   help='Diffusion steps (default: 10)')
+parser.add_argument('--splits', type=str, choices=['random', 'fixed'], default='fixed',
+                   help='Use random or fixed splits')
+parser.add_argument('--component', type=str, choices=['whole', 'lcc'], default='lcc',
+                   help='Use whole graph or largest connected component')
+
+args = parser.parse_args()
+
+DATASET_NAME = args.dataset
+K_DIFFUSION = args.k
+SPLIT_TYPE = args.splits
+COMPONENT_TYPE = args.component
+
+# Experimental parameters (same as partAB)
+NUM_RANDOM_SPLITS = 5 if SPLIT_TYPE == 'random' else 1
 NUM_SEEDS = 5
-NUM_RANDOM_SPLITS = 5
 
-# Hyperparameters
+# Training hyperparameters (same as partAB)
 EPOCHS = 200
 HIDDEN_DIM = 256
+HIDDEN_MAG = 32  # For magnitude stream in dual-stream architecture
 LEARNING_RATE = 0.01
 WEIGHT_DECAY = 5e-4
 
-# α values to test
-ALPHA_VALUES = [0.0, 0.25, 0.5, 0.75, 1.0]
-
-# Set device
+# Device
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.manual_seed(42)
 np.random.seed(42)
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# Output directory
-split_type = 'random_splits' if USE_RANDOM_SPLITS else 'fixed_splits'
-lcc_suffix = '_lcc' if USE_LCC else ''
-output_base = f'results/investigation3_magnitude_preservation/{DATASET_NAME}/{split_type}{lcc_suffix}'
+# Output
+output_base = f'results/investigation3_magnitude/{DATASET_NAME}_{SPLIT_TYPE}_{COMPONENT_TYPE}/k{K_DIFFUSION}'
 os.makedirs(f'{output_base}/plots', exist_ok=True)
 os.makedirs(f'{output_base}/metrics', exist_ok=True)
-os.makedirs(f'{output_base}/diagnostics', exist_ok=True)  # NEW: For diagnostic outputs
+os.makedirs(f'{output_base}/diagnostics', exist_ok=True)
 
 print('='*80)
-print('INVESTIGATION 3: MAGNITUDE-PRESERVING NORMALIZATION (ENHANCED)')
+print('INVESTIGATION 3: MAGNITUDE PRESERVATION IN SPECTRAL REPRESENTATIONS')
 print('='*80)
 print(f'Dataset: {DATASET_NAME}')
-print(f'Split type: {split_type}')
-print(f'Use LCC: {USE_LCC}')
-print(f'α values: {ALPHA_VALUES}')
+print(f'Diffusion k: {K_DIFFUSION}')
+print(f'Split type: {SPLIT_TYPE}')
+print(f'Component: {COMPONENT_TYPE}')
 print(f'Device: {device}')
 print('='*80)
 
 # ============================================================================
-# Enhanced Model Class with Diagnostics
+# Models (following partAB.py pattern)
 # ============================================================================
 
-class AlphaNormMLPDiagnostic(nn.Module):
+class SGC(nn.Module):
+    """SGC: Logistic regression with bias"""
+    def __init__(self, nfeat, nclass):
+        super(SGC, self).__init__()
+        self.W = nn.Linear(nfeat, nclass, bias=True)
+        torch.nn.init.xavier_normal_(self.W.weight)
+    
+    def forward(self, x):
+        return self.W(x)
+
+
+class MagnitudeOnlyMLP(nn.Module):
     """
-    MLP with α-normalization and diagnostic capabilities
-    
-    CRITICAL FIX: Magnitude channel is now standardized to prevent instability
+    ABLATION: Use only magnitude ||x||₂ for classification.
+    Tests if magnitude contains discriminative information.
     """
-    def __init__(self, input_dim, hidden_dim, output_dim, alpha=0.5, with_magnitude=False):
-        super(AlphaNormMLPDiagnostic, self).__init__()
-        self.alpha = alpha
-        self.with_magnitude = with_magnitude
-        
-        # Track magnitude statistics for diagnostics
-        self.magnitude_stats = {
-            'raw_norms': [],
-            'log_norms': [],
-            'standardized_norms': []
-        }
-        
-        # Adjust input dimension if magnitude channel is added
-        actual_input_dim = input_dim + 1 if with_magnitude else input_dim
-        
-        self.fc1 = nn.Linear(actual_input_dim, hidden_dim, bias=False)
-        self.fc2 = nn.Linear(hidden_dim, hidden_dim, bias=False)
-        self.fc3 = nn.Linear(hidden_dim, output_dim, bias=False)
-        
-        # Initialize
-        nn.init.xavier_normal_(self.fc1.weight)
-        nn.init.xavier_normal_(self.fc2.weight)
-        nn.init.xavier_normal_(self.fc3.weight)
+    def __init__(self, num_classes, hidden_dim=64):
+        super().__init__()
+        self.mlp = nn.Sequential(
+            nn.Linear(1, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(hidden_dim, num_classes)
+        )
     
-    def forward(self, x, collect_stats=False):
-        # Compute norms (with small epsilon for numerical stability)
-        eps = 1e-8
-        norms = torch.norm(x, p=2, dim=1, keepdim=True) + eps
-        
-        # Apply α-normalization
-        if self.alpha > 0:
-            x_normalized = x / (norms ** self.alpha)
-        else:
-            x_normalized = x  # No normalization when α=0
-        
-        # Optionally append magnitude channel
-        if self.with_magnitude:
-            log_norms = torch.log(norms)
-            
-            # CRITICAL FIX: Standardize magnitude channel
-            # This prevents the catastrophic failure seen on ogbn-arxiv
-            log_norms_mean = log_norms.mean()
-            log_norms_std = log_norms.std()
-            log_norms_standardized = (log_norms - log_norms_mean) / (log_norms_std + eps)
-            
-            # Collect statistics for diagnostics (Q1: Magnitude distributions)
-            if collect_stats:
-                self.magnitude_stats['raw_norms'].append(norms.detach().cpu().numpy())
-                self.magnitude_stats['log_norms'].append(log_norms.detach().cpu().numpy())
-                self.magnitude_stats['standardized_norms'].append(log_norms_standardized.detach().cpu().numpy())
-            
-            x_normalized = torch.cat([x_normalized, log_norms_standardized], dim=1)
-        
-        # Forward pass
-        x = self.fc1(x_normalized)
-        x = F.normalize(x, p=2, dim=1)
-        x = F.relu(x)
-        
-        x = self.fc2(x)
-        x = F.normalize(x, p=2, dim=1)
-        x = F.relu(x)
-        
-        x = self.fc3(x)
-        
-        return x
+    def forward(self, X):
+        M = torch.norm(X, dim=1, keepdim=True)
+        return self.mlp(M)
+
+
+class LogMagnitudeMLP(nn.Module):
+    """
+    Augment RowNorm features with log-magnitude: [x̂, log(||x||)]
+    """
+    def __init__(self, input_dim, hidden_dim, num_classes):
+        super().__init__()
+        self.mlp = nn.Sequential(
+            nn.Linear(input_dim + 1, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(hidden_dim, num_classes)
+        )
     
-    def get_magnitude_stats_summary(self):
-        """Get summary statistics of magnitude distributions"""
-        if not self.magnitude_stats['raw_norms']:
-            return None
+    def forward(self, X):
+        X_norm = X / (torch.norm(X, dim=1, keepdim=True) + 1e-10)
+        M = torch.norm(X, dim=1, keepdim=True)
+        log_M = torch.log(M + 1e-10)
+        X_augmented = torch.cat([X_norm, log_M], dim=1)
+        return self.mlp(X_augmented)
+
+
+class DualStreamMLP(nn.Module):
+    """
+    Process direction and magnitude in separate streams.
+    """
+    def __init__(self, input_dim, hidden_dir, hidden_mag, num_classes):
+        super().__init__()
         
-        raw_norms = np.concatenate(self.magnitude_stats['raw_norms'])
-        log_norms = np.concatenate(self.magnitude_stats['log_norms'])
-        std_norms = np.concatenate(self.magnitude_stats['standardized_norms'])
+        self.mlp_direction = nn.Sequential(
+            nn.Linear(input_dim, hidden_dir),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(hidden_dir, hidden_dir // 2),
+            nn.ReLU(),
+            nn.Dropout(0.5)
+        )
         
-        return {
-            'raw_norms': {
-                'min': float(raw_norms.min()),
-                'max': float(raw_norms.max()),
-                'mean': float(raw_norms.mean()),
-                'std': float(raw_norms.std()),
-                'median': float(np.median(raw_norms))
-            },
-            'log_norms': {
-                'min': float(log_norms.min()),
-                'max': float(log_norms.max()),
-                'mean': float(log_norms.mean()),
-                'std': float(log_norms.std()),
-                'median': float(np.median(log_norms))
-            },
-            'standardized_norms': {
-                'min': float(std_norms.min()),
-                'max': float(std_norms.max()),
-                'mean': float(std_norms.mean()),
-                'std': float(std_norms.std()),
-                'median': float(np.median(std_norms))
-            }
-        }
+        self.mlp_magnitude = nn.Sequential(
+            nn.Linear(1, hidden_mag),
+            nn.ReLU(),
+            nn.Linear(hidden_mag, hidden_mag)
+        )
+        
+        self.classifier = nn.Linear(hidden_dir // 2 + hidden_mag, num_classes)
+    
+    def forward(self, X):
+        X_norm = X / (torch.norm(X, dim=1, keepdim=True) + 1e-10)
+        M = torch.norm(X, dim=1, keepdim=True)
+        
+        h_dir = self.mlp_direction(X_norm)
+        h_mag = self.mlp_magnitude(M)
+        
+        h_combined = torch.cat([h_dir, h_mag], dim=1)
+        return self.classifier(h_combined)
+
 
 # ============================================================================
-# Helper Functions
+# Helper Functions (from partAB.py)
 # ============================================================================
 
-def get_largest_connected_component(adj):
-    """Extract largest connected component (for optional LCC mode)"""
+def get_largest_connected_component_nx(adj):
+    """Extract largest connected component using networkx"""
     G = nx.from_scipy_sparse_array(adj)
     components = list(nx.connected_components(G))
     largest_cc = max(components, key=len)
     lcc_nodes = sorted(list(largest_cc))
+    
     lcc_mask = np.zeros(adj.shape[0], dtype=bool)
     lcc_mask[lcc_nodes] = True
     
     print(f'\nConnected Components Analysis:')
     print(f'  Total components: {len(components)}')
-    print(f'  Largest component size: {len(largest_cc)} nodes ({len(largest_cc)/adj.shape[0]*100:.1f}%)')
+    print(f'  Largest component size: {len(largest_cc)} nodes')
+    print(f'  Total nodes: {adj.shape[0]}')
+    print(f'  LCC percentage: {len(largest_cc)/adj.shape[0]*100:.2f}%')
     
     return lcc_mask
+
 
 def extract_subgraph(adj, features, labels, mask, split_idx=None):
     """Extract subgraph for nodes in mask"""
@@ -240,31 +238,69 @@ def extract_subgraph(adj, features, labels, mask, split_idx=None):
     split_idx_sub = None
     if split_idx is not None:
         split_idx_sub = {}
-        for split_name in ['train_idx', 'val_idx', 'test_idx']:
-            if split_name in split_idx:
-                old_indices = split_idx[split_name]
-                new_indices = []
-                for old_idx in old_indices:
-                    if mask[old_idx]:
-                        new_indices.append(old_to_new[old_idx])
-                split_idx_sub[split_name] = np.array(new_indices)
-                print(f'  {split_name}: {len(old_indices)} -> {len(new_indices)} nodes')
+        for split_name, indices in split_idx.items():
+            mask_indices = np.isin(indices, node_indices)
+            old_indices = indices[mask_indices]
+            new_indices = np.array([old_to_new[idx] for idx in old_indices])
+            split_idx_sub[split_name] = new_indices
     
     return adj_sub, features_sub, labels_sub, split_idx_sub
 
-def compute_restricted_eigenvectors(X, L, D, tol=1e-10, eps_base=1e-12):
-    """Compute restricted eigenvectors from feature matrix X"""
+
+def compute_sgc_normalized_adjacency(adj):
+    """
+    Compute SGC-style normalized adjacency: D^(-1/2) (A + I) D^(-1/2)
+    EXACT COPY FROM partAB.py
+    """
+    adj = adj + sp.eye(adj.shape[0])  # Add self-loops
+    adj = sp.coo_matrix(adj)
+    
+    row_sum = np.array(adj.sum(1))
+    d_inv_sqrt = np.power(row_sum, -0.5).flatten()
+    d_inv_sqrt[np.isinf(d_inv_sqrt)] = 0.
+    d_mat_inv_sqrt = sp.diags(d_inv_sqrt)
+    
+    return d_mat_inv_sqrt @ adj @ d_mat_inv_sqrt
+
+
+def sgc_precompute(features, adj_normalized, degree):
+    """
+    Apply SGC precomputation: (D^(-1/2) (A+I) D^(-1/2))^k X
+    EXACT COPY FROM partAB.py
+    """
+    for i in range(degree):
+        features = adj_normalized @ features
+    return features
+
+
+def compute_restricted_eigenvectors(X, L, D, num_components=0):
+    """
+    Compute restricted eigenvectors with proper component handling
+    EXACT COPY FROM partAB.py
+    
+    Args:
+        X: Feature matrix
+        L: Laplacian
+        D: Degree matrix
+        num_components: Number of disconnected components (eigenvalues to drop)
+    
+    Returns:
+        U: Restricted eigenvectors (D-orthonormal)
+        eigenvalues: Eigenvalues
+        d_effective: Effective dimension
+        ortho_error: D-orthonormality error
+    """
     num_nodes, dimension = X.shape
     
-    # QR decomposition
+    # QR decomposition for rank handling
     Q, R = np.linalg.qr(X)
-    rank_X = np.sum(np.abs(np.diag(R)) > tol)
+    rank_X = np.sum(np.abs(np.diag(R)) > 1e-10)
     
     if rank_X < dimension:
-        print(f'  Rank deficiency detected: {rank_X}/{dimension}')
         Q = Q[:, :rank_X]
+        dimension = rank_X
     
-    d_effective = rank_X
+    d_effective = dimension
     
     # Project Laplacian
     L_r = Q.T @ (L @ Q)
@@ -275,10 +311,11 @@ def compute_restricted_eigenvectors(X, L, D, tol=1e-10, eps_base=1e-12):
     D_r = 0.5 * (D_r + D_r.T)
     
     # Regularize
+    eps_base = 1e-10
     eps = eps_base * np.trace(D_r) / d_effective
     D_r = D_r + eps * np.eye(d_effective)
     
-    # Solve generalized eigenvalue problem
+    # Solve generalized eigenproblem
     eigenvalues, V = la.eigh(L_r, D_r)
     
     # Sort by eigenvalue
@@ -286,37 +323,138 @@ def compute_restricted_eigenvectors(X, L, D, tol=1e-10, eps_base=1e-12):
     eigenvalues = eigenvalues[idx]
     V = V[:, idx]
     
-    # Map back to node space
+    # Drop component eigenvalues if needed
+    if num_components > 0:
+        eigenvalues = eigenvalues[num_components:]
+        V = V[:, num_components:]
+    
+    # Map back to full space
     U = Q @ V
     
     # Verify D-orthonormality
-    DU = D @ U
-    G = U.T @ DU
-    ortho_error = np.abs(G - np.eye(d_effective)).max()
+    G = U.T @ (D @ U)
+    ortho_error = np.max(np.abs(G - np.eye(len(eigenvalues))))
     
-    return U.astype(np.float32), eigenvalues, d_effective, ortho_error
+    return U, eigenvalues, len(eigenvalues), ortho_error
 
-def create_random_split(num_nodes, train_ratio=0.6, val_ratio=0.2, seed=0):
-    """Create random train/val/test split"""
-    np.random.seed(seed)
-    indices = np.arange(num_nodes)
-    np.random.shuffle(indices)
-    
-    train_size = int(train_ratio * num_nodes)
-    val_size = int(val_ratio * num_nodes)
-    
-    train_idx = indices[:train_size]
-    val_idx = indices[train_size:train_size + val_size]
-    test_idx = indices[train_size + val_size:]
-    
-    return train_idx, val_idx, test_idx
 
-def train_and_evaluate_diagnostic(model, X_train, y_train, X_val, y_val, X_test, y_test,
-                                   epochs, lr, weight_decay, device, batch_size=128):
-    """
-    Training function with diagnostic tracking (Q2: Is network learning?)
-    """
-    # Prepare data
+# ============================================================================
+# Diagnostic Functions
+# ============================================================================
+
+def analyze_magnitude_information(X, labels, num_classes, output_dir):
+    """Phase 1 Diagnostics: Does magnitude contain discriminative information?"""
+    print('\n' + '='*80)
+    print('PHASE 1 DIAGNOSTICS: MAGNITUDE INFORMATION CONTENT')
+    print('='*80)
+    
+    M = np.linalg.norm(X, axis=1)
+    
+    diagnostics = {
+        'overall_mean': float(M.mean()),
+        'overall_std': float(M.std()),
+        'overall_min': float(M.min()),
+        'overall_max': float(M.max()),
+        'per_class': {}
+    }
+    
+    print(f'\nOverall Magnitude Statistics:')
+    print(f'  Mean: {M.mean():.4f}')
+    print(f'  Std:  {M.std():.4f}')
+    print(f'  Min:  {M.min():.4f}')
+    print(f'  Max:  {M.max():.4f}')
+    
+    print(f'\nPer-Class Magnitude Analysis:')
+    print(f'{"Class":<8} {"Count":<8} {"Mean":<12} {"Std":<12}')
+    print('-' * 44)
+    
+    class_means = []
+    class_stds = []
+    
+    for c in range(num_classes):
+        mask = labels == c
+        M_class = M[mask]
+        
+        class_mean = M_class.mean()
+        class_std = M_class.std()
+        
+        class_means.append(class_mean)
+        class_stds.append(class_std)
+        
+        diagnostics['per_class'][int(c)] = {
+            'count': int(mask.sum()),
+            'mean': float(class_mean),
+            'std': float(class_std)
+        }
+        
+        print(f'{c:<8} {mask.sum():<8} {class_mean:<12.4f} {class_std:<12.4f}')
+    
+    class_means = np.array(class_means)
+    class_stds = np.array(class_stds)
+    
+    between_class_variance = class_means.var()
+    within_class_variance = class_stds.mean()
+    
+    diagnostics['between_class_variance'] = float(between_class_variance)
+    diagnostics['within_class_variance'] = float(within_class_variance)
+    
+    if within_class_variance > 0:
+        fisher_score = between_class_variance / within_class_variance
+    else:
+        fisher_score = 0.0
+    
+    diagnostics['fisher_score'] = float(fisher_score)
+    
+    print(f'\nSeparability Analysis:')
+    print(f'  Between-class variance: {between_class_variance:.4f}')
+    print(f'  Within-class variance:  {within_class_variance:.4f}')
+    print(f'  Fisher score:           {fisher_score:.4f}')
+    
+    if fisher_score > 0.1:
+        print(f'  ✓ Magnitude appears discriminative (Fisher > 0.1)')
+    else:
+        print(f'  ✗ Magnitude may not be discriminative (Fisher < 0.1)')
+    
+    # Visualization
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    
+    ax = axes[0]
+    data_per_class = [M[labels == c] for c in range(num_classes)]
+    bp = ax.boxplot(data_per_class, labels=range(num_classes))
+    ax.set_xlabel('Class', fontsize=12)
+    ax.set_ylabel('Magnitude ||x||₂', fontsize=12)
+    ax.set_title('Magnitude Distribution per Class', fontsize=13, fontweight='bold')
+    ax.grid(True, alpha=0.3)
+    
+    ax = axes[1]
+    x_pos = np.arange(num_classes)
+    ax.bar(x_pos, class_means, yerr=class_stds, capsize=5, alpha=0.7)
+    ax.set_xlabel('Class', fontsize=12)
+    ax.set_ylabel('Mean Magnitude', fontsize=12)
+    ax.set_title('Mean Magnitude per Class (±1 std)', fontsize=13, fontweight='bold')
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels(range(num_classes))
+    ax.grid(True, alpha=0.3, axis='y')
+    
+    plt.tight_layout()
+    plt.savefig(f'{output_dir}/magnitude_per_class.png', dpi=150, bbox_inches='tight')
+    print(f'\n✓ Saved: {output_dir}/magnitude_per_class.png')
+    plt.close()
+    
+    with open(f'{output_dir}/magnitude_diagnostics.json', 'w') as f:
+        json.dump(diagnostics, f, indent=2)
+    print(f'✓ Saved: {output_dir}/magnitude_diagnostics.json')
+    
+    return diagnostics
+
+
+# ============================================================================
+# Training and Evaluation (from partAB.py)
+# ============================================================================
+
+def train_and_test(model, X_train, y_train, X_val, y_val, X_test, y_test,
+                  epochs, lr, weight_decay, device, use_scheduler=False):
+    """Standard training loop"""
     X_train_t = torch.FloatTensor(X_train).to(device)
     y_train_t = torch.LongTensor(y_train).to(device)
     X_val_t = torch.FloatTensor(X_val).to(device)
@@ -324,569 +462,596 @@ def train_and_evaluate_diagnostic(model, X_train, y_train, X_val, y_val, X_test,
     X_test_t = torch.FloatTensor(X_test).to(device)
     y_test_t = torch.LongTensor(y_test).to(device)
     
-    # Create dataloader
-    if len(X_train) > batch_size:
-        train_dataset = TensorDataset(X_train_t, y_train_t)
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    else:
-        train_loader = [(X_train_t, y_train_t)]
-    
-    # Optimizer and loss
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    
+    if use_scheduler:
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
+    
     criterion = nn.CrossEntropyLoss()
     
-    # Diagnostic tracking
-    train_losses = []
-    train_accs = []  # NEW: Track training accuracy
-    val_accs = []
+    start_time = time.time()
     best_val_acc = 0.0
-    best_model_state = None
-    
-    # Check if model supports collect_stats (only AlphaNormMLPDiagnostic does)
-    supports_collect_stats = hasattr(model, 'magnitude_stats')
-    
-    # Collect magnitude stats on first epoch
-    collect_stats_epoch = 0
+    best_test_acc = 0.0
     
     for epoch in range(epochs):
-        # Training
         model.train()
-        epoch_loss = 0.0
-        epoch_correct = 0
-        epoch_total = 0
+        optimizer.zero_grad()
+        output = model(X_train_t)
+        loss = criterion(output, y_train_t)
+        loss.backward()
+        optimizer.step()
         
-        for batch_X, batch_y in train_loader:
-            optimizer.zero_grad()
-            
-            # Collect stats only on first epoch, first batch (if model supports it)
-            if supports_collect_stats:
-                collect_stats = (epoch == collect_stats_epoch and epoch_total == 0)
-                outputs = model(batch_X, collect_stats=collect_stats)
-            else:
-                outputs = model(batch_X)
-            
-            loss = criterion(outputs, batch_y)
-            loss.backward()
-            optimizer.step()
-            
-            epoch_loss += loss.item()
-            
-            # Track training accuracy
-            preds = outputs.argmax(dim=1)
-            epoch_correct += (preds == batch_y).sum().item()
-            epoch_total += batch_y.size(0)
+        if use_scheduler:
+            scheduler.step()
         
-        avg_loss = epoch_loss / len(train_loader)
-        train_acc = epoch_correct / epoch_total
-        train_losses.append(avg_loss)
-        train_accs.append(train_acc)
-        
-        # Validation
-        model.eval()
-        with torch.no_grad():
-            if supports_collect_stats:
-                val_outputs = model(X_val_t, collect_stats=False)
-            else:
-                val_outputs = model(X_val_t)
-            val_preds = val_outputs.argmax(dim=1)
-            val_acc = (val_preds == y_val_t).float().mean().item()
-            val_accs.append(val_acc)
-            
-            if val_acc > best_val_acc:
-                best_val_acc = val_acc
-                best_model_state = copy.deepcopy(model.state_dict())
+        if (epoch + 1) % 10 == 0 or epoch == epochs - 1:
+            model.eval()
+            with torch.no_grad():
+                val_output = model(X_val_t)
+                val_pred = val_output.argmax(dim=1)
+                val_acc = (val_pred == y_val_t).float().mean().item()
+                
+                test_output = model(X_test_t)
+                test_pred = test_output.argmax(dim=1)
+                test_acc = (test_pred == y_test_t).float().mean().item()
+                
+                if val_acc > best_val_acc:
+                    best_val_acc = val_acc
+                    best_test_acc = test_acc
     
-    # Load best model and evaluate
-    model.load_state_dict(best_model_state)
-    model.eval()
-    with torch.no_grad():
-        if supports_collect_stats:
-            test_outputs = model(X_test_t, collect_stats=False)
-        else:
-            test_outputs = model(X_test_t)
-        test_preds = test_outputs.argmax(dim=1)
-        test_acc = (test_preds == y_test_t).float().mean().item()
+    train_time = time.time() - start_time
+    return best_val_acc, best_test_acc, train_time
+
+
+def aggregate_results(results):
+    """Aggregate results across seeds"""
+    if not results:
+        return {'test_acc_mean': 0.0, 'test_acc_std': 0.0, 
+                'val_acc_mean': 0.0, 'val_acc_std': 0.0}
     
-    # Get magnitude statistics
-    mag_stats = model.get_magnitude_stats_summary() if hasattr(model, 'get_magnitude_stats_summary') else None
+    test_accs = [r['test_acc'] for r in results]
+    val_accs = [r['val_acc'] for r in results]
     
     return {
-        'test_acc': test_acc,
-        'best_val_acc': best_val_acc,
-        'train_losses': train_losses,
-        'train_accs': train_accs,  # NEW
-        'val_accs': val_accs,
-        'magnitude_stats': mag_stats  # NEW
+        'test_acc_mean': np.mean(test_accs),
+        'test_acc_std': np.std(test_accs),
+        'val_acc_mean': np.mean(val_accs),
+        'val_acc_std': np.std(val_accs)
     }
 
-def aggregate_results(results_list):
-    """Aggregate results across multiple seeds"""
-    test_accs = [r['test_acc'] for r in results_list]
+
+# ============================================================================
+# Experiment Functions (following partAB.py pattern)
+# ============================================================================
+
+def run_sgc_baseline(X_diffused, labels, train_idx, val_idx, test_idx,
+                     num_classes, num_seeds, device):
+    """SGC Baseline"""
+    results = []
     
-    # Check if network learned (Q2: Is network learning?)
-    final_train_accs = [r['train_accs'][-1] for r in results_list if 'train_accs' in r]
-    network_learned = bool(np.mean(final_train_accs) > 0.2) if final_train_accs else True
+    X_train = X_diffused[train_idx]
+    y_train = labels[train_idx]
+    X_val = X_diffused[val_idx]
+    y_val = labels[val_idx]
+    X_test = X_diffused[test_idx]
+    y_test = labels[test_idx]
     
-    return {
-        'test_acc_mean': float(np.mean(test_accs)),
-        'test_acc_std': float(np.std(test_accs)),
-        'test_acc_min': float(np.min(test_accs)),
-        'test_acc_max': float(np.max(test_accs)),
-        'n_runs': int(len(test_accs)),
-        'network_learned': network_learned,
-        'final_train_acc_mean': float(np.mean(final_train_accs)) if final_train_accs else None
-    }
+    for seed in range(num_seeds):
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+        
+        model = SGC(X_diffused.shape[1], num_classes).to(device)
+        
+        val_acc, test_acc, train_time = train_and_test(
+            model, X_train, y_train, X_val, y_val, X_test, y_test,
+            EPOCHS, LEARNING_RATE, WEIGHT_DECAY, device, use_scheduler=False
+        )
+        
+        results.append({
+            'seed': seed,
+            'val_acc': val_acc,
+            'test_acc': test_acc,
+            'train_time': train_time
+        })
+    
+    return results
 
-# ============================================================================
-# 1. Load Dataset
-# ============================================================================
-print(f'\n[1/7] Loading dataset: {DATASET_NAME}...')
 
-(edge_index, features_original, labels_original, num_nodes_original, num_classes,
- train_idx_fixed, val_idx_fixed, test_idx_fixed) = load_dataset(DATASET_NAME, root='./dataset')
+def run_sgc_mlp_baseline(X_diffused, labels, train_idx, val_idx, test_idx,
+                         num_classes, num_seeds, device):
+    """SGC + MLP"""
+    results = []
+    
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X_diffused[train_idx])
+    X_val_scaled = scaler.transform(X_diffused[val_idx])
+    X_test_scaled = scaler.transform(X_diffused[test_idx])
+    
+    for seed in range(num_seeds):
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+        
+        model = StandardMLP(X_diffused.shape[1], HIDDEN_DIM, num_classes).to(device)
+        
+        val_acc, test_acc, train_time = train_and_test(
+            model, X_scaled, labels[train_idx], 
+            X_val_scaled, labels[val_idx],
+            X_test_scaled, labels[test_idx],
+            EPOCHS, LEARNING_RATE, WEIGHT_DECAY, device, use_scheduler=False
+        )
+        
+        results.append({
+            'seed': seed,
+            'val_acc': val_acc,
+            'test_acc': test_acc,
+            'train_time': train_time
+        })
+    
+    return results
 
-print(f'Loaded: {num_nodes_original:,} nodes, {num_classes} classes, {features_original.shape[1]} features')
 
-# Package fixed splits
-if train_idx_fixed is not None:
-    split_idx_original = {
-        'train_idx': train_idx_fixed,
-        'val_idx': val_idx_fixed,
-        'test_idx': test_idx_fixed
-    }
-else:
-    split_idx_original = None
-
-# ============================================================================
-# 2. Build Graph Matrices and Optional LCC Extraction
-# ============================================================================
-print('\n[2/7] Building graph matrices...')
-adj_original, D_original, L_original = build_graph_matrices(edge_index, num_nodes_original)
-print(f'Built: Adjacency ({adj_original.shape}), Degree, Laplacian')
-
-# Optional LCC extraction
-if USE_LCC:
-    print('\n[3/7] Extracting largest connected component...')
-    lcc_mask = get_largest_connected_component(adj_original)
-    adj, features, labels, split_idx = extract_subgraph(
-        adj_original, features_original, labels_original, lcc_mask, split_idx_original
+def run_restricted_standard_mlp(X_diffused, L, D, num_components, labels,
+                                train_idx, val_idx, test_idx, num_classes,
+                                num_seeds, device):
+    """Restricted + StandardMLP"""
+    U, eigenvalues, d_eff, ortho_err = compute_restricted_eigenvectors(
+        X_diffused, L, D, num_components
     )
     
-    # Rebuild graph matrices for LCC
+    scaler = StandardScaler()
+    U_train_scaled = scaler.fit_transform(U[train_idx])
+    U_val_scaled = scaler.transform(U[val_idx])
+    U_test_scaled = scaler.transform(U[test_idx])
+    
+    results = []
+    
+    for seed in range(num_seeds):
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+        
+        model = StandardMLP(d_eff, HIDDEN_DIM, num_classes).to(device)
+        
+        val_acc, test_acc, train_time = train_and_test(
+            model, U_train_scaled, labels[train_idx],
+            U_val_scaled, labels[val_idx],
+            U_test_scaled, labels[test_idx],
+            EPOCHS, LEARNING_RATE, WEIGHT_DECAY, device, use_scheduler=False
+        )
+        
+        results.append({
+            'seed': seed,
+            'val_acc': val_acc,
+            'test_acc': test_acc,
+            'train_time': train_time
+        })
+    
+    return results, d_eff, ortho_err
+
+
+def run_restricted_rownorm(X_diffused, L, D, num_components, labels,
+                           train_idx, val_idx, test_idx, num_classes,
+                           num_seeds, device):
+    """Restricted + RowNorm"""
+    U, eigenvalues, d_eff, ortho_err = compute_restricted_eigenvectors(
+        X_diffused, L, D, num_components
+    )
+    
+    results = []
+    
+    X_train = U[train_idx]
+    y_train = labels[train_idx]
+    X_val = U[val_idx]
+    y_val = labels[val_idx]
+    X_test = U[test_idx]
+    y_test = labels[test_idx]
+    
+    for seed in range(num_seeds):
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+        
+        model = RowNormMLP(d_eff, HIDDEN_DIM, num_classes).to(device)
+        
+        val_acc, test_acc, train_time = train_and_test(
+            model, X_train, y_train, X_val, y_val, X_test, y_test,
+            EPOCHS, LEARNING_RATE, WEIGHT_DECAY, device, use_scheduler=False
+        )
+        
+        results.append({
+            'seed': seed,
+            'val_acc': val_acc,
+            'test_acc': test_acc,
+            'train_time': train_time
+        })
+    
+    return results, d_eff, ortho_err
+
+
+def run_magnitude_only(X_diffused, L, D, num_components, labels,
+                       train_idx, val_idx, test_idx, num_classes,
+                       num_seeds, device):
+    """Magnitude-Only MLP (Ablation)"""
+    U, eigenvalues, d_eff, ortho_err = compute_restricted_eigenvectors(
+        X_diffused, L, D, num_components
+    )
+    
+    results = []
+    
+    X_train = U[train_idx]
+    y_train = labels[train_idx]
+    X_val = U[val_idx]
+    y_val = labels[val_idx]
+    X_test = U[test_idx]
+    y_test = labels[test_idx]
+    
+    for seed in range(num_seeds):
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+        
+        model = MagnitudeOnlyMLP(num_classes, hidden_dim=64).to(device)
+        
+        val_acc, test_acc, train_time = train_and_test(
+            model, X_train, y_train, X_val, y_val, X_test, y_test,
+            EPOCHS, LEARNING_RATE, WEIGHT_DECAY, device, use_scheduler=False
+        )
+        
+        results.append({
+            'seed': seed,
+            'val_acc': val_acc,
+            'test_acc': test_acc,
+            'train_time': train_time
+        })
+    
+    return results, d_eff, ortho_err
+
+
+def run_log_magnitude(X_diffused, L, D, num_components, labels,
+                     train_idx, val_idx, test_idx, num_classes,
+                     num_seeds, device):
+    """Log-Magnitude Augmented MLP"""
+    U, eigenvalues, d_eff, ortho_err = compute_restricted_eigenvectors(
+        X_diffused, L, D, num_components
+    )
+    
+    results = []
+    
+    X_train = U[train_idx]
+    y_train = labels[train_idx]
+    X_val = U[val_idx]
+    y_val = labels[val_idx]
+    X_test = U[test_idx]
+    y_test = labels[test_idx]
+    
+    for seed in range(num_seeds):
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+        
+        model = LogMagnitudeMLP(d_eff, HIDDEN_DIM, num_classes).to(device)
+        
+        val_acc, test_acc, train_time = train_and_test(
+            model, X_train, y_train, X_val, y_val, X_test, y_test,
+            EPOCHS, LEARNING_RATE, WEIGHT_DECAY, device, use_scheduler=False
+        )
+        
+        results.append({
+            'seed': seed,
+            'val_acc': val_acc,
+            'test_acc': test_acc,
+            'train_time': train_time
+        })
+    
+    return results, d_eff, ortho_err
+
+
+def run_dual_stream(X_diffused, L, D, num_components, labels,
+                   train_idx, val_idx, test_idx, num_classes,
+                   num_seeds, device):
+    """Dual-Stream MLP"""
+    U, eigenvalues, d_eff, ortho_err = compute_restricted_eigenvectors(
+        X_diffused, L, D, num_components
+    )
+    
+    results = []
+    
+    X_train = U[train_idx]
+    y_train = labels[train_idx]
+    X_val = U[val_idx]
+    y_val = labels[val_idx]
+    X_test = U[test_idx]
+    y_test = labels[test_idx]
+    
+    for seed in range(num_seeds):
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+        
+        model = DualStreamMLP(d_eff, HIDDEN_DIM, HIDDEN_MAG, num_classes).to(device)
+        
+        val_acc, test_acc, train_time = train_and_test(
+            model, X_train, y_train, X_val, y_val, X_test, y_test,
+            EPOCHS, LEARNING_RATE, WEIGHT_DECAY, device, use_scheduler=False
+        )
+        
+        results.append({
+            'seed': seed,
+            'val_acc': val_acc,
+            'test_acc': test_acc,
+            'train_time': train_time
+        })
+    
+    return results, d_eff, ortho_err
+
+
+# ============================================================================
+# Main Experiment Loop
+# ============================================================================
+
+print('\n[1/6] Loading dataset...')
+(edge_index, X_raw, labels, num_nodes, num_classes,
+ train_idx, val_idx, test_idx) = load_dataset(DATASET_NAME, root='./dataset')
+
+print(f'Nodes: {num_nodes:,}, Features: {X_raw.shape[1]}, Classes: {num_classes}')
+
+# Build graph matrices
+print('\n[2/6] Building graph matrices...')
+adj, D, L = build_graph_matrices(edge_index, num_nodes)
+
+# Extract LCC if requested (EXACT COPY FROM partAB.py)
+if COMPONENT_TYPE == 'lcc':
+    print('\n[3/6] Extracting largest connected component...')
+    lcc_mask = get_largest_connected_component_nx(adj)
+    
+    split_idx_original = {'train_idx': train_idx, 'val_idx': val_idx, 'test_idx': test_idx}
+    adj, X_raw, labels, split_idx = extract_subgraph(
+        adj, X_raw, labels, lcc_mask, split_idx_original
+    )
+    
+    # Rebuild graph matrices for LCC (EXACT FROM partAB.py)
     print('Rebuilding graph matrices for LCC...')
     adj_coo = adj.tocoo()
     edge_index_lcc = np.vstack([adj_coo.row, adj_coo.col])
-    adj, D, L = build_graph_matrices(edge_index_lcc, adj.shape[0])
+    adj_final, D, L = build_graph_matrices(edge_index_lcc, adj.shape[0])
+    adj = adj_final
+    
+    num_components = 0  # LCC has 1 component
 else:
-    print('\n[3/7] Using whole graph (no LCC extraction)...')
-    adj = adj_original
-    features = features_original
-    labels = labels_original
-    split_idx = split_idx_original
-    D = D_original
-    L = L_original
+    print('\n[3/6] Using whole graph...')
+    num_components = len(list(nx.connected_components(nx.from_scipy_sparse_array(adj)))) - 1
 
-num_nodes = adj.shape[0]
-print(f'Working with: {num_nodes:,} nodes')
+# Update variables after component selection
+num_nodes = X_raw.shape[0]
+num_classes = len(np.unique(labels))
 
-# ============================================================================
-# 3. Compute Restricted Eigenvectors
-# ============================================================================
-print('\n[4/7] Computing restricted eigenvectors from X...')
+if SPLIT_TYPE == 'fixed':
+    train_idx = split_idx['train_idx']
+    val_idx = split_idx['val_idx']
+    test_idx = split_idx['test_idx']
 
-# Convert features to dense if sparse
-if sp.issparse(features):
-    X = features.toarray()
-else:
-    X = features
+# Compute normalized adjacency (SAME AS partAB.py)
+print('\n[4/6] Computing SGC-style normalized adjacency...')
+A_sgc = compute_sgc_normalized_adjacency(adj)
+print('✓ A_sgc = D^(-1/2) (A + I) D^(-1/2)')
 
-d_raw = X.shape[1]
+# Diffuse features (SAME AS partAB.py)
+print(f'\n[5/6] Precomputing diffusion (k={K_DIFFUSION})...')
+features_dense = X_raw.toarray() if sp.issparse(X_raw) else X_raw
+X_diffused = sgc_precompute(features_dense.copy(), A_sgc, K_DIFFUSION)
+print(f'✓ X_diffused shape: {X_diffused.shape}')
 
-# Compute restricted eigenvectors
-U, eigenvalues, d_effective, ortho_error = compute_restricted_eigenvectors(X, L, D)
-
-print(f'Restricted eigenvectors:')
-print(f'  Shape: {U.shape}')
-print(f'  Raw dimension: {d_raw}')
-print(f'  Effective dimension: {d_effective}')
-print(f'  D-orthonormality error: {ortho_error:.2e}')
-
-if ortho_error > 1e-2:
-    print(f'  ❌ CRITICAL: Very high orthonormality error!')
-    print(f'  Consider using --use-lcc flag')
-elif ortho_error > 1e-4:
-    print(f'  ⚠️  WARNING: High orthonormality error!')
-elif ortho_error < 1e-6:
-    print(f'  ✓ Excellent D-orthonormality')
-else:
-    print(f'  ✓ Good D-orthonormality')
-
-rank_X = d_effective
-if rank_X < d_raw:
-    print(f'  Rank deficiency: {rank_X}/{d_raw} ({rank_X/d_raw*100:.1f}%)')
-else:
-    print(f'  Full rank: {rank_X}/{d_raw}')
-
-# ============================================================================
-# 4. Analyze Magnitude Distributions (Q1)
-# ============================================================================
-print('\n[5/7] Analyzing magnitude distributions (Q1: What are the magnitudes?)...')
-
-# Compute magnitudes
-U_norms = np.linalg.norm(U, axis=1)
-U_log_norms = np.log(U_norms + 1e-8)
-
-mag_stats = {
-    'raw_norms': {
-        'min': float(U_norms.min()),
-        'max': float(U_norms.max()),
-        'mean': float(U_norms.mean()),
-        'std': float(U_norms.std()),
-        'median': float(np.median(U_norms)),
-        'cv': float(U_norms.std() / U_norms.mean())  # Coefficient of variation
-    },
-    'log_norms': {
-        'min': float(U_log_norms.min()),
-        'max': float(U_log_norms.max()),
-        'mean': float(U_log_norms.mean()),
-        'std': float(U_log_norms.std()),
-        'median': float(np.median(U_log_norms))
-    }
-}
-
-print(f'Magnitude Distribution Analysis:')
-print(f'  Raw norms ||u_i||:')
-print(f'    Range: [{mag_stats["raw_norms"]["min"]:.4f}, {mag_stats["raw_norms"]["max"]:.4f}]')
-print(f'    Mean ± Std: {mag_stats["raw_norms"]["mean"]:.4f} ± {mag_stats["raw_norms"]["std"]:.4f}')
-print(f'    Coefficient of Variation: {mag_stats["raw_norms"]["cv"]:.4f}')
-print(f'  Log norms log(||u_i||):')
-print(f'    Range: [{mag_stats["log_norms"]["min"]:.4f}, {mag_stats["log_norms"]["max"]:.4f}]')
-print(f'    Mean ± Std: {mag_stats["log_norms"]["mean"]:.4f} ± {mag_stats["log_norms"]["std"]:.4f}')
-
-# Interpretation
-if mag_stats['raw_norms']['cv'] < 0.1:
-    print(f'  → Magnitudes are VERY UNIFORM (CV < 0.1)')
-    print(f'     Magnitude channel may not provide much signal')
-elif mag_stats['raw_norms']['cv'] < 0.3:
-    print(f'  → Magnitudes have MODERATE variation (CV < 0.3)')
-    print(f'     Magnitude channel may provide some signal')
-else:
-    print(f'  → Magnitudes are HIGHLY VARIED (CV > 0.3)')
-    print(f'     Magnitude channel should provide strong signal')
-
-# Generate magnitude distribution plot
-fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-
-# Raw norms histogram
-axes[0].hist(U_norms, bins=50, color='steelblue', alpha=0.7, edgecolor='black')
-axes[0].axvline(U_norms.mean(), color='red', linestyle='--', linewidth=2, label=f'Mean: {U_norms.mean():.3f}')
-axes[0].set_xlabel('||u_i|| (Euclidean Norm)', fontsize=11)
-axes[0].set_ylabel('Frequency', fontsize=11)
-axes[0].set_title(f'Raw Magnitude Distribution - {DATASET_NAME}', fontsize=12, fontweight='bold')
-axes[0].legend()
-axes[0].grid(alpha=0.3)
-
-# Log norms histogram
-axes[1].hist(U_log_norms, bins=50, color='coral', alpha=0.7, edgecolor='black')
-axes[1].axvline(U_log_norms.mean(), color='red', linestyle='--', linewidth=2, label=f'Mean: {U_log_norms.mean():.3f}')
-axes[1].set_xlabel('log(||u_i||)', fontsize=11)
-axes[1].set_ylabel('Frequency', fontsize=11)
-axes[1].set_title(f'Log Magnitude Distribution - {DATASET_NAME}', fontsize=12, fontweight='bold')
-axes[1].legend()
-axes[1].grid(alpha=0.3)
-
-plt.tight_layout()
-plt.savefig(f'{output_base}/diagnostics/magnitude_distributions.png', dpi=150, bbox_inches='tight')
-print(f'✓ Saved: {output_base}/diagnostics/magnitude_distributions.png')
-plt.close()
-
-# Save magnitude statistics
-with open(f'{output_base}/diagnostics/magnitude_stats.json', 'w') as f:
-    json.dump(mag_stats, f, indent=2)
-print(f'✓ Saved: {output_base}/diagnostics/magnitude_stats.json')
-
-# ============================================================================
-# 5. Define Model Configurations
-# ============================================================================
-print('\n[6/7] Defining model configurations...')
-
-model_configs = []
-
-# Baselines
-model_configs.append({
-    'name': '(a) X → Standard MLP',
-    'key': 'baseline_X_standard',
-    'features': X,
-    'model_class': StandardMLP,
-    'alpha': None,
-    'with_magnitude': False,
-    'use_scaler': True
-})
-
-model_configs.append({
-    'name': '(b) U → Standard MLP',
-    'key': 'baseline_U_standard',
-    'features': U,
-    'model_class': StandardMLP,
-    'alpha': None,
-    'with_magnitude': False,
-    'use_scaler': True
-})
-
-model_configs.append({
-    'name': '(c) U → RowNorm MLP (α=1.0)',
-    'key': 'baseline_U_rownorm',
-    'features': U,
-    'model_class': AlphaNormMLPDiagnostic,
-    'alpha': 1.0,
-    'with_magnitude': False,
-    'use_scaler': False
-})
-
-# α-normalization without magnitude
-for alpha in [0.25, 0.5, 0.75]:
-    model_configs.append({
-        'name': f'(d{alpha}) U → α-Norm MLP (α={alpha})',
-        'key': f'alpha_{alpha:.2f}_no_mag',
-        'features': U,
-        'model_class': AlphaNormMLPDiagnostic,
-        'alpha': alpha,
-        'with_magnitude': False,
-        'use_scaler': False
-    })
-
-# α-normalization WITH magnitude (Q3: Standardization tested!)
-for alpha in [0.5, 0.75, 1.0]:
-    model_configs.append({
-        'name': f'(e{alpha}) U → α-Norm + Mag MLP (α={alpha})',
-        'key': f'alpha_{alpha:.2f}_with_mag',
-        'features': U,
-        'model_class': AlphaNormMLPDiagnostic,
-        'alpha': alpha,
-        'with_magnitude': True,
-        'use_scaler': False
-    })
-
-print(f'Testing {len(model_configs)} model configurations')
-
-# ============================================================================
-# 6. Run Experiments
-# ============================================================================
-print(f'\n[7/7] Running experiments...')
-
-num_split_iterations = NUM_RANDOM_SPLITS if USE_RANDOM_SPLITS else 1
-
-if USE_RANDOM_SPLITS:
-    print(f'Using {NUM_RANDOM_SPLITS} random splits × {NUM_SEEDS} seeds')
-else:
-    print(f'Using fixed benchmark splits × {NUM_SEEDS} seeds')
-
-# Determine batch size
-if split_idx is not None and 'train_idx' in split_idx and len(split_idx['train_idx']) > 256:
-    batch_size = 128
-else:
-    batch_size = 256
+# Run diagnostics
+print(f'\n[6/6] Running Phase 1 Diagnostics...')
+diagnostics_diffused = analyze_magnitude_information(
+    X_diffused, labels, num_classes, f'{output_base}/diagnostics'
+)
 
 # Initialize results storage
-all_results = {cfg['key']: [] for cfg in model_configs}
-
-# Training loop
-for split_idx_iter in range(num_split_iterations):
-    
-    if USE_RANDOM_SPLITS:
-        print(f'\n{"="*70}')
-        print(f'RANDOM SPLIT {split_idx_iter+1}/{NUM_RANDOM_SPLITS}')
-        print(f'{"="*70}')
-        train_idx, val_idx, test_idx = create_random_split(num_nodes, seed=split_idx_iter)
-    else:
-        print(f'\n{"="*70}')
-        print('USING FIXED BENCHMARK SPLITS')
-        print(f'{"="*70}')
-        if split_idx is not None:
-            train_idx = split_idx['train_idx']
-            val_idx = split_idx['val_idx']
-            test_idx = split_idx['test_idx']
-        else:
-            # Fallback to random if no fixed splits
-            train_idx, val_idx, test_idx = create_random_split(num_nodes, seed=0)
-    
-    print(f'Train: {len(train_idx):,} | Val: {len(val_idx):,} | Test: {len(test_idx):,}')
-    
-    current_batch_size = min(batch_size, len(train_idx))
-    
-    # Train each configuration
-    for cfg_idx, cfg in enumerate(model_configs, 1):
-        print(f'\n[{cfg_idx}/{len(model_configs)}] {cfg["name"]}')
-        
-        # Get features
-        features_to_use = cfg['features']
-        
-        # Apply StandardScaler if needed
-        if cfg['use_scaler']:
-            scaler = StandardScaler()
-            X_train = scaler.fit_transform(features_to_use[train_idx])
-            X_val = scaler.transform(features_to_use[val_idx])
-            X_test = scaler.transform(features_to_use[test_idx])
-        else:
-            X_train = features_to_use[train_idx]
-            X_val = features_to_use[val_idx]
-            X_test = features_to_use[test_idx]
-        
-        y_train = labels[train_idx]
-        y_val = labels[val_idx]
-        y_test = labels[test_idx]
-        
-        # Train with multiple seeds
-        for seed in range(NUM_SEEDS):
-            torch.manual_seed(seed)
-            np.random.seed(seed)
-            
-            # Create model
-            if cfg['model_class'] == StandardMLP:
-                model = StandardMLP(
-                    input_dim=X_train.shape[1],
-                    hidden_dim=HIDDEN_DIM,
-                    output_dim=num_classes
-                ).to(device)
-            else:  # AlphaNormMLPDiagnostic
-                model = AlphaNormMLPDiagnostic(
-                    input_dim=X_train.shape[1],
-                    hidden_dim=HIDDEN_DIM,
-                    output_dim=num_classes,
-                    alpha=cfg['alpha'],
-                    with_magnitude=cfg['with_magnitude']
-                ).to(device)
-            
-            # Train and evaluate
-            result = train_and_evaluate_diagnostic(
-                model, X_train, y_train, X_val, y_val, X_test, y_test,
-                EPOCHS, LEARNING_RATE, WEIGHT_DECAY, device, current_batch_size
-            )
-            
-            all_results[cfg['key']].append(result)
-        
-        # Show summary
-        recent_results = all_results[cfg['key']][-NUM_SEEDS:]
-        test_accs = [r['test_acc'] for r in recent_results]
-        print(f'  → Test Acc: {np.mean(test_accs)*100:.2f}% ± {np.std(test_accs)*100:.2f}%')
-        
-        # Check if network learned (Q2)
-        final_train_accs = [r['train_accs'][-1] for r in recent_results if 'train_accs' in r]
-        if final_train_accs:
-            avg_train_acc = np.mean(final_train_accs)
-            if avg_train_acc < 0.2:
-                print(f'  ⚠️  WARNING: Network may not be learning (train acc: {avg_train_acc*100:.1f}%)')
-
-# ============================================================================
-# 7. Aggregate and Save Results
-# ============================================================================
-print(f'\n[8/8] Aggregating results and saving outputs...')
-
-aggregated_results = {}
-for cfg in model_configs:
-    key = cfg['key']
-    aggregated_results[key] = aggregate_results(all_results[key])
-
-# Save metrics
-metrics = {
+all_results = {
     'dataset': DATASET_NAME,
-    'split_type': split_type,
-    'use_lcc': bool(USE_LCC),
+    'k_diffusion': K_DIFFUSION,
+    'split_type': SPLIT_TYPE,
+    'num_nodes': num_nodes,
+    'num_classes': num_classes,
     'num_seeds': NUM_SEEDS,
-    'num_splits': num_split_iterations,
-    'total_runs_per_model': NUM_SEEDS * num_split_iterations,
-    'd_raw': int(d_raw),
-    'd_effective': int(d_effective),
-    'rank_deficiency': bool(rank_X < d_raw),
-    'orthonormality_error': float(ortho_error),
-    'magnitude_statistics': mag_stats,
-    'alpha_values_tested': ALPHA_VALUES,
-    'models': {}
+    'diagnostics': {'diffused_features': diagnostics_diffused}
 }
 
-for cfg in model_configs:
-    key = cfg['key']
-    metrics['models'][key] = {
-        'name': cfg['name'],
-        'alpha': cfg['alpha'],
-        'with_magnitude': cfg['with_magnitude'],
-        'results': aggregated_results[key]
-    }
+experiments = {
+    'sgc_baseline': [],
+    'sgc_mlp_baseline': [],
+    'restricted_standard_mlp': [],
+    'restricted_rownorm_mlp': [],
+    'magnitude_only': [],
+    'log_magnitude': [],
+    'dual_stream': []
+}
 
-save_path = f'{output_base}/metrics/results_complete.json'
-with open(save_path, 'w') as f:
-    json.dump(metrics, f, indent=2)
-print(f'✓ Saved: {save_path}')
+metadata = {}
 
-# ============================================================================
-# 8. Print Summary
-# ============================================================================
-print('\n' + '='*80)
-print('RESULTS SUMMARY')
-print('='*80)
-
-print('\nBaselines (from Investigation 2):')
-baseline_keys = ['baseline_X_standard', 'baseline_U_standard', 'baseline_U_rownorm']
-for key in baseline_keys:
-    if key in aggregated_results:
-        res = aggregated_results[key]
-        cfg = next(c for c in model_configs if c['key'] == key)
-        learned = '✓' if res['network_learned'] else '✗'
-        print(f'{cfg["name"]:40} {res["test_acc_mean"]*100:6.2f}% ± {res["test_acc_std"]*100:5.2f}%  [{learned}]')
-
-print('\nα-Normalization (without magnitude):')
-for alpha in [0.25, 0.5, 0.75]:
-    key = f'alpha_{alpha:.2f}_no_mag'
-    if key in aggregated_results:
-        res = aggregated_results[key]
-        cfg = next(c for c in model_configs if c['key'] == key)
-        learned = '✓' if res['network_learned'] else '✗'
-        print(f'{cfg["name"]:40} {res["test_acc_mean"]*100:6.2f}% ± {res["test_acc_std"]*100:5.2f}%  [{learned}]')
-
-print('\nα-Normalization (WITH magnitude channel):')
-for alpha in [0.5, 0.75, 1.0]:
-    key = f'alpha_{alpha:.2f}_with_mag'
-    if key in aggregated_results:
-        res = aggregated_results[key]
-        cfg = next(c for c in model_configs if c['key'] == key)
-        learned = '✓' if res['network_learned'] else '✗'
-        print(f'{cfg["name"]:40} {res["test_acc_mean"]*100:6.2f}% ± {res["test_acc_std"]*100:5.2f}%  [{learned}]')
-
-# Find best result
-best_key = max(aggregated_results.keys(), key=lambda k: aggregated_results[k]['test_acc_mean'])
-best_cfg = next(c for c in model_configs if c['key'] == best_key)
-best_acc = aggregated_results[best_key]['test_acc_mean'] * 100
-
+# Run experiments
 print(f'\n{"="*80}')
-print(f'BEST RESULT: {best_cfg["name"]}')
-print(f'Test Accuracy: {best_acc:.2f}%')
+print(f'RUNNING EXPERIMENTS ({NUM_RANDOM_SPLITS} split(s) × {NUM_SEEDS} seeds)')
+print(f'{"="*80}')
 
-# Compare to baselines
-baseline_rownorm = aggregated_results['baseline_U_rownorm']['test_acc_mean'] * 100
-improvement = best_acc - baseline_rownorm
-print(f'Improvement over RowNorm: {improvement:+.2f}pp')
+for split_idx_iter in range(NUM_RANDOM_SPLITS):
+    print(f'\n{"="*80}')
+    print(f'SPLIT {split_idx_iter + 1}/{NUM_RANDOM_SPLITS}')
+    print(f'{"="*80}')
+    
+    if SPLIT_TYPE == 'fixed':
+        train_idx_cur = train_idx
+        val_idx_cur = val_idx
+        test_idx_cur = test_idx
+    else:
+        np.random.seed(split_idx_iter)
+        indices = np.arange(num_nodes)
+        np.random.shuffle(indices)
+        
+        train_size = int(0.6 * num_nodes)
+        val_size = int(0.2 * num_nodes)
+        
+        train_idx_cur = indices[:train_size]
+        val_idx_cur = indices[train_size:train_size + val_size]
+        test_idx_cur = indices[train_size + val_size:]
+    
+    print(f'Train: {len(train_idx_cur)}, Val: {len(val_idx_cur)}, Test: {len(test_idx_cur)}')
+    
+    # Experiment 1
+    print('\n[1/7] SGC Baseline (Logistic)')
+    sgc_results = run_sgc_baseline(
+        X_diffused, labels, train_idx_cur, val_idx_cur, test_idx_cur,
+        num_classes, NUM_SEEDS, device
+    )
+    experiments['sgc_baseline'].extend(sgc_results)
+    sgc_agg = aggregate_results(sgc_results)
+    print(f'→ {sgc_agg["test_acc_mean"]*100:.2f}% ± {sgc_agg["test_acc_std"]*100:.2f}%')
+    
+    # Experiment 2
+    print('\n[2/7] SGC + MLP')
+    sgc_mlp_results = run_sgc_mlp_baseline(
+        X_diffused, labels, train_idx_cur, val_idx_cur, test_idx_cur,
+        num_classes, NUM_SEEDS, device
+    )
+    experiments['sgc_mlp_baseline'].extend(sgc_mlp_results)
+    sgc_mlp_agg = aggregate_results(sgc_mlp_results)
+    print(f'→ {sgc_mlp_agg["test_acc_mean"]*100:.2f}% ± {sgc_mlp_agg["test_acc_std"]*100:.2f}%')
+    
+    # Experiment 3
+    print('\n[3/7] Restricted + StandardMLP')
+    restricted_std_results, d_eff, ortho_err = run_restricted_standard_mlp(
+        X_diffused, L, D, num_components, labels,
+        train_idx_cur, val_idx_cur, test_idx_cur, num_classes,
+        NUM_SEEDS, device
+    )
+    experiments['restricted_standard_mlp'].extend(restricted_std_results)
+    metadata['d_restricted'] = d_eff
+    metadata['ortho_error'] = float(ortho_err)
+    restricted_std_agg = aggregate_results(restricted_std_results)
+    print(f'→ {restricted_std_agg["test_acc_mean"]*100:.2f}% ± {restricted_std_agg["test_acc_std"]*100:.2f}%')
+    print(f'  D-orthonormality error: {ortho_err:.2e}')
+    
+    # Experiment 4
+    print('\n[4/7] Restricted + RowNorm')
+    rownorm_results, _, _ = run_restricted_rownorm(
+        X_diffused, L, D, num_components, labels,
+        train_idx_cur, val_idx_cur, test_idx_cur, num_classes,
+        NUM_SEEDS, device
+    )
+    experiments['restricted_rownorm_mlp'].extend(rownorm_results)
+    rownorm_agg = aggregate_results(rownorm_results)
+    print(f'→ {rownorm_agg["test_acc_mean"]*100:.2f}% ± {rownorm_agg["test_acc_std"]*100:.2f}%')
+    
+    # Experiment 5
+    print('\n[5/7] Magnitude-Only MLP (Ablation)')
+    magnitude_only_results, _, _ = run_magnitude_only(
+        X_diffused, L, D, num_components, labels,
+        train_idx_cur, val_idx_cur, test_idx_cur, num_classes,
+        NUM_SEEDS, device
+    )
+    experiments['magnitude_only'].extend(magnitude_only_results)
+    mag_only_agg = aggregate_results(magnitude_only_results)
+    print(f'→ {mag_only_agg["test_acc_mean"]*100:.2f}% ± {mag_only_agg["test_acc_std"]*100:.2f}%')
+    
+    # Experiment 6
+    print('\n[6/7] Log-Magnitude Augmented MLP')
+    log_mag_results, _, _ = run_log_magnitude(
+        X_diffused, L, D, num_components, labels,
+        train_idx_cur, val_idx_cur, test_idx_cur, num_classes,
+        NUM_SEEDS, device
+    )
+    experiments['log_magnitude'].extend(log_mag_results)
+    log_mag_agg = aggregate_results(log_mag_results)
+    print(f'→ {log_mag_agg["test_acc_mean"]*100:.2f}% ± {log_mag_agg["test_acc_std"]*100:.2f}%')
+    
+    # Experiment 7
+    print('\n[7/7] Dual-Stream MLP')
+    dual_stream_results, _, _ = run_dual_stream(
+        X_diffused, L, D, num_components, labels,
+        train_idx_cur, val_idx_cur, test_idx_cur, num_classes,
+        NUM_SEEDS, device
+    )
+    experiments['dual_stream'].extend(dual_stream_results)
+    dual_agg = aggregate_results(dual_stream_results)
+    print(f'→ {dual_agg["test_acc_mean"]*100:.2f}% ± {dual_agg["test_acc_std"]*100:.2f}%')
 
-if improvement > 2.0:
-    print(f'✓✓ MAJOR IMPROVEMENT!')
-elif improvement > 0.5:
-    print(f'✓ Improvement')
-elif improvement > -0.5:
-    print(f'~ Similar performance')
-else:
-    print(f'✗ Degradation')
+# Aggregate and save results
+print(f'\n{"="*80}')
+print('FINAL RESULTS SUMMARY')
+print(f'{"="*80}')
 
-print('='*80)
+final_results = {}
+for exp_name, exp_results in experiments.items():
+    final_results[exp_name] = aggregate_results(exp_results)
 
-# ============================================================================
-# 9. Generate Plots
-# ============================================================================
-print('\nGenerating comparison plots...')
+print(f'\n{"Method":<30} {"Test Acc":<15} {"Std":<10}')
+print('-' * 55)
 
-# [Rest of plotting code remains the same as before...]
+method_names = {
+    'sgc_baseline': 'SGC Baseline (Logistic)',
+    'sgc_mlp_baseline': 'SGC + MLP',
+    'restricted_standard_mlp': 'Restricted + StandardMLP',
+    'restricted_rownorm_mlp': 'Restricted + RowNorm',
+    'magnitude_only': 'Magnitude-Only (Ablation)',
+    'log_magnitude': 'Log-Magnitude Augmented',
+    'dual_stream': 'Dual-Stream'
+}
 
-print('\n' + '='*80)
+for exp_name, display_name in method_names.items():
+    agg = final_results[exp_name]
+    print(f'{display_name:<30} {agg["test_acc_mean"]*100:>6.2f}%        {agg["test_acc_std"]*100:>5.2f}%')
+
+# Part A/B/B.5 Analysis
+print(f'\n{"="*80}')
+print('PART A/B/B.5 FRAMEWORK ANALYSIS')
+print(f'{"="*80}')
+
+sgc_mlp_acc = final_results['sgc_mlp_baseline']['test_acc_mean'] * 100
+restricted_std_acc = final_results['restricted_standard_mlp']['test_acc_mean'] * 100
+rownorm_acc = final_results['restricted_rownorm_mlp']['test_acc_mean'] * 100
+log_mag_acc = final_results['log_magnitude']['test_acc_mean'] * 100
+dual_stream_acc = final_results['dual_stream']['test_acc_mean'] * 100
+
+part_a = restricted_std_acc - sgc_mlp_acc
+part_b_rownorm = rownorm_acc - restricted_std_acc
+part_b_log_mag = log_mag_acc - restricted_std_acc
+part_b_dual = dual_stream_acc - restricted_std_acc
+
+gap_rownorm = rownorm_acc - sgc_mlp_acc
+gap_log_mag = log_mag_acc - sgc_mlp_acc
+gap_dual = dual_stream_acc - sgc_mlp_acc
+
+print(f'\nPart A (Basis Sensitivity):')
+print(f'  SGC+MLP → Restricted+StandardMLP: {part_a:+.2f}pp')
+
+print(f'\nPart B (Spectral-Optimality):')
+print(f'  RowNorm improvement:       {part_b_rownorm:+.2f}pp')
+print(f'  Log-Magnitude improvement: {part_b_log_mag:+.2f}pp')
+print(f'  Dual-Stream improvement:   {part_b_dual:+.2f}pp')
+
+if part_b_log_mag > part_b_rownorm:
+    print(f'  ✓ Log-Magnitude beats RowNorm by {part_b_log_mag - part_b_rownorm:.2f}pp')
+if part_b_dual > part_b_rownorm:
+    print(f'  ✓ Dual-Stream beats RowNorm by {part_b_dual - part_b_rownorm:.2f}pp')
+
+print(f'\nThe Gap (Final vs Baseline):')
+print(f'  RowNorm:       {gap_rownorm:+.2f}pp')
+print(f'  Log-Magnitude: {gap_log_mag:+.2f}pp')
+print(f'  Dual-Stream:   {gap_dual:+.2f}pp')
+
+# Save results
+all_results['experiments'] = final_results
+all_results['metadata'] = metadata
+all_results['framework_analysis'] = {
+    'part_a': float(part_a),
+    'part_b_rownorm': float(part_b_rownorm),
+    'part_b_log_magnitude': float(part_b_log_mag),
+    'part_b_dual_stream': float(part_b_dual),
+    'gap_rownorm': float(gap_rownorm),
+    'gap_log_magnitude': float(gap_log_mag),
+    'gap_dual_stream': float(gap_dual)
+}
+
+with open(f'{output_base}/metrics/results.json', 'w') as f:
+    json.dump(all_results, f, indent=2)
+
+print(f'\n✓ Saved results: {output_base}/metrics/results.json')
+print(f'\n{"="*80}')
 print('EXPERIMENT COMPLETE')
-print('='*80)
-print(f'Dataset: {DATASET_NAME}')
-print(f'Results saved to: {output_base}/')
-print('='*80)
+print(f'{"="*80}')

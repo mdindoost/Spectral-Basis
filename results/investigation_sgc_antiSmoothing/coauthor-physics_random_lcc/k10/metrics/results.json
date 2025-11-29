@@ -7,7 +7,7 @@
   "num_splits": 5,
   "num_seeds": 5,
   "total_runs": 25,
-  "precompute_time": 44.771733045578,
+  "precompute_time": 24.632466793060303,
   "metadata": {
     "d_restricted_std": 7700,
     "ortho_error_std": 5.979500894426337e-09,
@@ -20,80 +20,80 @@
       "val_acc_std": 0.0015784596023714736,
       "test_acc_mean": 0.9446956133842468,
       "test_acc_std": 0.0020849413220775997,
-      "train_time_mean": 0.5370880222320557,
-      "train_time_std": 0.029550187766774913
+      "train_time_mean": 0.5302208232879638,
+      "train_time_std": 0.027888705690176693
     },
     "sgc_mlp_baseline": {
       "val_acc_mean": 0.9540910339355468,
       "val_acc_std": 0.0019191797307179996,
       "test_acc_mean": 0.9548173475265503,
       "test_acc_std": 0.00204518309938464,
-      "train_time_mean": 1.6521182823181153,
-      "train_time_std": 0.009808226002610955
+      "train_time_mean": 1.644278154373169,
+      "train_time_std": 0.013579074156003233
     },
     "restricted_standard_mlp": {
       "val_acc_mean": 0.8816816401481629,
       "val_acc_std": 0.00923014444292479,
       "test_acc_mean": 0.8754376411437989,
       "test_acc_std": 0.010466148455281248,
-      "train_time_mean": 1.5414096355438232,
-      "train_time_std": 0.007136237165195134
+      "train_time_mean": 1.5395327472686768,
+      "train_time_std": 0.012741827985795703
     },
     "full_rownorm_mlp": {
       "val_acc_mean": 0.9174079442024231,
       "val_acc_std": 0.004798379317094726,
       "test_acc_mean": 0.9157158994674682,
       "test_acc_std": 0.004063984953467177,
-      "train_time_mean": 2.4152510166168213,
-      "train_time_std": 0.019506949127832723
+      "train_time_mean": 2.4093205642700197,
+      "train_time_std": 0.021087142588938335
     },
     "jl_binary_nc": {
       "val_acc_mean": 0.5073876452445983,
       "val_acc_std": 0.00579130544965759,
       "test_acc_mean": 0.5082434487342834,
       "test_acc_std": 0.004683891185256128,
-      "train_time_mean": 0.4775110816955566,
-      "train_time_std": 0.019597930493155946
+      "train_time_mean": 0.44968453407287595,
+      "train_time_std": 0.0038365510073909356
     },
     "jl_binary_2nc": {
       "val_acc_mean": 0.5082110726833343,
       "val_acc_std": 0.0053911327681542,
       "test_acc_mean": 0.5073333096504211,
       "test_acc_std": 0.004071202627481357,
-      "train_time_mean": 0.47239593505859373,
-      "train_time_std": 0.01907139549259621
+      "train_time_mean": 0.44996118545532227,
+      "train_time_std": 0.004764565448928906
     },
     "jl_binary_4nc": {
       "val_acc_mean": 0.5306001710891723,
       "val_acc_std": 0.00621579021939568,
       "test_acc_mean": 0.5232695388793945,
       "test_acc_std": 0.006493801140862374,
-      "train_time_mean": 0.47079400062561033,
-      "train_time_std": 0.010066790520279775
+      "train_time_mean": 0.4509094715118408,
+      "train_time_std": 0.004412476704868756
     },
     "jl_ortho_nc": {
       "val_acc_mean": 0.5073586440086365,
       "val_acc_std": 0.005677957952178812,
       "test_acc_mean": 0.5082608413696289,
       "test_acc_std": 0.0047199305708393105,
-      "train_time_mean": 0.46763713836669923,
-      "train_time_std": 0.014003735682427366
+      "train_time_mean": 0.4487598705291748,
+      "train_time_std": 0.0032695659661576065
     },
     "jl_ortho_2nc": {
       "val_acc_mean": 0.5102580380439758,
       "val_acc_std": 0.0049083325121473224,
       "test_acc_mean": 0.5083072257041931,
       "test_acc_std": 0.0056867292159725495,
-      "train_time_mean": 0.4719787406921387,
-      "train_time_std": 0.014865652259109194
+      "train_time_mean": 0.44885443687438964,
+      "train_time_std": 0.0029810443782340326
     },
     "jl_ortho_4nc": {
       "val_acc_mean": 0.5221339535713195,
       "val_acc_std": 0.004070665892222277,
       "test_acc_mean": 0.5186376547813416,
       "test_acc_std": 0.0048635167367506405,
-      "train_time_mean": 0.4745792007446289,
-      "train_time_std": 0.01293792745734965
+      "train_time_mean": 0.44996932029724124,
+      "train_time_std": 0.0031588477466955923
     }
   },
   "improvements": {

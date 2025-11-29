@@ -1,0 +1,93 @@
+{
+  "dataset": "pubmed",
+  "k_diffusion": 10,
+  "split_type": "fixed",
+  "num_nodes": 19717,
+  "num_classes": 3,
+  "num_seeds": 5,
+  "diagnostics": {
+    "diffused_features": {
+      "overall_mean": 0.1404180425360746,
+      "overall_std": 0.051469313917898524,
+      "overall_min": 0.07116577222149792,
+      "overall_max": 0.7665304790264081,
+      "per_class": {
+        "0": {
+          "count": 4103,
+          "mean": 0.15867750761634147,
+          "std": 0.05291654057807769
+        },
+        "1": {
+          "count": 7739,
+          "mean": 0.12575635350960265,
+          "std": 0.043646735870842855
+        },
+        "2": {
+          "count": 7875,
+          "mean": 0.14531305538071343,
+          "std": 0.053783442674085025
+        }
+      },
+      "between_class_variance": 0.00018276395103928193,
+      "within_class_variance": 0.05011557304100186,
+      "fisher_score": 0.003646849471116579
+    }
+  },
+  "experiments": {
+    "sgc_baseline": {
+      "test_acc_mean": 0.7520000338554382,
+      "test_acc_std": 0.0010954310115890709,
+      "val_acc_mean": 0.7604000449180603,
+      "val_acc_std": 0.0026533016150791424
+    },
+    "sgc_mlp_baseline": {
+      "test_acc_mean": 0.7614000320434571,
+      "test_acc_std": 0.009911617654447993,
+      "val_acc_mean": 0.784000039100647,
+      "val_acc_std": 0.007694159921240203
+    },
+    "restricted_standard_mlp": {
+      "test_acc_mean": 0.47020002007484435,
+      "test_acc_std": 0.0031874890555692627,
+      "val_acc_mean": 0.4640000224113464,
+      "val_acc_std": 0.005059645085614994
+    },
+    "restricted_rownorm_mlp": {
+      "test_acc_mean": 0.5014000296592712,
+      "test_acc_std": 0.012142496386912218,
+      "val_acc_mean": 0.5212000250816345,
+      "val_acc_std": 0.01746311122778091
+    },
+    "magnitude_only": {
+      "test_acc_mean": 0.4110000193119049,
+      "test_acc_std": 0.012930581064378447,
+      "val_acc_mean": 0.4204000234603882,
+      "val_acc_std": 0.006621169595926395
+    },
+    "log_magnitude": {
+      "test_acc_mean": 0.48220002055168154,
+      "test_acc_std": 0.01895678473428679,
+      "val_acc_mean": 0.5184000134468079,
+      "val_acc_std": 0.0032000020146560754
+    },
+    "dual_stream": {
+      "test_acc_mean": 0.5034000277519226,
+      "test_acc_std": 0.010011995595749562,
+      "val_acc_mean": 0.5092000186443328,
+      "val_acc_std": 0.01281249660734496
+    }
+  },
+  "metadata": {
+    "d_restricted": 500,
+    "ortho_error": 4.2468206729040503e-10
+  },
+  "framework_analysis": {
+    "part_a": -29.120001196861267,
+    "part_b_rownorm": 3.120000958442688,
+    "part_b_log_magnitude": 1.2000000476837158,
+    "part_b_dual_stream": 3.3200007677078247,
+    "gap_rownorm": -26.00000023841858,
+    "gap_log_magnitude": -27.92000114917755,
+    "gap_dual_stream": -25.800000429153442
+  }
+}
