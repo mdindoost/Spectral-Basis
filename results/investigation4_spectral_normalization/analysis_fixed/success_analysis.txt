@@ -1,0 +1,14 @@
+SUCCESS ANALYSIS
+============================================================
+
+Spectral RowNorm beats standard RowNorm: 8/9
+Nested Spheres beats Log-Magnitude: 7/9
+Gap closed (positive): 2/9
+
+BEST CASES (Nested Spheres):
+------------------------------------------------------------
+amazon-computers: Gap = +6.65pp, Nested = 91.01%, Best α = 1.0
+citeseer: Gap = +5.13pp, Nested = 67.45%, Best α = 1.0
+amazon-photo: Gap = -0.20pp, Nested = 91.05%, Best α = 1.0
+coauthor-physics: Gap = -0.49pp, Nested = 94.63%, Best α = 1.0
+ogbn-arxiv: Gap = -0.78pp, Nested = 70.44%, Best α = -1.0

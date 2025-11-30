@@ -69,6 +69,164 @@ class CosineRowNormMLP(nn.Module):
         logits = self.scale * (x @ w.t())
         return logits
 
+class LogMagnitudeMLP(nn.Module):
+    """
+    Log-Magnitude Augmented MLP
+    Augments RowNorm features with log-magnitude
+    """
+    def __init__(self, input_dim, hidden_dim, num_classes):
+        super(LogMagnitudeMLP, self).__init__()
+        
+        # MLP with one extra input (log-magnitude)
+        self.fc1 = nn.Linear(input_dim + 1, hidden_dim)
+        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
+        self.fc3 = nn.Linear(hidden_dim, num_classes)
+        self.dropout = nn.Dropout(0.5)
+        
+    def forward(self, x):
+        # Row normalization
+        x_norm = torch.norm(x, p=2, dim=1, keepdim=True)
+        x_normalized = x / (x_norm + 1e-8)
+        
+        # Log-magnitude
+        log_magnitude = torch.log(x_norm + 1e-8)
+        
+        # Augment
+        x_augmented = torch.cat([x_normalized, log_magnitude], dim=1)
+        
+        # MLP
+        x = F.relu(self.fc1(x_augmented))
+        x = self.dropout(x)
+        x = F.relu(self.fc2(x))
+        x = self.dropout(x)
+        x = self.fc3(x)
+        
+        return x
+
+
+class SpectralRowNormMLP(nn.Module):
+    """
+    RowNorm with eigenvalue weighting (nested spheres)
+    
+    Each eigenvector is weighted by f(λ) = λ^alpha before normalization:
+        V_weighted = V * (eigenvalues ** alpha)
+        V_normalized = V_weighted / ||V_weighted||_row
+    
+    Args:
+        input_dim: Number of features
+        hidden_dim: Hidden layer dimension
+        num_classes: Number of output classes
+        eigenvalues: Eigenvalues corresponding to eigenvectors (shape: d)
+        alpha: Weighting exponent (0 = standard RowNorm, 1 = linear eigenvalue weighting)
+    """
+    def __init__(self, input_dim, hidden_dim, num_classes, eigenvalues, alpha=0.5):
+        super(SpectralRowNormMLP, self).__init__()
+        
+        self.alpha = alpha
+        
+        # Compute eigenvalue weights
+        # Handle alpha=0 separately to avoid numerical issues
+        if abs(alpha) < 1e-8:
+            self.eigenvalue_weights = torch.ones(input_dim)
+        else:
+            # Ensure eigenvalues are positive (they should be from symmetric matrices)
+            eigenvalues_safe = torch.abs(eigenvalues) + 1e-8
+            self.eigenvalue_weights = eigenvalues_safe ** alpha
+        
+        # Register as buffer (not a parameter, but saved with model)
+        self.register_buffer('weights', self.eigenvalue_weights)
+        
+        # MLP architecture
+        self.fc1 = nn.Linear(input_dim, hidden_dim)
+        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
+        self.fc3 = nn.Linear(hidden_dim, num_classes)
+        self.dropout = nn.Dropout(0.5)
+        
+    def forward(self, x):
+        # Step 1: Weight by eigenvalues (nested spheres)
+        x_weighted = x * self.weights
+        
+        # Step 2: Row normalization
+        x_norm = torch.norm(x_weighted, p=2, dim=1, keepdim=True)
+        x_normalized = x_weighted / (x_norm + 1e-8)
+        
+        # Step 3: MLP
+        x = F.relu(self.fc1(x_normalized))
+        x = self.dropout(x)
+        x = F.relu(self.fc2(x))
+        x = self.dropout(x)
+        x = self.fc3(x)
+        
+        return x
+
+
+class NestedSpheresClassifier(nn.Module):
+    """
+    Complete nested spheres architecture combining:
+    1. Eigenvalue weighting (spectral structure)
+    2. Magnitude preservation (node importance)
+    
+    Architecture:
+        V_weighted = V * (eigenvalues ** alpha)
+        M = log(||V_weighted||_row)
+        V_normalized = V_weighted / ||V_weighted||_row
+        X_augmented = [V_normalized, beta * M]
+        output = MLP(X_augmented)
+    
+    Args:
+        input_dim: Number of features
+        hidden_dim: Hidden layer dimension
+        num_classes: Number of output classes
+        eigenvalues: Eigenvalues corresponding to eigenvectors
+        alpha: Eigenvalue weighting exponent
+        beta: Magnitude feature scaling factor
+    """
+    def __init__(self, input_dim, hidden_dim, num_classes, eigenvalues, 
+                 alpha=0.5, beta=1.0):
+        super(NestedSpheresClassifier, self).__init__()
+        
+        self.alpha = alpha
+        self.beta = beta
+        
+        # Compute eigenvalue weights
+        if abs(alpha) < 1e-8:
+            self.eigenvalue_weights = torch.ones(input_dim)
+        else:
+            eigenvalues_safe = torch.abs(eigenvalues) + 1e-8
+            self.eigenvalue_weights = eigenvalues_safe ** alpha
+        
+        self.register_buffer('weights', self.eigenvalue_weights)
+        
+        # MLP with one extra input (log-magnitude)
+        self.fc1 = nn.Linear(input_dim + 1, hidden_dim)
+        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
+        self.fc3 = nn.Linear(hidden_dim, num_classes)
+        self.dropout = nn.Dropout(0.5)
+        
+    def forward(self, x):
+        # Step 1: Weight by eigenvalues (nested spheres)
+        x_weighted = x * self.weights
+        
+        # Step 2: Compute magnitude
+        magnitude = torch.norm(x_weighted, p=2, dim=1, keepdim=True)
+        
+        # Step 3: Row normalization
+        x_normalized = x_weighted / (magnitude + 1e-8)
+        
+        # Step 4: Log-magnitude
+        log_magnitude = torch.log(magnitude + 1e-8)
+        
+        # Step 5: Augment with scaled log-magnitude
+        x_augmented = torch.cat([x_normalized, self.beta * log_magnitude], dim=1)
+        
+        # Step 6: MLP
+        x = F.relu(self.fc1(x_augmented))
+        x = self.dropout(x)
+        x = F.relu(self.fc2(x))
+        x = self.dropout(x)
+        x = self.fc3(x)
+        
+        return x
 # ============================================================================
 # Dataset Loading
 # ============================================================================
