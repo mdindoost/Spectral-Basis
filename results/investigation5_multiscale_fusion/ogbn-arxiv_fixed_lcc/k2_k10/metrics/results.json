@@ -1,0 +1,43 @@
+{
+  "metadata": {
+    "dataset": "ogbn-arxiv",
+    "num_nodes": 169343,
+    "num_classes": 40,
+    "k_low": 2,
+    "k_high": 10,
+    "d_sgc": 128,
+    "d_eigenvec": 127,
+    "ortho_error": 1.2536796045736764e-09
+  },
+  "results": {
+    "sgc_baseline": {
+      "test_acc_mean": 0.5813386082649231,
+      "test_acc_std": 0.0015702437250127246,
+      "val_acc_mean": 0.5941742777824401,
+      "val_acc_std": 0.0013645391592900379
+    },
+    "branch1_only": {
+      "test_acc_mean": 0.6561323523521423,
+      "test_acc_std": 0.009149515933898289,
+      "val_acc_mean": 0.6595858573913574,
+      "val_acc_std": 0.006676264628558999
+    },
+    "branch2_only": {
+      "test_acc_mean": 0.6996234893798828,
+      "test_acc_std": 0.002161574597425118,
+      "val_acc_mean": 0.7132118344306946,
+      "val_acc_std": 0.0010363008564118902
+    },
+    "dual_branch": {
+      "test_acc_mean": 0.7036273717880249,
+      "test_acc_std": 0.0018186391010890372,
+      "val_acc_mean": 0.7206952929496765,
+      "val_acc_std": 0.0011657763117609837
+    }
+  },
+  "analysis": {
+    "best_single_branch": 69.96234893798828,
+    "dual_branch": 70.36273717880249,
+    "fusion_gain": 0.400388240814209
+  }
+}

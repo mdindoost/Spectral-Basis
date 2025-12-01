@@ -1,0 +1,43 @@
+{
+  "metadata": {
+    "dataset": "wikics",
+    "num_nodes": 11311,
+    "num_classes": 10,
+    "k_low": 2,
+    "k_high": 10,
+    "d_sgc": 300,
+    "d_eigenvec": 299,
+    "ortho_error": 2.1854017484557176e-09
+  },
+  "results": {
+    "sgc_baseline": {
+      "test_acc_mean": 0.09934478923678398,
+      "test_acc_std": 0.05847791416513587,
+      "val_acc_mean": 0.09888823702931404,
+      "val_acc_std": 0.057498504735909256
+    },
+    "branch1_only": {
+      "test_acc_mean": 0.6216398239135742,
+      "test_acc_std": 0.042076360819194705,
+      "val_acc_mean": 0.641544783115387,
+      "val_acc_std": 0.047135499400424066
+    },
+    "branch2_only": {
+      "test_acc_mean": 0.6303524136543274,
+      "test_acc_std": 0.006344107612249271,
+      "val_acc_mean": 0.6628437757492065,
+      "val_acc_std": 0.005937333021689286
+    },
+    "dual_branch": {
+      "test_acc_mean": 0.6405171036720276,
+      "test_acc_std": 0.06561163647281427,
+      "val_acc_mean": 0.6650673151016235,
+      "val_acc_std": 0.07640077298805832
+    }
+  },
+  "analysis": {
+    "best_single_branch": 63.03524136543274,
+    "dual_branch": 64.05171036720276,
+    "fusion_gain": 1.0164690017700195
+  }
+}
