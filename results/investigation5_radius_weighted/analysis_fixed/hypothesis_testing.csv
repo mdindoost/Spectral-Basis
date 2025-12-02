@@ -1,0 +1,10 @@
+Dataset,RowNorm Effect,Log-Mag Effect,Nested Effect,SIMPLE Helps?,Log-Mag Hurts?,Nested Hurts?,Hypothesis
+amazon-computers,-0.24,-0.15,-0.06,✗,✓,✓,✗✗
+amazon-photo,-0.13,-0.12,-0.01,✗,✓,✗,✗✗
+citeseer,-1.03,0.54,0.03,✗,✗,✗,✗✗
+coauthor-cs,0.86,-0.67,0.01,✓,✓,✗,✓✓
+coauthor-physics,0.08,0.23,0.09,✓,✗,✗,~
+cora,-0.11,-1.33,0.37,✗,✓,✗,✗✗
+ogbn-arxiv,0.20,-0.09,-0.09,✓,✓,✓,✓✓
+pubmed,-1.10,0.12,-1.70,✗,✗,✓,✗✗
+wikics,0.20,0.22,0.17,✓,✗,✗,~

@@ -1,0 +1,26 @@
+
+\begin{table}[htbp]
+\centering
+\caption{Investigation 5: Hypothesis Test Summary}
+\label{tab:hypothesis_summary}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Method} & \textbf{Uses Magnitude?} & \textbf{Helps (n/18)} & \textbf{Hurts (n/18)} \\
+\midrule
+RowNorm (SIMPLE) & No & 8 & 8 \\
+Log-Magnitude (COMPLEX) & Yes & 7 & 9 \\
+Nested Spheres (COMPLEX) & Yes & 3 & 4 \\
+\bottomrule
+\end{tabular}
+\vspace{0.5em}
+
+\textbf{Hypothesis:} Radius weighting helps SIMPLE methods (no magnitude feature) \\
+but hurts COMPLEX methods (already use magnitude as feature).
+
+\textbf{Confirmation Rate:}
+\begin{itemize}
+    \item SIMPLE (RowNorm helps): 8/18 = 44.4\%
+    \item COMPLEX (LogMag hurts): 9/18 = 50.0\%
+    \item COMPLEX (Nested hurts): 4/18 = 22.2\%
+\end{itemize}
+\end{table}

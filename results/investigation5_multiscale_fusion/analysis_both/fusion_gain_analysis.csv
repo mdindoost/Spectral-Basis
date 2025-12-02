@@ -1,0 +1,19 @@
+Dataset,Split,Best Single,Dual-Branch,Triple-Branch,Dual Gain,Triple Gain,Magnitude Contribution,Dual Outcome,Triple Outcome,Magnitude Effect
+amazon-computers,fixed,90.82,91.40,91.70,0.58,0.87,0.30,Helps (>0.5pp),Helps (>0.5pp),Neutral
+amazon-computers,random,89.79,90.36,90.77,0.57,0.99,0.42,Helps (>0.5pp),Helps (>0.5pp),Neutral
+amazon-photo,fixed,94.54,93.09,92.81,-1.44,-1.72,-0.28,Hurts (<-0.5pp),Hurts (<-0.5pp),Neutral
+amazon-photo,random,94.39,93.01,92.87,-1.38,-1.52,-0.14,Hurts (<-0.5pp),Hurts (<-0.5pp),Neutral
+citeseer,fixed,70.23,71.67,72.19,1.45,1.96,0.51,Helps (>0.5pp),Helps (>0.5pp),Positive (>0.5pp)
+citeseer,random,75.16,73.25,73.19,-1.91,-1.97,-0.07,Hurts (<-0.5pp),Hurts (<-0.5pp),Neutral
+coauthor-cs,fixed,94.11,93.99,93.87,-0.12,-0.24,-0.12,Neutral,Neutral,Neutral
+coauthor-cs,random,93.47,93.43,93.41,-0.04,-0.06,-0.02,Neutral,Neutral,Neutral
+coauthor-physics,fixed,96.51,96.44,96.43,-0.07,-0.08,-0.02,Neutral,Neutral,Neutral
+coauthor-physics,random,96.51,96.64,96.59,0.13,0.08,-0.05,Neutral,Neutral,Neutral
+cora,fixed,78.03,78.19,78.47,0.15,0.44,0.28,Neutral,Neutral,Neutral
+cora,random,84.87,84.65,84.49,-0.22,-0.38,-0.16,Neutral,Neutral,Neutral
+ogbn-arxiv,fixed,69.96,70.36,70.51,0.40,0.54,0.14,Neutral,Helps (>0.5pp),Neutral
+ogbn-arxiv,random,71.99,72.68,71.76,0.69,-0.23,-0.92,Helps (>0.5pp),Neutral,Negative (<-0.5pp)
+pubmed,fixed,75.96,54.42,53.50,-21.54,-22.46,-0.92,Hurts (<-0.5pp),Hurts (<-0.5pp),Negative (<-0.5pp)
+pubmed,random,89.33,86.47,87.22,-2.86,-2.11,0.76,Hurts (<-0.5pp),Hurts (<-0.5pp),Positive (>0.5pp)
+wikics,fixed,78.25,69.86,70.02,-8.39,-8.23,0.16,Hurts (<-0.5pp),Hurts (<-0.5pp),Neutral
+wikics,random,83.85,81.52,81.91,-2.32,-1.94,0.38,Hurts (<-0.5pp),Hurts (<-0.5pp),Neutral

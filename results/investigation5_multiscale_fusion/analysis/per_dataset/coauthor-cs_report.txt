@@ -1,0 +1,53 @@
+================================================================================
+INVESTIGATION 5: COAUTHOR-CS
+================================================================================
+
+DATASET INFORMATION
+--------------------------------------------------------------------------------
+Nodes: 18333
+Classes: 15
+
+FIXED SPLITS
+--------------------------------------------------------------------------------
+SGC Baseline:          nan% ± nan%
+Branch 1 (k=2):        nan% ± nan%
+Branch 2 (k=10):       nan% ± nan%
+Dual-Branch:           nan% ± nan%
+Triple-Branch:         nan% ± nan%
+
+ANALYSIS
+--------------------------------------------------------------------------------
+Dual fusion gain:      -0.12pp (Neutral)
+Triple fusion gain:    -0.24pp (Neutral)
+Log-Mag contribution:  -0.12pp
+
+INTERPRETATION
+--------------------------------------------------------------------------------
+≈ Multi-scale fusion has NEUTRAL effect.
+≈ Log-magnitude augmentation has NEUTRAL effect.
+
+Branch comparison: Branch 1 - Branch 2 = +nanpp
+  → Both branches perform similarly
+
+RANDOM SPLITS
+--------------------------------------------------------------------------------
+SGC Baseline:          nan% ± nan%
+Branch 1 (k=2):        nan% ± nan%
+Branch 2 (k=10):       nan% ± nan%
+Dual-Branch:           nan% ± nan%
+Triple-Branch:         nan% ± nan%
+
+ANALYSIS
+--------------------------------------------------------------------------------
+Dual fusion gain:      -0.04pp (Neutral)
+Triple fusion gain:    -0.06pp (Neutral)
+Log-Mag contribution:  -0.02pp
+
+INTERPRETATION
+--------------------------------------------------------------------------------
+≈ Multi-scale fusion has NEUTRAL effect.
+≈ Log-magnitude augmentation has NEUTRAL effect.
+
+Branch comparison: Branch 1 - Branch 2 = +nanpp
+  → Both branches perform similarly
+

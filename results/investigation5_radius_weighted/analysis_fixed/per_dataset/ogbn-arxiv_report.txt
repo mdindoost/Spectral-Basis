@@ -1,0 +1,76 @@
+================================================================================
+OGBN-ARXIV
+Investigation 5: Radius-Weighted Training
+================================================================================
+
+EXPERIMENT RESULTS
+--------------------------------------------------------------------------------
+
+SGC+MLP (k=2)
+  Test Accuracy: 70.41% ± 0.30%
+
+SGC Baseline (k=10)
+  Test Accuracy: 44.18% ± 0.31%
+
+Restricted + StandardMLP
+  Test Accuracy: 71.22% ± 0.13%
+  Effective dimension: 128
+  D-orthonormality error: 1.28e-09
+  Radius: μ=0.0193, σ=0.0215
+
+Restricted + RowNorm
+  Test Accuracy: 70.69% ± 0.05%
+  Effective dimension: 128
+  D-orthonormality error: 1.28e-09
+  Radius: μ=0.0193, σ=0.0215
+
+Restricted + RowNorm + Radius
+  Test Accuracy: 70.90% ± 0.15%
+  Effective dimension: 128
+  D-orthonormality error: 1.28e-09
+  Radius: μ=0.0193, σ=0.0215
+  Weight distribution: μ=0.0000, σ=0.0000
+
+Restricted + Log-Magnitude
+  Test Accuracy: 70.61% ± 0.06%
+  Effective dimension: 128
+  D-orthonormality error: 1.28e-09
+  Radius: μ=0.0193, σ=0.0215
+
+Restricted + Log-Magnitude + Radius
+  Test Accuracy: 70.51% ± 0.14%
+  Effective dimension: 128
+  D-orthonormality error: 1.28e-09
+  Radius: μ=0.0193, σ=0.0215
+  Weight distribution: μ=0.0000, σ=0.0000
+
+Restricted + Nested Spheres
+  Test Accuracy: 69.33% ± 0.11%
+  Effective dimension: 128
+  D-orthonormality error: 1.28e-09
+  Radius: μ=0.0193, σ=0.0215
+
+Restricted + Nested Spheres + Radius
+  Test Accuracy: 69.24% ± 0.11%
+  Effective dimension: 128
+  D-orthonormality error: 1.28e-09
+  Radius: μ=0.0193, σ=0.0215
+  Weight distribution: μ=0.0000, σ=0.0000
+
+FRAMEWORK ANALYSIS
+--------------------------------------------------------------------------------
+
+Oversmoothing SGC: -14.08pp (k=2 → k=10)
+Oversmoothing MLP: +0.40pp (k=2 → k=10)
+
+Part A (Basis Sensitivity): +0.40pp
+Part B (RowNorm): -0.52pp
+Part B.5 (Log-Magnitude): -0.61pp
+Part B.6 (Nested Spheres): -1.89pp
+
+Part B.7 (Radius Weighting Effects):
+  RowNorm: +0.20pp (✓ HELPS - adds new info)
+  Log-Magnitude: -0.09pp (✓ HURTS - redundancy confirmed)
+  Nested Spheres: -0.09pp (✓ HURTS - redundancy confirmed)
+
+================================================================================

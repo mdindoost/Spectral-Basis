@@ -1,0 +1,19 @@
+Dataset,Split,Nodes,Classes,SGC Baseline,Branch 1 (SGC k=2),Branch 2 (k=10 RowNorm),Dual-Branch,Triple-Branch,SGC Std,Branch 1 Std,Branch 2 Std,Dual Std,Triple Std,Dual Gain,Triple Gain,Log-Mag Contribution
+amazon-computers,fixed,13381,10,,,,,,,,,,,0.58,0.87,0.30
+amazon-computers,random,13381,10,,,,,,,,,,,0.57,0.99,0.42
+amazon-photo,fixed,7487,8,,,,,,,,,,,-1.44,-1.72,-0.28
+amazon-photo,random,7487,8,,,,,,,,,,,-1.38,-1.52,-0.14
+citeseer,fixed,2120,6,,,,,,,,,,,1.45,1.96,0.51
+citeseer,random,2120,6,,,,,,,,,,,-1.91,-1.97,-0.07
+coauthor-cs,fixed,18333,15,,,,,,,,,,,-0.12,-0.24,-0.12
+coauthor-cs,random,18333,15,,,,,,,,,,,-0.04,-0.06,-0.02
+coauthor-physics,fixed,34493,5,,,,,,,,,,,-0.07,-0.08,-0.02
+coauthor-physics,random,34493,5,,,,,,,,,,,0.13,0.08,-0.05
+cora,fixed,2485,7,,,,,,,,,,,0.15,0.44,0.28
+cora,random,2485,7,,,,,,,,,,,-0.22,-0.38,-0.16
+ogbn-arxiv,fixed,169343,40,,,,,,,,,,,0.40,0.54,0.14
+ogbn-arxiv,random,169343,40,,,,,,,,,,,0.69,-0.23,-0.92
+pubmed,fixed,19717,3,,,,,,,,,,,-21.54,-22.46,-0.92
+pubmed,random,19717,3,,,,,,,,,,,-2.86,-2.11,0.76
+wikics,fixed,11311,10,,,,,,,,,,,-8.39,-8.23,0.16
+wikics,random,11311,10,,,,,,,,,,,-2.32,-1.94,0.38

@@ -1,0 +1,10 @@
+Dataset,Split,Best Single,Dual-Branch,Triple-Branch,Dual Gain,Triple Gain,Magnitude Contribution,Dual Outcome,Triple Outcome,Magnitude Effect
+amazon-computers,fixed,90.82,91.40,91.70,0.58,0.87,0.30,Helps (>0.5pp),Helps (>0.5pp),Neutral
+amazon-photo,fixed,94.54,93.09,92.81,-1.44,-1.72,-0.28,Hurts (<-0.5pp),Hurts (<-0.5pp),Neutral
+citeseer,fixed,70.23,71.67,72.19,1.45,1.96,0.51,Helps (>0.5pp),Helps (>0.5pp),Positive (>0.5pp)
+coauthor-cs,fixed,94.11,93.99,93.87,-0.12,-0.24,-0.12,Neutral,Neutral,Neutral
+coauthor-physics,fixed,96.51,96.44,96.43,-0.07,-0.08,-0.02,Neutral,Neutral,Neutral
+cora,fixed,78.03,78.19,78.47,0.15,0.44,0.28,Neutral,Neutral,Neutral
+ogbn-arxiv,fixed,69.96,70.36,70.51,0.40,0.54,0.14,Neutral,Helps (>0.5pp),Neutral
+pubmed,fixed,75.96,54.42,53.50,-21.54,-22.46,-0.92,Hurts (<-0.5pp),Hurts (<-0.5pp),Negative (<-0.5pp)
+wikics,fixed,78.25,69.86,70.02,-8.39,-8.23,0.16,Hurts (<-0.5pp),Hurts (<-0.5pp),Neutral

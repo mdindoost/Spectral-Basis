@@ -1,0 +1,53 @@
+================================================================================
+INVESTIGATION 5: OGBN-ARXIV
+================================================================================
+
+DATASET INFORMATION
+--------------------------------------------------------------------------------
+Nodes: 169343
+Classes: 40
+
+FIXED SPLITS
+--------------------------------------------------------------------------------
+SGC Baseline:          nan% ± nan%
+Branch 1 (k=2):        nan% ± nan%
+Branch 2 (k=10):       nan% ± nan%
+Dual-Branch:           nan% ± nan%
+Triple-Branch:         nan% ± nan%
+
+ANALYSIS
+--------------------------------------------------------------------------------
+Dual fusion gain:      +0.40pp (Neutral)
+Triple fusion gain:    +0.54pp (Helps)
+Log-Mag contribution:  +0.14pp
+
+INTERPRETATION
+--------------------------------------------------------------------------------
+≈ Multi-scale fusion has NEUTRAL effect.
+≈ Log-magnitude augmentation has NEUTRAL effect.
+
+Branch comparison: Branch 1 - Branch 2 = +nanpp
+  → Both branches perform similarly
+
+RANDOM SPLITS
+--------------------------------------------------------------------------------
+SGC Baseline:          nan% ± nan%
+Branch 1 (k=2):        nan% ± nan%
+Branch 2 (k=10):       nan% ± nan%
+Dual-Branch:           nan% ± nan%
+Triple-Branch:         nan% ± nan%
+
+ANALYSIS
+--------------------------------------------------------------------------------
+Dual fusion gain:      +0.69pp (Helps)
+Triple fusion gain:    -0.23pp (Neutral)
+Log-Mag contribution:  -0.92pp
+
+INTERPRETATION
+--------------------------------------------------------------------------------
+✓ Multi-scale fusion is EFFECTIVE for this dataset.
+✗ Log-magnitude augmentation HURTS.
+
+Branch comparison: Branch 1 - Branch 2 = +nanpp
+  → Both branches perform similarly
+

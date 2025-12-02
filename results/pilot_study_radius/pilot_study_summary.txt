@@ -1,0 +1,23 @@
+================================================================================
+PILOT STUDY SUMMARY REPORT
+================================================================================
+
+DECISION CRITERIA:
+--------------------------------------------------------------------------------
+Maximum improvement on Cora: +3.85pp
+Maximum improvement on ogbn-arxiv: +0.23pp
+Overall mean improvement: -0.65pp
+
+✅ RECOMMENDATION: Proceed with full study
+   At least one failure dataset shows >1.0pp improvement
+
+BEST CONFIGURATION:
+   Dataset: cora
+   Method: logmag
+   Radius: eigenvalue
+   Improvement: +3.85pp
+
+RECOMMENDED FULL STUDY:
+   Focus on: eigenvalue radius definition
+   Test on: All 9 datasets from Investigation 5
+   Weight range: [0.3, 1.0] (current)

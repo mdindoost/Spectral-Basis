@@ -1,0 +1,10 @@
+Dataset,Part B (RowNorm),Part B.5 (Log-Mag),Part B.6 (Nested),Part B.7 (RowNorm+Radius),Part B.7 (Log-Mag+Radius),Part B.7 (Nested+Radius),Radius Effect (RowNorm),Radius Effect (Log-Mag),Radius Effect (Nested)
+amazon-computers,0.29,0.89,0.96,0.44,0.57,0.99,0.15,-0.32,0.02
+amazon-photo,2.67,2.16,2.91,2.48,2.07,2.76,-0.19,-0.09,-0.15
+citeseer,14.48,14.15,14.10,13.73,14.43,13.63,-0.75,0.28,-0.47
+coauthor-cs,-0.27,3.50,8.38,0.59,2.84,8.38,0.86,-0.67,0.01
+coauthor-physics,4.34,5.26,6.72,4.42,5.50,6.80,0.08,0.23,0.09
+cora,8.17,4.47,7.93,7.85,3.78,7.97,-0.32,-0.68,0.04
+ogbn-arxiv,-0.58,-1.99,-2.79,-0.43,-1.76,-2.60,0.15,0.23,0.18
+pubmed,0.53,0.90,0.55,0.66,0.66,0.39,0.13,-0.23,-0.16
+wikics,-0.04,0.83,-0.35,0.23,0.68,-0.28,0.27,-0.15,0.07

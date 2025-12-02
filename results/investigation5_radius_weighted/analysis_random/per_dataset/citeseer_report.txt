@@ -1,0 +1,76 @@
+================================================================================
+CITESEER
+Investigation 5: Radius-Weighted Training
+================================================================================
+
+EXPERIMENT RESULTS
+--------------------------------------------------------------------------------
+
+SGC+MLP (k=2)
+  Test Accuracy: 76.27% ± 0.74%
+
+SGC Baseline (k=10)
+  Test Accuracy: 77.31% ± 0.09%
+
+Restricted + StandardMLP
+  Test Accuracy: 62.03% ± 1.87%
+  Effective dimension: 1956
+  D-orthonormality error: 1.55e-08
+  Radius: μ=1.0674, σ=0.4470
+
+Restricted + RowNorm
+  Test Accuracy: 76.51% ± 0.72%
+  Effective dimension: 1956
+  D-orthonormality error: 1.55e-08
+  Radius: μ=1.0674, σ=0.4470
+
+Restricted + RowNorm + Radius
+  Test Accuracy: 75.75% ± 1.14%
+  Effective dimension: 1956
+  D-orthonormality error: 1.55e-08
+  Radius: μ=1.0674, σ=0.4470
+  Weight distribution: μ=0.0008, σ=0.0002
+
+Restricted + Log-Magnitude
+  Test Accuracy: 76.18% ± 0.91%
+  Effective dimension: 1956
+  D-orthonormality error: 1.55e-08
+  Radius: μ=1.0674, σ=0.4470
+
+Restricted + Log-Magnitude + Radius
+  Test Accuracy: 76.46% ± 0.46%
+  Effective dimension: 1956
+  D-orthonormality error: 1.55e-08
+  Radius: μ=1.0674, σ=0.4470
+  Weight distribution: μ=0.0008, σ=0.0002
+
+Restricted + Nested Spheres
+  Test Accuracy: 76.13% ± 0.57%
+  Effective dimension: 1956
+  D-orthonormality error: 1.55e-08
+  Radius: μ=1.0674, σ=0.4470
+
+Restricted + Nested Spheres + Radius
+  Test Accuracy: 75.66% ± 0.84%
+  Effective dimension: 1956
+  D-orthonormality error: 1.55e-08
+  Radius: μ=1.0674, σ=0.4470
+  Weight distribution: μ=0.0008, σ=0.0002
+
+FRAMEWORK ANALYSIS
+--------------------------------------------------------------------------------
+
+Oversmoothing SGC: -2.22pp (k=2 → k=10)
+Oversmoothing MLP: -0.42pp (k=2 → k=10)
+
+Part A (Basis Sensitivity): -13.82pp
+Part B (RowNorm): +14.48pp
+Part B.5 (Log-Magnitude): +14.15pp
+Part B.6 (Nested Spheres): +14.10pp
+
+Part B.7 (Radius Weighting Effects):
+  RowNorm: -0.75pp (✗ HURTS unexpectedly)
+  Log-Magnitude: +0.28pp (✗ HELPS - contradicts hypothesis)
+  Nested Spheres: -0.47pp (✓ HURTS - redundancy confirmed)
+
+================================================================================

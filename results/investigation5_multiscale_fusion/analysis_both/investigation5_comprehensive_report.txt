@@ -1,0 +1,111 @@
+================================================================================
+INVESTIGATION 5: MULTI-SCALE FEATURE FUSION
+Comprehensive Analysis Report
+================================================================================
+
+RESEARCH QUESTION
+--------------------------------------------------------------------------------
+Does combining low-diffusion features (k=2) with high-diffusion restricted
+eigenvectors (k=10) improve performance? Does augmenting with log-magnitude
+(from Investigation 3) provide additional benefit?
+
+METHODS TESTED
+--------------------------------------------------------------------------------
+1. SGC Baseline: Logistic regression on SGC k=2
+2. Branch 1 Only: SGC k=2 + MLP
+3. Branch 2 Only: Restricted k=10 + RowNorm + MLP
+4. Dual-Branch: Fusion of Branch 1 + Branch 2
+5. Triple-Branch: Branch 1 + Branch 2 (augmented with log-magnitude)
+
+SUMMARY STATISTICS
+--------------------------------------------------------------------------------
+Total experiments: 18
+Datasets: 9
+Split types: ['fixed' 'random']
+
+DUAL-BRANCH RESULTS
+--------------------------------------------------------------------------------
+Success rate (>0.5pp gain): 4 / 18 = 22.2%
+Mean gain: -2.02pp (std: 5.35pp)
+Median gain: -0.09pp
+Range: [-21.54pp, 1.45pp]
+
+Top 3 Dual-Branch gains:
+  citeseer (fixed): +1.45pp
+  ogbn-arxiv (random): +0.69pp
+  amazon-computers (fixed): +0.58pp
+
+TRIPLE-BRANCH RESULTS
+--------------------------------------------------------------------------------
+Success rate (>0.5pp gain): 4 / 18 = 22.2%
+Mean gain: -2.00pp (std: 5.55pp)
+Median gain: -0.24pp
+Range: [-22.46pp, 1.96pp]
+
+Top 3 Triple-Branch gains:
+  citeseer (fixed): +1.96pp
+  amazon-computers (random): +0.99pp
+  amazon-computers (fixed): +0.87pp
+
+MAGNITUDE CONTRIBUTION (Triple - Dual)
+--------------------------------------------------------------------------------
+Positive effect (>0.5pp): 2 / 18 = 11.1%
+Neutral effect (-0.5 to +0.5pp): 14 / 18
+Negative effect (<-0.5pp): 2 / 18 = 11.1%
+Mean contribution: +0.01pp (std: 0.43pp)
+Median contribution: -0.02pp
+
+Top 3 Magnitude contributions:
+  pubmed (random): +0.76pp
+  citeseer (fixed): +0.51pp
+  amazon-computers (random): +0.42pp
+
+Bottom 3 Magnitude contributions (where it hurt):
+  ogbn-arxiv (random): -0.92pp
+  pubmed (fixed): -0.92pp
+  amazon-photo (fixed): -0.28pp
+
+DETAILED RESULTS TABLE
+--------------------------------------------------------------------------------
+         Dataset  Split  SGC Baseline  Branch 1 Only  Branch 2 Only  Dual-Branch  Triple-Branch  Dual Gain  Triple Gain  Magnitude Contribution
+amazon-computers  fixed     89.644705      90.821611      90.066615    91.398960      91.695038   0.577350     0.873427                0.296078
+amazon-computers random     88.682856      89.785583      89.252151    90.357866      90.774751   0.572283     0.989167                0.416885
+    amazon-photo  fixed     93.841019      94.535742      89.993324    93.092855      92.812296  -1.442887    -1.723446               -0.280559
+    amazon-photo random     93.647534      94.389857      90.210952    93.012020      92.873168  -1.377836    -1.516689               -0.138852
+        citeseer  fixed     70.015085      70.226246      66.244346    71.674210      72.187030   1.447964     1.960784                0.512820
+        citeseer random     77.273586      75.160378      71.122643    73.254718      73.188681  -1.905660    -1.971698               -0.066037
+     coauthor-cs  fixed     94.372952      94.111228      80.567063    93.991271      93.871316  -0.119957    -0.239912               -0.119956
+     coauthor-cs random     93.862592      93.466736      80.476550    93.426386      93.407848  -0.040349    -0.058888               -0.018538
+coauthor-physics  fixed     95.994200      96.510141      92.208692    96.443473      96.426083  -0.066668    -0.084058               -0.017390
+coauthor-physics random     96.132169      96.507242      92.072459    96.638257      96.589561   0.131015     0.082319               -0.048696
+            cora  fixed     78.316944      78.032789      63.584702    78.185796      78.469948   0.153006     0.437158                0.284152
+            cora random     87.951707      84.869212      76.152915    84.651909      84.490942  -0.217303    -0.378270               -0.160967
+      ogbn-arxiv  fixed     58.133861      65.613235      69.962349    70.362737      70.505114   0.400388     0.542765                0.142376
+      ogbn-arxiv random     58.649781      65.777267      71.990790    72.681076      71.757663   0.690286    -0.233127               -0.923413
+          pubmed  fixed     77.180004      75.960002      49.080002    54.420003      53.500003 -21.539999   -22.459999               -0.920000
+          pubmed random     81.159227      89.327584      83.130830    86.465515      87.222107  -2.862069    -2.105477                0.756592
+          wikics  fixed     76.369754      78.250401      63.148576    69.860104      70.023023  -8.390297    -8.227378                0.162919
+          wikics random     77.362792      83.846220      77.984974    81.523640      81.907201  -2.322581    -1.939019                0.383561
+
+KEY FINDINGS
+--------------------------------------------------------------------------------
+1. Multi-scale fusion (Dual-Branch) helps in 22% of cases
+   → Multi-scale fusion has limited benefit
+
+2. Log-magnitude augmentation (Triple-Branch) helps in 22% of cases
+   → Magnitude augmentation rarely helps (11% positive)
+
+3. Best performing method overall: Branch 1 Only (6/18 datasets)
+
+CONCLUSION
+--------------------------------------------------------------------------------
+Investigation 5 tested multi-scale feature fusion combining low-diffusion
+(k=2) and high-diffusion (k=10) features with optional log-magnitude
+augmentation. Results show:
+
+- Multi-scale fusion (Dual-Branch) has limited benefit
+- Log-magnitude augmentation rarely improves results
+
+Best overall method: Branch 1 Only
+
+================================================================================

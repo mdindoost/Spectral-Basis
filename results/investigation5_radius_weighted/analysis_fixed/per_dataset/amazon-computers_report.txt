@@ -1,0 +1,76 @@
+================================================================================
+AMAZON-COMPUTERS
+Investigation 5: Radius-Weighted Training
+================================================================================
+
+EXPERIMENT RESULTS
+--------------------------------------------------------------------------------
+
+SGC+MLP (k=2)
+  Test Accuracy: 93.21% ± 0.42%
+
+SGC Baseline (k=10)
+  Test Accuracy: 76.76% ± 0.23%
+
+Restricted + StandardMLP
+  Test Accuracy: 89.58% ± 0.29%
+  Effective dimension: 767
+  D-orthonormality error: 2.35e-09
+  Radius: μ=0.0855, σ=0.1674
+
+Restricted + RowNorm
+  Test Accuracy: 90.26% ± 0.26%
+  Effective dimension: 767
+  D-orthonormality error: 2.35e-09
+  Radius: μ=0.0855, σ=0.1674
+
+Restricted + RowNorm + Radius
+  Test Accuracy: 90.02% ± 0.31%
+  Effective dimension: 767
+  D-orthonormality error: 2.35e-09
+  Radius: μ=0.0855, σ=0.1674
+  Weight distribution: μ=0.0001, σ=0.0000
+
+Restricted + Log-Magnitude
+  Test Accuracy: 90.81% ± 0.09%
+  Effective dimension: 767
+  D-orthonormality error: 2.35e-09
+  Radius: μ=0.0855, σ=0.1674
+
+Restricted + Log-Magnitude + Radius
+  Test Accuracy: 90.66% ± 0.18%
+  Effective dimension: 767
+  D-orthonormality error: 2.35e-09
+  Radius: μ=0.0855, σ=0.1674
+  Weight distribution: μ=0.0001, σ=0.0000
+
+Restricted + Nested Spheres
+  Test Accuracy: 91.04% ± 0.21%
+  Effective dimension: 767
+  D-orthonormality error: 2.35e-09
+  Radius: μ=0.0855, σ=0.1674
+
+Restricted + Nested Spheres + Radius
+  Test Accuracy: 90.98% ± 0.14%
+  Effective dimension: 767
+  D-orthonormality error: 2.35e-09
+  Radius: μ=0.0855, σ=0.1674
+  Weight distribution: μ=0.0001, σ=0.0000
+
+FRAMEWORK ANALYSIS
+--------------------------------------------------------------------------------
+
+Oversmoothing SGC: -13.29pp (k=2 → k=10)
+Oversmoothing MLP: -9.36pp (k=2 → k=10)
+
+Part A (Basis Sensitivity): +5.72pp
+Part B (RowNorm): +0.68pp
+Part B.5 (Log-Magnitude): +1.23pp
+Part B.6 (Nested Spheres): +1.47pp
+
+Part B.7 (Radius Weighting Effects):
+  RowNorm: -0.24pp (✗ HURTS unexpectedly)
+  Log-Magnitude: -0.15pp (✓ HURTS - redundancy confirmed)
+  Nested Spheres: -0.06pp (✓ HURTS - redundancy confirmed)
+
+================================================================================

@@ -1,0 +1,19 @@
+Dataset,Split,Dual Gain,Triple Gain,Log-Mag Contribution,Dual Category,Triple Category
+amazon-computers,fixed,0.58,0.87,0.30,Helps,Helps
+amazon-computers,random,0.57,0.99,0.42,Helps,Helps
+amazon-photo,fixed,-1.44,-1.72,-0.28,Hurts,Hurts
+amazon-photo,random,-1.38,-1.52,-0.14,Hurts,Hurts
+citeseer,fixed,1.45,1.96,0.51,Helps,Helps
+citeseer,random,-1.91,-1.97,-0.07,Hurts,Hurts
+coauthor-cs,fixed,-0.12,-0.24,-0.12,Neutral,Neutral
+coauthor-cs,random,-0.04,-0.06,-0.02,Neutral,Neutral
+coauthor-physics,fixed,-0.07,-0.08,-0.02,Neutral,Neutral
+coauthor-physics,random,0.13,0.08,-0.05,Neutral,Neutral
+cora,fixed,0.15,0.44,0.28,Neutral,Neutral
+cora,random,-0.22,-0.38,-0.16,Neutral,Neutral
+ogbn-arxiv,fixed,0.40,0.54,0.14,Neutral,Helps
+ogbn-arxiv,random,0.69,-0.23,-0.92,Helps,Neutral
+pubmed,fixed,-21.54,-22.46,-0.92,Hurts,Hurts
+pubmed,random,-2.86,-2.11,0.76,Hurts,Hurts
+wikics,fixed,-8.39,-8.23,0.16,Hurts,Hurts
+wikics,random,-2.32,-1.94,0.38,Hurts,Hurts

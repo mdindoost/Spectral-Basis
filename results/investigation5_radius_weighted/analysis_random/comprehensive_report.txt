@@ -1,0 +1,113 @@
+================================================================================
+INVESTIGATION 5: RADIUS-WEIGHTED TRAINING
+Comprehensive Analysis Report
+================================================================================
+
+Split Type: Random
+Datasets Analyzed: 9
+
+HYPOTHESIS
+--------------------------------------------------------------------------------
+Radius weighting adds confidence signal based on node centrality.
+Expected behavior:
+  1. SIMPLE methods (RowNorm) lack magnitude info → should BENEFIT
+  2. COMPLEX methods (Log-Mag, Nested) already use magnitude → should HURT (redundancy)
+
+HYPOTHESIS TESTING RESULTS
+--------------------------------------------------------------------------------
+SIMPLE methods benefit: 6/9 (66.7%)
+Log-Magnitude hurts: 6/9 (66.7%)
+Nested Spheres hurts: 3/9 (33.3%)
+Full hypothesis confirmed: 4/9 (44.4%)
+
+✗✗ HYPOTHESIS NOT SUPPORTED
+
+PER-DATASET ANALYSIS
+--------------------------------------------------------------------------------
+
+AMAZON-COMPUTERS
+  RowNorm effect: +0.15pp (✓)
+  Log-Mag effect: -0.32pp (✓)
+  Nested effect:  +0.02pp (✗)
+  Hypothesis: ✓✓
+
+AMAZON-PHOTO
+  RowNorm effect: -0.19pp (✗)
+  Log-Mag effect: -0.09pp (✓)
+  Nested effect:  -0.15pp (✓)
+  Hypothesis: ✗✗
+
+CITESEER
+  RowNorm effect: -0.75pp (✗)
+  Log-Mag effect: +0.28pp (✗)
+  Nested effect:  -0.47pp (✓)
+  Hypothesis: ✗✗
+
+COAUTHOR-CS
+  RowNorm effect: +0.86pp (✓)
+  Log-Mag effect: -0.67pp (✓)
+  Nested effect:  +0.01pp (✗)
+  Hypothesis: ✓✓
+
+COAUTHOR-PHYSICS
+  RowNorm effect: +0.08pp (✓)
+  Log-Mag effect: +0.23pp (✗)
+  Nested effect:  +0.09pp (✗)
+  Hypothesis: ~
+
+CORA
+  RowNorm effect: -0.32pp (✗)
+  Log-Mag effect: -0.68pp (✓)
+  Nested effect:  +0.04pp (✗)
+  Hypothesis: ✗✗
+
+OGBN-ARXIV
+  RowNorm effect: +0.15pp (✓)
+  Log-Mag effect: +0.23pp (✗)
+  Nested effect:  +0.18pp (✗)
+  Hypothesis: ~
+
+PUBMED
+  RowNorm effect: +0.13pp (✓)
+  Log-Mag effect: -0.23pp (✓)
+  Nested effect:  -0.16pp (✓)
+  Hypothesis: ✓✓
+
+WIKICS
+  RowNorm effect: +0.27pp (✓)
+  Log-Mag effect: -0.15pp (✓)
+  Nested effect:  +0.07pp (✗)
+  Hypothesis: ✓✓
+
+FRAMEWORK SUMMARY
+--------------------------------------------------------------------------------
+Part A: Basis sensitivity (SGC+MLP → Restricted+StandardMLP)
+Part B: RowNorm effect (Restricted+StandardMLP → Restricted+RowNorm)
+Part B.5: Magnitude preservation (Log-Magnitude augmentation)
+Part B.6: Eigenvalue structure (Nested Spheres)
+Part B.7: Radius weighting effect (NEW)
+
+Mean effects across datasets:
+  Part A: -5.22pp ± 6.75pp
+  Part B: +3.29pp ± 5.07pp
+  Part B.5: +3.35pp ± 4.61pp
+  Part B.6: +4.27pp ± 5.37pp
+  Part B.7 (RowNorm): +0.04pp ± 0.44pp
+  Part B.7 (Log-Mag): -0.16pp ± 0.37pp
+  Part B.7 (Nested): -0.04pp ± 0.19pp
+
+OVERSMOOTHING ANALYSIS
+--------------------------------------------------------------------------------
+Comparing k=2 vs k=10 performance:
+
+Datasets with severe oversmoothing (>5pp degradation): 4/9
+Mean SGC oversmoothing: -6.21pp
+Mean MLP oversmoothing: -2.08pp
+
+CONCLUSION
+--------------------------------------------------------------------------------
+Radius weighting represents a confidence-based training approach that:
+  ~ Inconsistently helps SIMPLE methods
+  ✓ Often hurts COMPLEX methods (redundancy confirmed)
+
+================================================================================

@@ -1,0 +1,53 @@
+================================================================================
+INVESTIGATION 5: PUBMED
+================================================================================
+
+DATASET INFORMATION
+--------------------------------------------------------------------------------
+Nodes: 19717
+Classes: 3
+
+FIXED SPLITS
+--------------------------------------------------------------------------------
+SGC Baseline:          nan% ± nan%
+Branch 1 (k=2):        nan% ± nan%
+Branch 2 (k=10):       nan% ± nan%
+Dual-Branch:           nan% ± nan%
+Triple-Branch:         nan% ± nan%
+
+ANALYSIS
+--------------------------------------------------------------------------------
+Dual fusion gain:      -21.54pp (Hurts)
+Triple fusion gain:    -22.46pp (Hurts)
+Log-Mag contribution:  -0.92pp
+
+INTERPRETATION
+--------------------------------------------------------------------------------
+✗ Multi-scale fusion HURTS performance.
+✗ Log-magnitude augmentation HURTS.
+
+Branch comparison: Branch 1 - Branch 2 = +nanpp
+  → Both branches perform similarly
+
+RANDOM SPLITS
+--------------------------------------------------------------------------------
+SGC Baseline:          nan% ± nan%
+Branch 1 (k=2):        nan% ± nan%
+Branch 2 (k=10):       nan% ± nan%
+Dual-Branch:           nan% ± nan%
+Triple-Branch:         nan% ± nan%
+
+ANALYSIS
+--------------------------------------------------------------------------------
+Dual fusion gain:      -2.86pp (Hurts)
+Triple fusion gain:    -2.11pp (Hurts)
+Log-Mag contribution:  +0.76pp
+
+INTERPRETATION
+--------------------------------------------------------------------------------
+✗ Multi-scale fusion HURTS performance.
+✓ Log-magnitude augmentation HELPS.
+
+Branch comparison: Branch 1 - Branch 2 = +nanpp
+  → Both branches perform similarly
+

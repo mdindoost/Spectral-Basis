@@ -1,0 +1,893 @@
+[
+  {
+    "dataset": "coauthor-cs",
+    "method": "rownorm",
+    "radius_type": "raw",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 81.7993426322937,
+    "test_acc_std": 0.4186769687219436,
+    "results": [
+      0.811613917350769,
+      0.8214285373687744,
+      0.8143402338027954,
+      0.8214285373687744,
+      0.8211559057235718
+    ],
+    "radius_f_stat": 155.34231152988218,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "coauthor-cs",
+    "method": "logmag",
+    "radius_type": "raw",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 84.04579877853394,
+    "test_acc_std": 0.3522720285725106,
+    "results": [
+      0.8440566658973694,
+      0.8336967825889587,
+      0.8416030406951904,
+      0.8413304090499878,
+      0.8416030406951904
+    ],
+    "radius_f_stat": 155.34231152988218,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "coauthor-cs",
+    "method": "nested",
+    "radius_type": "raw",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 89.59105491638184,
+    "test_acc_std": 0.10259067588027154,
+    "results": [
+      0.894220232963562,
+      0.8958560228347778,
+      0.8955833911895752,
+      0.8966739177703857,
+      0.897219181060791
+    ],
+    "radius_f_stat": 155.34231152988218,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "cora",
+    "method": "rownorm",
+    "radius_type": "raw",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 59.71584916114807,
+    "test_acc_std": 1.0125661904862204,
+    "results": [
+      0.6163934469223022,
+      0.596721351146698,
+      0.5923497676849365,
+      0.5934426188468933,
+      0.5868852734565735
+    ],
+    "radius_f_stat": 12.713770542812554,
+    "radius_p_value": 3.503534922744119e-14
+  },
+  {
+    "dataset": "cora",
+    "method": "logmag",
+    "radius_type": "raw",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 52.28415369987488,
+    "test_acc_std": 1.8399639222663824,
+    "results": [
+      0.5092896223068237,
+      0.548633873462677,
+      0.49726778268814087,
+      0.5224043726921082,
+      0.5366120338439941
+    ],
+    "radius_f_stat": 12.713770542812554,
+    "radius_p_value": 3.503534922744119e-14
+  },
+  {
+    "dataset": "cora",
+    "method": "nested",
+    "radius_type": "raw",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 67.47541189193726,
+    "test_acc_std": 0.9911068369595122,
+    "results": [
+      0.6863388419151306,
+      0.6666666865348816,
+      0.6666666865348816,
+      0.6666666865348816,
+      0.6874316930770874
+    ],
+    "radius_f_stat": 12.713770542812554,
+    "radius_p_value": 3.503534922744119e-14
+  },
+  {
+    "dataset": "ogbn-arxiv",
+    "method": "rownorm",
+    "radius_type": "raw",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 70.8972716331482,
+    "test_acc_std": 0.15122272963014521,
+    "results": [
+      0.7085776925086975,
+      0.7101207971572876,
+      0.7099356055259705,
+      0.7100590467453003,
+      0.7061704397201538
+    ],
+    "radius_f_stat": 1750.8999727214239,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "ogbn-arxiv",
+    "method": "logmag",
+    "radius_type": "raw",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 70.51252245903015,
+    "test_acc_std": 0.14417907022420887,
+    "results": [
+      0.7039895057678223,
+      0.7060675621032715,
+      0.70709627866745,
+      0.7030636072158813,
+      0.7054091691970825
+    ],
+    "radius_f_stat": 1750.8999727214239,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "ogbn-arxiv",
+    "method": "nested",
+    "radius_type": "raw",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 69.23729062080383,
+    "test_acc_std": 0.10893092919093093,
+    "results": [
+      0.6931670904159546,
+      0.6915622353553772,
+      0.691603422164917,
+      0.6913976669311523,
+      0.6941341161727905
+    ],
+    "radius_f_stat": 1750.8999727214239,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "coauthor-cs",
+    "method": "rownorm",
+    "radius_type": "eigenvalue",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 81.55942916870117,
+    "test_acc_std": 0.5984428197282009,
+    "results": [
+      0.8121591806411743,
+      0.8058887124061584,
+      0.8167938590049744,
+      0.8211559057235718,
+      0.8219738006591797
+    ],
+    "radius_f_stat": 680.1649875953276,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "coauthor-cs",
+    "method": "rownorm",
+    "radius_type": "degree",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 81.22682332992554,
+    "test_acc_std": 1.0025287457541254,
+    "results": [
+      0.8039803504943848,
+      0.8157033324241638,
+      0.8004361987113953,
+      0.8121591806411743,
+      0.8290621042251587
+    ],
+    "radius_f_stat": 56.97402083135015,
+    "radius_p_value": 1.2713814084705728e-157
+  },
+  {
+    "dataset": "coauthor-cs",
+    "method": "rownorm",
+    "radius_type": "diffused",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 80.27262449264526,
+    "test_acc_std": 0.7819441374436232,
+    "results": [
+      0.8058887124061584,
+      0.7949836254119873,
+      0.811613917350769,
+      0.7919846773147583,
+      0.8091602921485901
+    ],
+    "radius_f_stat": 601.7346856734711,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "coauthor-cs",
+    "method": "logmag",
+    "radius_type": "eigenvalue",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 84.6074116230011,
+    "test_acc_std": 0.28468536742606265,
+    "results": [
+      0.8486913442611694,
+      0.8435114026069641,
+      0.8459650874137878,
+      0.8424208760261536,
+      0.84978187084198
+    ],
+    "radius_f_stat": 680.1649875953276,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "coauthor-cs",
+    "method": "logmag",
+    "radius_type": "degree",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 84.93456482887268,
+    "test_acc_std": 0.16946855341594466,
+    "results": [
+      0.8525081276893616,
+      0.8495092391967773,
+      0.8484187126159668,
+      0.8476008176803589,
+      0.8486913442611694
+    ],
+    "radius_f_stat": 56.97402083135015,
+    "radius_p_value": 1.2713814084705728e-157
+  },
+  {
+    "dataset": "coauthor-cs",
+    "method": "logmag",
+    "radius_type": "diffused",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 84.55834031105042,
+    "test_acc_std": 0.3873235964782814,
+    "results": [
+      0.8459650874137878,
+      0.8418756723403931,
+      0.8495092391967773,
+      0.8405125141143799,
+      0.8500545024871826
+    ],
+    "radius_f_stat": 601.7346856734711,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "coauthor-cs",
+    "method": "nested",
+    "radius_type": "eigenvalue",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 89.73827242851257,
+    "test_acc_std": 0.21986803379553294,
+    "results": [
+      0.8931297063827515,
+      0.8983096480369568,
+      0.8988549113273621,
+      0.8974918127059937,
+      0.8991275429725647
+    ],
+    "radius_f_stat": 680.1649875953276,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "coauthor-cs",
+    "method": "nested",
+    "radius_type": "degree",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 89.68374729156494,
+    "test_acc_std": 0.15090858651124833,
+    "results": [
+      0.8974918127059937,
+      0.8947654962539673,
+      0.8983096480369568,
+      0.8983096480369568,
+      0.8953107595443726
+    ],
+    "radius_f_stat": 56.97402083135015,
+    "radius_p_value": 1.2713814084705728e-157
+  },
+  {
+    "dataset": "coauthor-cs",
+    "method": "nested",
+    "radius_type": "diffused",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 89.82006311416626,
+    "test_acc_std": 0.20299365493561097,
+    "results": [
+      0.8961286544799805,
+      0.9018538594245911,
+      0.897219181060791,
+      0.8988549113273621,
+      0.8969465494155884
+    ],
+    "radius_f_stat": 601.7346856734711,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "cora",
+    "method": "rownorm",
+    "radius_type": "eigenvalue",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 58.426231145858765,
+    "test_acc_std": 1.0632035158009119,
+    "results": [
+      0.5857923626899719,
+      0.5956284403800964,
+      0.5945355296134949,
+      0.5672131180763245,
+      0.5781421065330505
+    ],
+    "radius_f_stat": 23.39707864955959,
+    "radius_p_value": 5.076995704337851e-27
+  },
+  {
+    "dataset": "cora",
+    "method": "rownorm",
+    "radius_type": "degree",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 58.338799476623535,
+    "test_acc_std": 0.3994674610405224,
+    "results": [
+      0.5814207792282104,
+      0.5868852734565735,
+      0.5890710353851318,
+      0.5781421065330505,
+      0.5814207792282104
+    ],
+    "radius_f_stat": 3.5709888390091047,
+    "radius_p_value": 0.001586273434482961
+  },
+  {
+    "dataset": "cora",
+    "method": "rownorm",
+    "radius_type": "diffused",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 57.989073991775506,
+    "test_acc_std": 0.6651405736880655,
+    "results": [
+      0.5737705230712891,
+      0.5868852734565735,
+      0.5890710353851318,
+      0.5748634338378906,
+      0.5748634338378906
+    ],
+    "radius_f_stat": 14.89993672716717,
+    "radius_p_value": 8.286246205784183e-17
+  },
+  {
+    "dataset": "cora",
+    "method": "logmag",
+    "radius_type": "eigenvalue",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 56.13115072250366,
+    "test_acc_std": 2.9297763953400606,
+    "results": [
+      0.5989071130752563,
+      0.587978184223175,
+      0.5169399380683899,
+      0.5508196949958801,
+      0.5519126057624817
+    ],
+    "radius_f_stat": 23.39707864955959,
+    "radius_p_value": 5.076995704337851e-27
+  },
+  {
+    "dataset": "cora",
+    "method": "logmag",
+    "radius_type": "degree",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 54.0546464920044,
+    "test_acc_std": 0.9935137058250076,
+    "results": [
+      0.55409836769104,
+      0.5453552007675171,
+      0.5431694388389587,
+      0.5245901942253113,
+      0.5355191230773926
+    ],
+    "radius_f_stat": 3.5709888390091047,
+    "radius_p_value": 0.001586273434482961
+  },
+  {
+    "dataset": "cora",
+    "method": "logmag",
+    "radius_type": "diffused",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 54.27322506904601,
+    "test_acc_std": 0.5640873204602056,
+    "results": [
+      0.5453552007675171,
+      0.5355191230773926,
+      0.5366120338439941,
+      0.5497267842292786,
+      0.5464481115341187
+    ],
+    "radius_f_stat": 14.89993672716717,
+    "radius_p_value": 8.286246205784183e-17
+  },
+  {
+    "dataset": "cora",
+    "method": "nested",
+    "radius_type": "eigenvalue",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 68.15300822257996,
+    "test_acc_std": 0.6282012380482275,
+    "results": [
+      0.6896175146102905,
+      0.6830601096153259,
+      0.6863388419151306,
+      0.6754098534584045,
+      0.6732240915298462
+    ],
+    "radius_f_stat": 23.39707864955959,
+    "radius_p_value": 5.076995704337851e-27
+  },
+  {
+    "dataset": "cora",
+    "method": "nested",
+    "radius_type": "degree",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 67.08196878433228,
+    "test_acc_std": 0.615912664562235,
+    "results": [
+      0.6786885261535645,
+      0.6612021923065186,
+      0.674316942691803,
+      0.6666666865348816,
+      0.6732240915298462
+    ],
+    "radius_f_stat": 3.5709888390091047,
+    "radius_p_value": 0.001586273434482961
+  },
+  {
+    "dataset": "cora",
+    "method": "nested",
+    "radius_type": "diffused",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 68.0437171459198,
+    "test_acc_std": 0.9911063111499048,
+    "results": [
+      0.6830601096153259,
+      0.6765027642250061,
+      0.6808743476867676,
+      0.66557377576828,
+      0.6961748600006104
+    ],
+    "radius_f_stat": 14.89993672716717,
+    "radius_p_value": 8.286246205784183e-17
+  },
+  {
+    "dataset": "ogbn-arxiv",
+    "method": "rownorm",
+    "radius_type": "eigenvalue",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 70.85529923439026,
+    "test_acc_std": 0.21017949308464717,
+    "results": [
+      0.70542973279953,
+      0.7098739147186279,
+      0.7116639018058777,
+      0.7077341079711914,
+      0.7080633044242859
+    ],
+    "radius_f_stat": 1737.1130916337645,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "ogbn-arxiv",
+    "method": "rownorm",
+    "radius_type": "degree",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 70.66600918769836,
+    "test_acc_std": 0.14449011797385353,
+    "results": [
+      0.7081867456436157,
+      0.7076312303543091,
+      0.7055326104164124,
+      0.7044009566307068,
+      0.7075489163398743
+    ],
+    "radius_f_stat": 592.8542305161326,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "ogbn-arxiv",
+    "method": "rownorm",
+    "radius_type": "diffused",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 70.78369855880737,
+    "test_acc_std": 0.13740082225002975,
+    "results": [
+      0.7059440612792969,
+      0.7080427408218384,
+      0.7090303301811218,
+      0.7095447182655334,
+      0.7066230773925781
+    ],
+    "radius_f_stat": 111.64452124983659,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "ogbn-arxiv",
+    "method": "logmag",
+    "radius_type": "eigenvalue",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 70.7055127620697,
+    "test_acc_std": 0.056766780592218284,
+    "results": [
+      0.7071168422698975,
+      0.7063761353492737,
+      0.7077135443687439,
+      0.706437885761261,
+      0.7076312303543091
+    ],
+    "radius_f_stat": 1737.1130916337645,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "ogbn-arxiv",
+    "method": "logmag",
+    "radius_type": "degree",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 70.62691688537598,
+    "test_acc_std": 0.08452665039840933,
+    "results": [
+      0.7078369855880737,
+      0.7055120468139648,
+      0.7057177424430847,
+      0.7064584493637085,
+      0.705820620059967
+    ],
+    "radius_f_stat": 592.8542305161326,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "ogbn-arxiv",
+    "method": "logmag",
+    "radius_type": "diffused",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 70.5853545665741,
+    "test_acc_std": 0.04638495857820981,
+    "results": [
+      0.7056971788406372,
+      0.7067670822143555,
+      0.7057177424430847,
+      0.7054914236068726,
+      0.7055943012237549
+    ],
+    "radius_f_stat": 111.64452124983659,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "ogbn-arxiv",
+    "method": "nested",
+    "radius_type": "eigenvalue",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 69.23893809318542,
+    "test_acc_std": 0.1634705296747023,
+    "results": [
+      0.6931465268135071,
+      0.6923235058784485,
+      0.6906981468200684,
+      0.6907187104225159,
+      0.6950600147247314
+    ],
+    "radius_f_stat": 1737.1130916337645,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "ogbn-arxiv",
+    "method": "nested",
+    "radius_type": "degree",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 69.46608424186707,
+    "test_acc_std": 0.05831973976473354,
+    "results": [
+      0.695080578327179,
+      0.6945250630378723,
+      0.6952451467514038,
+      0.6935991644859314,
+      0.6948542594909668
+    ],
+    "radius_f_stat": 592.8542305161326,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "ogbn-arxiv",
+    "method": "nested",
+    "radius_type": "diffused",
+    "weight_range": [
+      0.3,
+      1.0
+    ],
+    "test_acc_mean": 69.34098839759827,
+    "test_acc_std": 0.12406184260263446,
+    "results": [
+      0.6921589374542236,
+      0.6933934092521667,
+      0.6932494044303894,
+      0.6925292611122131,
+      0.6957184076309204
+    ],
+    "radius_f_stat": 111.64452124983659,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "coauthor-cs",
+    "method": "rownorm",
+    "radius_type": "raw",
+    "weight_range": [
+      0.1,
+      1.0
+    ],
+    "test_acc_mean": 81.3358736038208,
+    "test_acc_std": 0.5884201154564456,
+    "results": [
+      0.8192474842071533,
+      0.8151580691337585,
+      0.8192474842071533,
+      0.8086150288581848,
+      0.80452561378479
+    ],
+    "radius_f_stat": 155.34231152988218,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "coauthor-cs",
+    "method": "rownorm",
+    "radius_type": "raw",
+    "weight_range": [
+      0.05,
+      1.0
+    ],
+    "test_acc_mean": 80.46346426010132,
+    "test_acc_std": 0.4563908284918313,
+    "results": [
+      0.802344560623169,
+      0.8064339756965637,
+      0.8097055554389954,
+      0.796891987323761,
+      0.8077971339225769
+    ],
+    "radius_f_stat": 155.34231152988218,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "cora",
+    "method": "rownorm",
+    "radius_type": "raw",
+    "weight_range": [
+      0.1,
+      1.0
+    ],
+    "test_acc_mean": 57.245903015136726,
+    "test_acc_std": 1.0331191223868736,
+    "results": [
+      0.5551912784576416,
+      0.5792350172996521,
+      0.5759562849998474,
+      0.5846994519233704,
+      0.5672131180763245
+    ],
+    "radius_f_stat": 12.713770542812554,
+    "radius_p_value": 3.503534922744119e-14
+  },
+  {
+    "dataset": "cora",
+    "method": "rownorm",
+    "radius_type": "raw",
+    "weight_range": [
+      0.05,
+      1.0
+    ],
+    "test_acc_mean": 58.426231145858765,
+    "test_acc_std": 1.5496024911341586,
+    "results": [
+      0.5584699511528015,
+      0.6032786965370178,
+      0.5803278684616089,
+      0.596721351146698,
+      0.582513689994812
+    ],
+    "radius_f_stat": 12.713770542812554,
+    "radius_p_value": 3.503534922744119e-14
+  },
+  {
+    "dataset": "ogbn-arxiv",
+    "method": "rownorm",
+    "radius_type": "raw",
+    "weight_range": [
+      0.1,
+      1.0
+    ],
+    "test_acc_mean": 70.89686155319214,
+    "test_acc_std": 0.16284629513686086,
+    "results": [
+      0.7106351852416992,
+      0.7102031111717224,
+      0.7077341079711914,
+      0.7098739147186279,
+      0.706396758556366
+    ],
+    "radius_f_stat": 1750.8999727214239,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "ogbn-arxiv",
+    "method": "rownorm",
+    "radius_type": "raw",
+    "weight_range": [
+      0.05,
+      1.0
+    ],
+    "test_acc_mean": 70.88657140731812,
+    "test_acc_std": 0.13355570964204766,
+    "results": [
+      0.7106968760490417,
+      0.7090920209884644,
+      0.7079604268074036,
+      0.7097092866897583,
+      0.7068699598312378
+    ],
+    "radius_f_stat": 1750.8999727214239,
+    "radius_p_value": 0.0
+  },
+  {
+    "dataset": "coauthor-cs",
+    "method": "rownorm",
+    "radius_type": "learned",
+    "weight_range": null,
+    "test_acc_mean": 75.55615663528442,
+    "test_acc_std": 2.6535334595888025,
+    "results": [
+      0.7824426889419556,
+      0.7660850286483765,
+      0.7134677767753601,
+      0.7366411685943604,
+      0.7791711688041687
+    ],
+    "radius_f_stat": null,
+    "radius_p_value": null
+  },
+  {
+    "dataset": "cora",
+    "method": "rownorm",
+    "radius_type": "learned",
+    "weight_range": null,
+    "test_acc_mean": 60.34972906112671,
+    "test_acc_std": 0.7740299813082202,
+    "results": [
+      0.591256856918335,
+      0.6021857857704163,
+      0.6142076849937439,
+      0.6087431907653809,
+      0.6010929346084595
+    ],
+    "radius_f_stat": null,
+    "radius_p_value": null
+  },
+  {
+    "dataset": "ogbn-arxiv",
+    "method": "rownorm",
+    "radius_type": "learned",
+    "weight_range": null,
+    "test_acc_mean": 54.10859465599061,
+    "test_acc_std": 1.2920306861197834,
+    "results": [
+      0.5413040518760681,
+      0.5375593900680542,
+      0.519679844379425,
+      0.5480320453643799,
+      0.5588544011116028
+    ],
+    "radius_f_stat": null,
+    "radius_p_value": null
+  }
+]
