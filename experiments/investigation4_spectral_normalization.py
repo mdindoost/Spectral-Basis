@@ -70,7 +70,7 @@ def _patched_torch_load(*args, **kwargs):
 torch.load = _patched_torch_load
 
 from utils import (
-    load_dataset, build_graph_matrices, 
+    load_dataset, build_graph_matrices, compute_restricted_eigenvectors,
     StandardMLP, RowNormMLP, LogMagnitudeMLP
 )
 
@@ -369,68 +369,7 @@ def sgc_precompute(features, adj_normalized, degree):
     return features
 
 
-def compute_restricted_eigenvectors(X, L, D, num_components=0):
-    """
-    Compute restricted eigenvectors (EXACT MATCH to partAB.py)
-    
-    Args:
-        X: Feature matrix
-        L: Laplacian
-        D: Degree matrix
-        num_components: Number of disconnected components (eigenvalues to drop)
-    
-    Returns:
-        U: Restricted eigenvectors (D-orthonormal)
-        eigenvalues: Eigenvalues
-        d_effective: Effective dimension
-        ortho_error: D-orthonormality error
-    """
-    num_nodes, dimension = X.shape
-    
-    # QR decomposition for rank handling
-    Q, R = np.linalg.qr(X)
-    rank_X = np.sum(np.abs(np.diag(R)) > 1e-10)
-    
-    if rank_X < dimension:
-        Q = Q[:, :rank_X]
-        dimension = rank_X
-    
-    d_effective = dimension
-    
-    # Project Laplacian
-    L_r = Q.T @ (L @ Q)
-    D_r = Q.T @ (D @ Q)
-    
-    # Symmetrize
-    L_r = 0.5 * (L_r + L_r.T)
-    D_r = 0.5 * (D_r + D_r.T)
-    
-    # Regularize
-    eps_base = 1e-10
-    eps = eps_base * np.trace(D_r) / d_effective
-    D_r = D_r + eps * np.eye(d_effective)
-    
-    # Solve generalized eigenproblem
-    eigenvalues, V = la.eigh(L_r, D_r)
-    
-    # Sort by eigenvalue
-    idx = np.argsort(eigenvalues)
-    eigenvalues = eigenvalues[idx]
-    V = V[:, idx]
-    
-    # Drop component eigenvalues if needed
-    if num_components > 0:
-        eigenvalues = eigenvalues[num_components:]
-        V = V[:, num_components:]
-    
-    # Map back to full space
-    U = Q @ V
-    
-    # Verify D-orthonormality (EXACT MATCH to investigation3)
-    G = U.T @ (D @ U)
-    ortho_error = np.max(np.abs(G - np.eye(len(eigenvalues))))
-    
-    return U, eigenvalues, len(eigenvalues), ortho_error
+
 
 
 # ============================================================================

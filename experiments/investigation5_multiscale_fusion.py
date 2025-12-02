@@ -4,29 +4,41 @@ INVESTIGATION 5: MULTI-SCALE FEATURE FUSION
 ===================================================================================
 
 Research Question: Does combining low-diffusion features (k=2) with high-diffusion
-restricted eigenvectors (k=10) improve over either scale alone?
+restricted eigenvectors (k=10) improve over either scale alone? Does adding
+log-magnitude information (from Investigation 3) provide additional benefit?
 
 Hypothesis: Different diffusion scales capture complementary information:
     - Low diffusion (k=2): Preserves local structure and original features
     - High diffusion (k=10): Captures global structure via restricted eigenvectors
-    - Fusion: Combines both scales for superior performance
+    - Log-magnitude: Captures node importance/centrality (augments eigenvectors)
+    - Fusion: Combines all scales for superior performance
 
-Architecture:
+Architectures Tested:
     Branch 1 (Local):  SGC k=2 → Linear(bias=True) → ReLU → h1
+    
     Branch 2 (Global): Diffuse k=10 → Restricted Eigenvectors → RowNorm 
                        → Linear(bias=False) → ReLU → h2
-    Fusion: Concat[h1, h2] → 2-Layer MLP → Softmax
+    
+    Branch 2 Augmented: Diffuse k=10 → Restricted Eigenvectors → 
+                        [RowNorm, Log(||·||)] → Linear(bias=False) → ReLU → h2
+                        (Log-magnitude concatenated BEFORE MLP, matching Investigation 3)
+    
+    Dual-Branch:   Concat[h1, h2] → 2-Layer MLP → Softmax
+    Triple-Branch: Concat[h1, h2_augmented] → 2-Layer MLP → Softmax
 
 Key Design Choices:
     - Branch 1 WITH bias: SGC features can have arbitrary offset
     - Branch 2 WITHOUT bias: Preserves unit sphere geometry from RowNorm
+    - Log-magnitude augments Branch 2 BEFORE processing (not as separate branch)
+    - This matches Investigation 3's architecture exactly
     - Standard RowNorm (α=0): Testing multi-scale, not normalization variants
 
 Baselines:
     1. SGC Baseline: Logistic regression on SGC k=2 features
     2. Branch 1 Only: SGC k=2 → Full MLP (with bias)
     3. Branch 2 Only: Restricted k=10 + RowNorm → Full MLP (no bias)
-    4. Dual-Branch: Both branches fused
+    4. Dual-Branch: Branches 1 + 2 fused
+    5. Triple-Branch: Branches 1 + 2(augmented with log-mag) fused
 
 Author: Mohammad
 Date: December 2025
@@ -56,6 +68,86 @@ def _patched_torch_load(*args, **kwargs):
 torch.load = _patched_torch_load
 
 from utils import load_dataset, build_graph_matrices
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+def train_and_test(model, X_train, y_train, X_val, y_val, X_test, y_test,
+                  epochs, lr, weight_decay, device, use_scheduler=False):
+    """
+    Train and test a model (NO early stopping - matches previous investigations)
+    
+    Returns:
+        val_acc: Best validation accuracy
+        test_acc: Test accuracy at best validation epoch
+        train_time: Training time in seconds
+    """
+    X_train = torch.FloatTensor(X_train).to(device)
+    y_train = torch.LongTensor(y_train).to(device)
+    X_val = torch.FloatTensor(X_val).to(device)
+    y_val = torch.LongTensor(y_val).to(device)
+    X_test = torch.FloatTensor(X_test).to(device)
+    y_test = torch.LongTensor(y_test).to(device)
+    
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    criterion = nn.CrossEntropyLoss()
+    
+    if use_scheduler:
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, mode='max', factor=0.5, patience=20, verbose=False
+        )
+    
+    best_val_acc = 0.0
+    best_test_acc = 0.0
+    
+    start_time = time.time()
+    
+    for epoch in range(epochs):
+        # Training
+        model.train()
+        optimizer.zero_grad()
+        logits = model(X_train)
+        loss = criterion(logits, y_train)
+        loss.backward()
+        optimizer.step()
+        
+        # Evaluation (every 10 epochs)
+        if (epoch + 1) % 10 == 0 or epoch == epochs - 1:
+            model.eval()
+            with torch.no_grad():
+                val_logits = model(X_val)
+                test_logits = model(X_test)
+                
+                val_acc = (val_logits.argmax(1) == y_val).float().mean().item()
+                test_acc = (test_logits.argmax(1) == y_test).float().mean().item()
+            
+            if val_acc > best_val_acc:
+                best_val_acc = val_acc
+                best_test_acc = test_acc
+            
+            if use_scheduler:
+                scheduler.step(val_acc)
+    
+    train_time = time.time() - start_time
+    
+    return best_val_acc, best_test_acc, train_time
+
+
+def aggregate_results(results):
+    """Aggregate results from multiple seeds"""
+    val_accs = [r['val_acc'] for r in results]
+    test_accs = [r['test_acc'] for r in results]
+    train_times = [r['train_time'] for r in results]
+    
+    return {
+        'val_acc_mean': np.mean(val_accs),
+        'val_acc_std': np.std(val_accs),
+        'test_acc_mean': np.mean(test_accs),
+        'test_acc_std': np.std(test_accs),
+        'train_time_mean': np.mean(train_times),
+        'train_time_std': np.std(train_times)
+    }
 
 # ============================================================================
 # Configuration
@@ -89,9 +181,12 @@ DEVICE = torch.device(args.device)
 
 # Hyperparameters (same as previous investigations)
 HIDDEN_DIM = 256
-EPOCHS = 200  # Corrected from 500
+EPOCHS = 200
 LEARNING_RATE = 0.01
 WEIGHT_DECAY = 5e-4
+
+# Random splits: 5 different splits (matching previous investigations)
+NUM_RANDOM_SPLITS = 5 if SPLIT_TYPE == 'random' else 1
 
 print(f'\n{"="*80}')
 print('INVESTIGATION 5: MULTI-SCALE FEATURE FUSION')
@@ -100,6 +195,9 @@ print(f'Dataset: {DATASET_NAME}')
 print(f'Diffusion scales: k_low={K_LOW}, k_high={K_HIGH}')
 print(f'Split type: {SPLIT_TYPE}')
 print(f'Component: {COMPONENT_TYPE}')
+print(f'Random splits: {NUM_RANDOM_SPLITS}')
+print(f'Seeds per split: {NUM_SEEDS}')
+print(f'Total runs per method: {NUM_RANDOM_SPLITS * NUM_SEEDS}')
 print(f'Device: {DEVICE}')
 print(f'{"="*80}\n')
 
@@ -179,6 +277,56 @@ class DualBranchMLP(nn.Module):
     def forward(self, x_sgc, x_rownorm):
         h1 = F.relu(self.branch1_linear(x_sgc))
         h2 = F.relu(self.branch2_linear(x_rownorm))
+        h_combined = torch.cat([h1, h2], dim=1)
+        return self.mlp(h_combined)
+
+
+class TripleBranchMLP(nn.Module):
+    """Triple-Branch: Branch 1 (SGC k=2) + Branch 2 (RowNorm + Log-Magnitude augmented)
+    
+    This matches Investigation 3's architecture:
+    - Branch 1: SGC k=2 features (local structure)
+    - Branch 2: RowNorm eigenvectors AUGMENTED with log-magnitude (global + importance)
+    
+    Log-magnitude is concatenated with RowNorm BEFORE Branch 2's MLP,
+    allowing the network to learn their interaction.
+    """
+    def __init__(self, d_sgc, d_eigenvec, hidden_dim, num_classes):
+        super().__init__()
+        # Branch 1: SGC k=2 (WITH bias)
+        self.branch1_linear = nn.Linear(d_sgc, hidden_dim, bias=True)
+        
+        # Branch 2: RowNorm + Log-Magnitude (NO bias)
+        # d_eigenvec + 1 for log-magnitude feature
+        self.branch2_linear = nn.Linear(d_eigenvec + 1, hidden_dim, bias=False)
+        
+        # Fusion MLP (concatenates 2 branch embeddings)
+        self.mlp = nn.Sequential(
+            nn.Linear(hidden_dim * 2, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(hidden_dim, num_classes)
+        )
+    
+    def forward(self, x_sgc, x_rownorm, log_mag):
+        """
+        Args:
+            x_sgc: (n, d_sgc) - SGC k=2 features
+            x_rownorm: (n, d_eigenvec) - RowNorm eigenvectors
+            log_mag: (n, 1) - Log-magnitude
+        """
+        # Branch 1: Process SGC features
+        h1 = F.relu(self.branch1_linear(x_sgc))
+        
+        # Branch 2: Augment RowNorm with log-magnitude BEFORE MLP
+        # This is exactly what Investigation 3 did!
+        x_rownorm_augmented = torch.cat([x_rownorm, log_mag], dim=1)
+        h2 = F.relu(self.branch2_linear(x_rownorm_augmented))
+        
+        # Fusion
         h_combined = torch.cat([h1, h2], dim=1)
         return self.mlp(h_combined)
 
@@ -273,7 +421,7 @@ def compute_restricted_eigenvectors(X, L, D, num_components=0):
 
 
 def prepare_multiscale_features(X, A, L, D, num_components, k_low, k_high):
-    """Prepare features for dual-branch architecture"""
+    """Prepare features for multi-branch architecture"""
     # Compute SGC-style normalized adjacency (EXACT MATCH to previous code)
     A_norm = compute_sgc_normalized_adjacency(A)
     
@@ -292,78 +440,30 @@ def prepare_multiscale_features(X, A, L, D, num_components, k_low, k_high):
     print(f'  D-orthonormality error: {ortho_error:.2e}')
     
     if ortho_error > 1e-6:
-        print(f'  ⚠ Warning: Orthonormality error {ortho_error:.2e} > 1e-6')
+        print(f'  ⚠️  Warning: Orthonormality error {ortho_error:.2e} > 1e-6')
     
     # Standard RowNorm (α=0)
     V_rownorm = U / (np.linalg.norm(U, axis=1, keepdims=True) + 1e-10)
     
-    return X_sgc_low, V_rownorm, eigenvalues, ortho_error
+    # Branch 3: Log-Magnitude (NEW!)
+    print(f'\nBranch 3: Computing Log-Magnitude features...')
+    magnitudes = np.linalg.norm(U, axis=1, keepdims=True)  # (n, 1)
+    log_magnitudes = np.log(magnitudes + 1e-10)  # Add epsilon for numerical stability
+    print(f'  Log-Magnitude shape: {log_magnitudes.shape}')
+    print(f'  Log-Magnitude range: [{log_magnitudes.min():.4f}, {log_magnitudes.max():.4f}]')
+    
+    return X_sgc_low, V_rownorm, log_magnitudes, eigenvalues, ortho_error
 
 
 # ============================================================================
 # Training (EXACT MATCH to previous investigations - NO EARLY STOPPING!)
 # ============================================================================
-
-def train_and_test(model, X_train, y_train, X_val, y_val, X_test, y_test,
-                  epochs, lr, weight_decay, device):
-    """Train and evaluate model (single-branch only)"""
-    # Convert to tensors
-    X_train_t = torch.FloatTensor(X_train).to(device)
-    y_train_t = torch.LongTensor(y_train).to(device)
-    X_val_t = torch.FloatTensor(X_val).to(device)
-    y_val_t = torch.LongTensor(y_val).to(device)
-    X_test_t = torch.FloatTensor(X_test).to(device)
-    y_test_t = torch.LongTensor(y_test).to(device)
-    
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    criterion = nn.CrossEntropyLoss()
-    
-    start_time = time.time()
-    best_val_acc = 0.0
-    best_test_acc = 0.0
-    
-    for epoch in range(epochs):
-        # Train
-        model.train()
-        optimizer.zero_grad()
-        output = model(X_train_t)
-        loss = criterion(output, y_train_t)
-        loss.backward()
-        optimizer.step()
-        
-        # Evaluate every 10 epochs (like original code)
-        if (epoch + 1) % 10 == 0 or epoch == epochs - 1:
-            model.eval()
-            with torch.no_grad():
-                val_output = model(X_val_t)
-                val_pred = val_output.argmax(dim=1)
-                val_acc = (val_pred == y_val_t).float().mean().item()
-                
-                test_output = model(X_test_t)
-                test_pred = test_output.argmax(dim=1)
-                test_acc = (test_pred == y_test_t).float().mean().item()
-                
-                if val_acc > best_val_acc:
-                    best_val_acc = val_acc
-                    best_test_acc = test_acc
-    
-    train_time = time.time() - start_time
-    return best_val_acc, best_test_acc, train_time
-
-
-def aggregate_results(results):
-    """Aggregate results across seeds"""
-    test_accs = [r['test_acc'] for r in results]
-    return {
-        'test_acc_mean': np.mean(test_accs),
-        'test_acc_std': np.std(test_accs),
-        'val_acc_mean': np.mean([r['val_acc'] for r in results]),
-        'val_acc_std': np.std([r['val_acc'] for r in results])
-    }
+# Note: train_and_test is imported from utils.py
+# For dual-branch and triple-branch, we use inline training because they take multiple inputs
 
 
 # ============================================================================
-# Experiment Runners (EXACT MATCH to previous investigations)
+# Experiment Functions
 # ============================================================================
 
 def run_sgc_baseline(X_diffused, labels, train_idx, val_idx, test_idx,
@@ -547,6 +647,95 @@ def run_dual_branch_mlp(X_sgc, V_rownorm, labels, train_idx, val_idx, test_idx,
     return results
 
 
+def run_triple_branch_mlp(X_sgc, V_rownorm, log_mag, labels, 
+                          train_idx, val_idx, test_idx,
+                          num_classes, num_seeds, device):
+    """Experiment: Triple-Branch (Multi-Scale + Magnitude Fusion)"""
+    results = []
+    
+    # Prepare training data
+    X_train_sgc = X_sgc[train_idx]
+    X_train_rn = V_rownorm[train_idx]
+    X_train_mag = log_mag[train_idx]
+    y_train = labels[train_idx]
+    
+    X_val_sgc = X_sgc[val_idx]
+    X_val_rn = V_rownorm[val_idx]
+    X_val_mag = log_mag[val_idx]
+    y_val = labels[val_idx]
+    
+    X_test_sgc = X_sgc[test_idx]
+    X_test_rn = V_rownorm[test_idx]
+    X_test_mag = log_mag[test_idx]
+    y_test = labels[test_idx]
+    
+    for seed in range(num_seeds):
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+        
+        model = TripleBranchMLP(X_sgc.shape[1], V_rownorm.shape[1], 
+                               HIDDEN_DIM, num_classes).to(device)
+        
+        # Convert to tensors
+        X_train_sgc_t = torch.FloatTensor(X_train_sgc).to(device)
+        X_train_rn_t = torch.FloatTensor(X_train_rn).to(device)
+        X_train_mag_t = torch.FloatTensor(X_train_mag).to(device)
+        y_train_t = torch.LongTensor(y_train).to(device)
+        
+        X_val_sgc_t = torch.FloatTensor(X_val_sgc).to(device)
+        X_val_rn_t = torch.FloatTensor(X_val_rn).to(device)
+        X_val_mag_t = torch.FloatTensor(X_val_mag).to(device)
+        y_val_t = torch.LongTensor(y_val).to(device)
+        
+        X_test_sgc_t = torch.FloatTensor(X_test_sgc).to(device)
+        X_test_rn_t = torch.FloatTensor(X_test_rn).to(device)
+        X_test_mag_t = torch.FloatTensor(X_test_mag).to(device)
+        y_test_t = torch.LongTensor(y_test).to(device)
+        
+        # Training (NO early stopping, like original code)
+        optimizer = torch.optim.Adam(model.parameters(), 
+                                    lr=LEARNING_RATE, 
+                                    weight_decay=WEIGHT_DECAY)
+        criterion = nn.CrossEntropyLoss()
+        
+        best_val_acc = 0.0
+        best_test_acc = 0.0
+        
+        start_time = time.time()
+        
+        for epoch in range(EPOCHS):
+            model.train()
+            optimizer.zero_grad()
+            logits = model(X_train_sgc_t, X_train_rn_t, X_train_mag_t)
+            loss = criterion(logits, y_train_t)
+            loss.backward()
+            optimizer.step()
+            
+            # Evaluate every 10 epochs (like original)
+            if (epoch + 1) % 10 == 0 or epoch == EPOCHS - 1:
+                model.eval()
+                with torch.no_grad():
+                    val_logits = model(X_val_sgc_t, X_val_rn_t, X_val_mag_t)
+                    test_logits = model(X_test_sgc_t, X_test_rn_t, X_test_mag_t)
+                    val_acc = (val_logits.argmax(1) == y_val_t).float().mean().item()
+                    test_acc = (test_logits.argmax(1) == y_test_t).float().mean().item()
+                
+                if val_acc > best_val_acc:
+                    best_val_acc = val_acc
+                    best_test_acc = test_acc
+        
+        train_time = time.time() - start_time
+        
+        results.append({
+            'seed': seed,
+            'val_acc': best_val_acc,
+            'test_acc': best_test_acc,
+            'train_time': train_time
+        })
+    
+    return results
+
+
 # ============================================================================
 # Main Experiment
 # ============================================================================
@@ -627,23 +816,13 @@ else:
 
 # Random splits
 if SPLIT_TYPE == 'random':
-    print('\n[4/6] Creating random splits...')
-    np.random.seed(42)
-    indices = np.arange(num_nodes)
-    np.random.shuffle(indices)
-    train_size = int(0.6 * num_nodes)
-    val_size = int(0.2 * num_nodes)
-    train_idx = indices[:train_size]
-    val_idx = indices[train_size:train_size + val_size]
-    test_idx = indices[train_size + val_size:]
-    print(f'  Train: {len(train_idx)}, Val: {len(val_idx)}, Test: {len(test_idx)}')
+    print(f'\n[4/6] Will create {NUM_RANDOM_SPLITS} random 60/20/20 splits')
 else:
-    print(f'\n[4/6] Using fixed splits')
-    print(f'  Train: {len(train_idx)}, Val: {len(val_idx)}, Test: {len(test_idx)}')
+    print(f'\n[4/6] Using fixed benchmark splits')
 
 # Prepare features
 print('\n[5/6] Preparing multi-scale features...')
-X_sgc_low, V_rownorm, eigenvalues, ortho_error = prepare_multiscale_features(
+X_sgc_low, V_rownorm, log_magnitudes, eigenvalues, ortho_error = prepare_multiscale_features(
     X_raw, adj, L, D, num_components, K_LOW, K_HIGH
 )
 
@@ -655,54 +834,113 @@ metadata = {
     'k_high': int(K_HIGH),
     'd_sgc': int(X_sgc_low.shape[1]),
     'd_eigenvec': int(V_rownorm.shape[1]),
-    'ortho_error': float(ortho_error)
+    'd_magnitude': 1,
+    'ortho_error': float(ortho_error),
+    'num_random_splits': int(NUM_RANDOM_SPLITS)
 }
 
+# Storage for results across all splits
+all_sgc_results = []
+all_b1_results = []
+all_b2_results = []
+all_dual_results = []
+all_triple_results = []
+
 # Run experiments
-print('\n[6/6] Running experiments...\n')
+print(f'\n[6/6] Running experiments across {NUM_RANDOM_SPLITS} split(s)...\n')
 
-print('[1/4] SGC Baseline...')
-sgc_results = run_sgc_baseline(
-    X_sgc_low, labels, train_idx, val_idx, test_idx,
-    num_classes, NUM_SEEDS, DEVICE
-)
-sgc_agg = aggregate_results(sgc_results)
-print(f'→ {sgc_agg["test_acc_mean"]*100:.2f}% ± {sgc_agg["test_acc_std"]*100:.2f}%')
+for split_idx in range(NUM_RANDOM_SPLITS):
+    print(f'\n{"="*80}')
+    print(f'SPLIT {split_idx + 1}/{NUM_RANDOM_SPLITS}')
+    print(f'{"="*80}\n')
+    
+    # Get split indices
+    if SPLIT_TYPE == 'fixed':
+        train_idx_cur = train_idx
+        val_idx_cur = val_idx
+        test_idx_cur = test_idx
+    else:
+        # Create random split (different seed for each split)
+        np.random.seed(split_idx)
+        indices = np.arange(num_nodes)
+        np.random.shuffle(indices)
+        train_size = int(0.6 * num_nodes)
+        val_size = int(0.2 * num_nodes)
+        train_idx_cur = indices[:train_size]
+        val_idx_cur = indices[train_size:train_size + val_size]
+        test_idx_cur = indices[train_size + val_size:]
+    
+    print(f'Train: {len(train_idx_cur)}, Val: {len(val_idx_cur)}, Test: {len(test_idx_cur)}')
 
-print('\n[2/4] Branch 1 Only (SGC k=2 + MLP)...')
-b1_results = run_branch1_mlp(
-    X_sgc_low, labels, train_idx, val_idx, test_idx,
-    num_classes, NUM_SEEDS, DEVICE
-)
-b1_agg = aggregate_results(b1_results)
-print(f'→ {b1_agg["test_acc_mean"]*100:.2f}% ± {b1_agg["test_acc_std"]*100:.2f}%')
+    print('\n[1/5] SGC Baseline...')
+    sgc_results = run_sgc_baseline(
+        X_sgc_low, labels, train_idx_cur, val_idx_cur, test_idx_cur,
+        num_classes, NUM_SEEDS, DEVICE
+    )
+    all_sgc_results.extend(sgc_results)
+    sgc_agg = aggregate_results(sgc_results)
+    print(f'→ {sgc_agg["test_acc_mean"]*100:.2f}% ± {sgc_agg["test_acc_std"]*100:.2f}%')
 
-print('\n[3/4] Branch 2 Only (Restricted k=10 + RowNorm)...')
-b2_results = run_branch2_mlp(
-    V_rownorm, labels, train_idx, val_idx, test_idx,
-    num_classes, NUM_SEEDS, DEVICE
-)
-b2_agg = aggregate_results(b2_results)
-print(f'→ {b2_agg["test_acc_mean"]*100:.2f}% ± {b2_agg["test_acc_std"]*100:.2f}%')
+    print('\n[2/5] Branch 1 Only (SGC k=2 + MLP)...')
+    b1_results = run_branch1_mlp(
+        X_sgc_low, labels, train_idx_cur, val_idx_cur, test_idx_cur,
+        num_classes, NUM_SEEDS, DEVICE
+    )
+    all_b1_results.extend(b1_results)
+    b1_agg = aggregate_results(b1_results)
+    print(f'→ {b1_agg["test_acc_mean"]*100:.2f}% ± {b1_agg["test_acc_std"]*100:.2f}%')
 
-print('\n[4/4] Dual-Branch (Multi-Scale Fusion)...')
-dual_results = run_dual_branch_mlp(
-    X_sgc_low, V_rownorm, labels, train_idx, val_idx, test_idx,
-    num_classes, NUM_SEEDS, DEVICE
-)
-dual_agg = aggregate_results(dual_results)
-print(f'→ {dual_agg["test_acc_mean"]*100:.2f}% ± {dual_agg["test_acc_std"]*100:.2f}%')
+    print('\n[3/5] Branch 2 Only (Restricted k=10 + RowNorm)...')
+    b2_results = run_branch2_mlp(
+        V_rownorm, labels, train_idx_cur, val_idx_cur, test_idx_cur,
+        num_classes, NUM_SEEDS, DEVICE
+    )
+    all_b2_results.extend(b2_results)
+    b2_agg = aggregate_results(b2_results)
+    print(f'→ {b2_agg["test_acc_mean"]*100:.2f}% ± {b2_agg["test_acc_std"]*100:.2f}%')
+
+    print('\n[4/5] Dual-Branch (Multi-Scale Fusion)...')
+    dual_results = run_dual_branch_mlp(
+        X_sgc_low, V_rownorm, labels, train_idx_cur, val_idx_cur, test_idx_cur,
+        num_classes, NUM_SEEDS, DEVICE
+    )
+    all_dual_results.extend(dual_results)
+    dual_agg = aggregate_results(dual_results)
+    print(f'→ {dual_agg["test_acc_mean"]*100:.2f}% ± {dual_agg["test_acc_std"]*100:.2f}%')
+
+    print('\n[5/5] Triple-Branch (Branch 2 + Log-Magnitude Augmentation)...')
+    triple_results = run_triple_branch_mlp(
+        X_sgc_low, V_rownorm, log_magnitudes, labels, 
+        train_idx_cur, val_idx_cur, test_idx_cur,
+        num_classes, NUM_SEEDS, DEVICE
+    )
+    all_triple_results.extend(triple_results)
+    triple_agg = aggregate_results(triple_results)
+    print(f'→ {triple_agg["test_acc_mean"]*100:.2f}% ± {triple_agg["test_acc_std"]*100:.2f}%')
+
+# Aggregate results across ALL splits
+print(f'\n{"="*80}')
+print(f'AGGREGATING RESULTS ACROSS {NUM_RANDOM_SPLITS} SPLIT(S)')
+print(f'{"="*80}\n')
+
+sgc_agg = aggregate_results(all_sgc_results)
+b1_agg = aggregate_results(all_b1_results)
+b2_agg = aggregate_results(all_b2_results)
+dual_agg = aggregate_results(all_dual_results)
+triple_agg = aggregate_results(all_triple_results)
 
 # Results summary
 print(f'\n{"="*80}')
 print('RESULTS SUMMARY')
-print(f'{"="*80}\n')
-print(f'{"Method":<40} {"Test Acc":<15} {"Std"}')
-print('-' * 65)
-print(f'{"SGC Baseline":<40} {sgc_agg["test_acc_mean"]*100:>6.2f}%        {sgc_agg["test_acc_std"]*100:>5.2f}%')
-print(f'{"Branch 1 Only (SGC k=2 + MLP)":<40} {b1_agg["test_acc_mean"]*100:>6.2f}%        {b1_agg["test_acc_std"]*100:>5.2f}%')
-print(f'{"Branch 2 Only (Restricted k=10 + RowNorm)":<40} {b2_agg["test_acc_mean"]*100:>6.2f}%        {b2_agg["test_acc_std"]*100:>5.2f}%')
-print(f'{"Dual-Branch (Multi-Scale Fusion)":<40} {dual_agg["test_acc_mean"]*100:>6.2f}%        {dual_agg["test_acc_std"]*100:>5.2f}%')
+print(f'{"="*80}')
+print(f'Aggregated across {NUM_RANDOM_SPLITS} split(s) × {NUM_SEEDS} seeds = {NUM_RANDOM_SPLITS * NUM_SEEDS} runs\n')
+print(f'{"Method":<50} {"Test Acc":<15} {"Std"}')
+print('-' * 75)
+print(f'{"SGC Baseline":<50} {sgc_agg["test_acc_mean"]*100:>6.2f}%        {sgc_agg["test_acc_std"]*100:>5.2f}%')
+print(f'{"Branch 1 Only (SGC k=2 + MLP)":<50} {b1_agg["test_acc_mean"]*100:>6.2f}%        {b1_agg["test_acc_std"]*100:>5.2f}%')
+print(f'{"Branch 2 Only (Restricted k=10 + RowNorm)":<50} {b2_agg["test_acc_mean"]*100:>6.2f}%        {b2_agg["test_acc_std"]*100:>5.2f}%')
+print(f'{"Dual-Branch (Branch 1 + Branch 2)":<50} {dual_agg["test_acc_mean"]*100:>6.2f}%        {dual_agg["test_acc_std"]*100:>5.2f}%')
+print(f'{"Triple-Branch (Branch 2 + Log-Magnitude)":<50} {triple_agg["test_acc_mean"]*100:>6.2f}%        {triple_agg["test_acc_std"]*100:>5.2f}%')
 
 # Analysis
 print(f'\n{"="*80}')
@@ -713,40 +951,86 @@ sgc_acc = sgc_agg['test_acc_mean'] * 100
 b1_acc = b1_agg['test_acc_mean'] * 100
 b2_acc = b2_agg['test_acc_mean'] * 100
 dual_acc = dual_agg['test_acc_mean'] * 100
+triple_acc = triple_agg['test_acc_mean'] * 100
+
 best_single = max(b1_acc, b2_acc)
-fusion_gain = dual_acc - best_single
+dual_gain = dual_acc - best_single
+triple_gain = triple_acc - best_single
+magnitude_contribution = triple_acc - dual_acc
 
 print(f'Best single branch:  {best_single:.2f}%')
 print(f'Dual-branch:         {dual_acc:.2f}%')
-print(f'Fusion gain:         {fusion_gain:+.2f}pp\n')
+print(f'Triple-branch:       {triple_acc:.2f}%')
+print(f'Dual fusion gain:    {dual_gain:+.2f}pp')
+print(f'Triple fusion gain:  {triple_gain:+.2f}pp')
+print(f'Log-Magnitude adds:  {magnitude_contribution:+.2f}pp\n')
 
-if fusion_gain > 0.5:
-    print(f'✓ Multi-scale fusion HELPS! ({fusion_gain:+.2f}pp)')
-elif fusion_gain > -0.5:
-    print(f'≈ Multi-scale fusion neutral (±{abs(fusion_gain):.2f}pp)')
+# Dual-branch analysis
+if dual_gain > 0.5:
+    print(f'✓ Dual-branch fusion HELPS! ({dual_gain:+.2f}pp)')
+elif dual_gain > -0.5:
+    print(f'≈ Dual-branch fusion neutral (±{abs(dual_gain):.2f}pp)')
 else:
-    print(f'✗ Multi-scale fusion hurts ({fusion_gain:.2f}pp)')
+    print(f'✗ Dual-branch fusion hurts ({dual_gain:.2f}pp)')
+
+# Triple-branch analysis
+print()
+if triple_gain > 0.5:
+    print(f'✓ Triple-branch fusion HELPS! ({triple_gain:+.2f}pp)')
+    if magnitude_contribution > 0.5:
+        print(f'  ✓✓ Log-Magnitude augmentation adds value (+{magnitude_contribution:.2f}pp over dual)')
+    elif magnitude_contribution > -0.5:
+        print(f'  ≈ Log-Magnitude augmentation neutral (±{abs(magnitude_contribution):.2f}pp)')
+elif triple_gain > -0.5:
+    print(f'≈ Triple-branch fusion neutral (±{abs(triple_gain):.2f}pp)')
+    if magnitude_contribution < -0.5:
+        print(f'  ✗ Log-Magnitude augmentation hurts ({magnitude_contribution:.2f}pp)')
+else:
+    print(f'✗ Triple-branch fusion hurts ({triple_gain:.2f}pp)')
+    if magnitude_contribution < -0.5:
+        print(f'  ✗ Log-Magnitude augmentation makes it worse ({magnitude_contribution:.2f}pp)')
 
 # Save results
 results_dict = {
     'metadata': metadata,
     'results': {
-        'sgc_baseline': sgc_agg,
-        'branch1_only': b1_agg,
-        'branch2_only': b2_agg,
-        'dual_branch': dual_agg
+        'sgc_baseline': {
+            'aggregated': sgc_agg,
+            'all_runs': all_sgc_results
+        },
+        'branch1_only': {
+            'aggregated': b1_agg,
+            'all_runs': all_b1_results
+        },
+        'branch2_only': {
+            'aggregated': b2_agg,
+            'all_runs': all_b2_results
+        },
+        'dual_branch': {
+            'aggregated': dual_agg,
+            'all_runs': all_dual_results
+        },
+        'triple_branch': {
+            'aggregated': triple_agg,
+            'all_runs': all_triple_results
+        }
     },
     'analysis': {
         'best_single_branch': float(best_single),
         'dual_branch': float(dual_acc),
-        'fusion_gain': float(fusion_gain)
-    }
+        'triple_branch': float(triple_acc),
+        'dual_fusion_gain': float(dual_gain),
+        'triple_fusion_gain': float(triple_gain),
+        'magnitude_contribution': float(magnitude_contribution)
+    },
+    'note': f'Results aggregated across {NUM_RANDOM_SPLITS} split(s) × {NUM_SEEDS} seeds = {NUM_RANDOM_SPLITS * NUM_SEEDS} total runs per method'
 }
 
 with open(f'{output_base}/metrics/results.json', 'w') as f:
     json.dump(results_dict, f, indent=2)
 
 print(f'\n✓ Results saved to: {output_base}/metrics/results.json')
+print(f'  Total runs per method: {NUM_RANDOM_SPLITS} split(s) × {NUM_SEEDS} seeds = {NUM_RANDOM_SPLITS * NUM_SEEDS} runs')
 print(f'\n{"="*80}')
 print('EXPERIMENT COMPLETE')
 print(f'{"="*80}')

@@ -8,6 +8,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import scipy.sparse as sp
+import scipy.linalg as la
+import networkx as nx
 
 # Dataset loaders
 from ogb.nodeproppred import NodePropPredDataset
@@ -17,7 +19,67 @@ from torch_geometric.utils import to_undirected
 # ============================================================================
 # Model Architectures
 # ============================================================================
+class SGC(nn.Module):
+    """SGC: Logistic regression with bias"""
+    def __init__(self, nfeat, nclass):
+        super(SGC, self).__init__()
+        self.W = nn.Linear(nfeat, nclass, bias=True)
+        torch.nn.init.xavier_normal_(self.W.weight)
+    
+    def forward(self, x):
+        return self.W(x)
 
+class NestedSpheresMLP(nn.Module):
+    """
+    Full Nested Spheres architecture combining:
+    1. Eigenvalue weighting (spectral structure)
+    2. Magnitude preservation (node importance)
+    
+    V_weighted = V * (eigenvalues ** alpha)
+    M = ||V_weighted||_row
+    V_normalized = V_weighted / M
+    X_augmented = [V_normalized, beta * log(M)]
+    """
+    def __init__(self, input_dim, hidden_dim, num_classes, eigenvalues, alpha=0.5, beta=1.0):
+        super().__init__()
+        
+        # Eigenvalue weighting
+        if abs(alpha) < 1e-8:
+            eigenvalue_weights = torch.ones(input_dim)
+        else:
+            eigenvalues_safe = torch.abs(eigenvalues) + 1e-8
+            eigenvalue_weights = eigenvalues_safe ** alpha
+        
+        self.register_buffer('eigenvalue_weights', eigenvalue_weights)
+        self.beta = beta
+        
+        # MLP (input_dim + 1 because we add log-magnitude)
+        self.mlp = nn.Sequential(
+            nn.Linear(input_dim + 1, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(hidden_dim, num_classes)
+        )
+    
+    def forward(self, X):
+        # Weight by eigenvalues (nested spheres)
+        X_weighted = X * self.eigenvalue_weights
+        
+        # Compute magnitude
+        M = torch.norm(X_weighted, dim=1, keepdim=True)
+        
+        # Normalize
+        X_normalized = X_weighted / (M + 1e-10)
+        
+        # Augment with log-magnitude
+        log_M = torch.log(M + 1e-10)
+        X_augmented = torch.cat([X_normalized, self.beta * log_M], dim=1)
+        
+        return self.mlp(X_augmented)
+    
 class StandardMLP(nn.Module):
     """Standard MLP with bias and no normalization"""
     def __init__(self, input_dim, hidden_dim, output_dim):
@@ -416,6 +478,118 @@ def build_graph_matrices(edge_index, num_nodes):
     
     return adj, L, D
 
+def get_largest_connected_component_nx(adj):
+    """Extract largest connected component"""
+    G = nx.from_scipy_sparse_array(adj)
+    components = list(nx.connected_components(G))
+    
+    if len(components) == 1:
+        return np.ones(adj.shape[0], dtype=bool)
+    
+    largest_component = max(components, key=len)
+    mask = np.zeros(adj.shape[0], dtype=bool)
+    mask[list(largest_component)] = True
+    
+    return mask
+
+
+
+
+def extract_subgraph(adj, features, labels, mask, split_idx):
+    """Extract subgraph for nodes in mask"""
+    node_indices = np.where(mask)[0]
+    old_to_new = {old_idx: new_idx for new_idx, old_idx in enumerate(node_indices)}
+    
+    adj_sub = adj[mask][:, mask]
+    features_sub = features[mask]
+    labels_sub = labels[mask]
+    
+    split_idx_sub = None
+    if split_idx is not None:
+        split_idx_sub = {}
+        for split_name, indices in split_idx.items():
+            mask_indices = np.isin(indices, node_indices)
+            old_indices = indices[mask_indices]
+            new_indices = np.array([old_to_new[idx] for idx in old_indices])
+            split_idx_sub[split_name] = new_indices
+    
+    return adj_sub, features_sub, labels_sub, split_idx_sub
+
+def compute_sgc_normalized_adjacency(adj):
+    """Compute SGC-style normalized adjacency: D^{-1/2} A D^{-1/2}"""
+    adj = adj + sp.eye(adj.shape[0])
+    adj = sp.coo_matrix(adj)
+    
+    row_sum = np.array(adj.sum(1))
+    d_inv_sqrt = np.power(row_sum, -0.5).flatten()
+    d_inv_sqrt[np.isinf(d_inv_sqrt)] = 0.
+    d_mat_inv_sqrt = sp.diags(d_inv_sqrt)
+    
+    return d_mat_inv_sqrt @ adj @ d_mat_inv_sqrt
+
+
+def sgc_precompute(features, adj_normalized, degree):
+    """Apply SGC precomputation: A^k X"""
+    for i in range(degree):
+        features = adj_normalized @ features
+    return features
+
+def compute_restricted_eigenvectors(X, L, D, num_components=0):
+    """
+    Compute X-restricted eigenvectors via Rayleigh-Ritz procedure.
+    
+    Returns:
+        U: Eigenvector matrix (n x d_effective)
+        eigenvalues: Corresponding eigenvalues
+        d_effective: Effective dimension after rank check
+        ortho_error: D-orthonormality error (should be < 1e-6)
+    """
+    num_nodes, dimension = X.shape
+    
+    # QR decomposition for numerical stability
+    Q, R = np.linalg.qr(X)
+    rank_X = np.sum(np.abs(np.diag(R)) > 1e-10)
+    
+    if rank_X < dimension:
+        Q = Q[:, :rank_X]
+        dimension = rank_X
+    
+    d_effective = dimension
+    
+    # Project Laplacian and degree matrix onto column space of X
+    L_r = Q.T @ (L @ Q)
+    D_r = Q.T @ (D @ Q)
+    
+    # Symmetrize for numerical stability
+    L_r = 0.5 * (L_r + L_r.T)
+    D_r = 0.5 * (D_r + D_r.T)
+    
+    # Regularize D_r
+    eps_base = 1e-10
+    eps = eps_base * np.trace(D_r) / d_effective
+    D_r = D_r + eps * np.eye(d_effective)
+    
+    # Solve generalized eigenvalue problem
+    eigenvalues, V = la.eigh(L_r, D_r)
+    
+    # Sort by eigenvalue
+    idx = np.argsort(eigenvalues)
+    eigenvalues = eigenvalues[idx]
+    V = V[:, idx]
+    
+    # Skip first num_components (usually 0 for LCC)
+    if num_components > 0:
+        eigenvalues = eigenvalues[num_components:]
+        V = V[:, num_components:]
+    
+    # Map back to original space
+    U = Q @ V
+    
+    # Verify D-orthonormality: U^T D U should be identity
+    G = U.T @ (D @ U)
+    ortho_error = np.max(np.abs(G - np.eye(len(eigenvalues))))
+    
+    return U, eigenvalues, len(eigenvalues), ortho_error
 # ============================================================================
 # Training Functions
 # ============================================================================
