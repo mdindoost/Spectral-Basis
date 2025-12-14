@@ -33,8 +33,7 @@ Decision Criteria:
   - If all alternatives show <0.5pp improvement → Abandon, focus on publication
   - If one specific approach works → Full study with that approach only
 
-Author: Mohammad
-Date: December 2025
+
 ===================================================================================
 """
 
