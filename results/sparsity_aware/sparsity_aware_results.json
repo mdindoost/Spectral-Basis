@@ -1,0 +1,1946 @@
+{
+  "cora_k2": {
+    "dataset": "cora",
+    "k_diffusion": 2,
+    "metadata": {
+      "num_nodes": 2485,
+      "num_classes": 7,
+      "d_eff": 1427,
+      "sparsity_U": 0.0001638421982490599,
+      "ref_nodes_pct": 79.43661971830987
+    },
+    "classifiers": {
+      "U_StandardMLP": {
+        "test_acc_mean": 0.5217974325021107,
+        "test_acc_std": 0.051986104877891716,
+        "num_runs": 15
+      },
+      "U_RowNormMLP": {
+        "test_acc_mean": 0.5706237236658732,
+        "test_acc_std": 0.02455277925775543,
+        "num_runs": 15
+      },
+      "U_LogMagnitudeMLP": {
+        "test_acc_mean": 0.5238095045089721,
+        "test_acc_std": 0.01965478649001503,
+        "num_runs": 15
+      },
+      "U_SparsityAwareMLP": {
+        "test_acc_mean": 0.5192488094170888,
+        "test_acc_std": 0.02208355287511132,
+        "num_runs": 15
+      },
+      "U_RobustMagnitudeMLP": {
+        "test_acc_mean": 0.5090543131033579,
+        "test_acc_std": 0.022537609738070577,
+        "num_runs": 15
+      },
+      "U_TrimmedMagnitudeMLP": {
+        "test_acc_mean": 0.5098591387271881,
+        "test_acc_std": 0.01926833758265949,
+        "num_runs": 15
+      },
+      "U_AdaptiveMagnitudeMLP": {
+        "test_acc_mean": 0.5209926088651021,
+        "test_acc_std": 0.021651582173223393,
+        "num_runs": 15
+      },
+      "U_DensityOnlyMLP": {
+        "test_acc_mean": 0.514688108364741,
+        "test_acc_std": 0.02280190463387032,
+        "num_runs": 15
+      },
+      "X_StandardMLP": {
+        "test_acc_mean": 0.8653252402941386,
+        "test_acc_std": 0.0061235257163095224,
+        "num_runs": 15
+      },
+      "X_RowNormMLP": {
+        "test_acc_mean": 0.8571428219477336,
+        "test_acc_std": 0.01511064377760694,
+        "num_runs": 15
+      },
+      "U_Linear": {
+        "test_acc_mean": 0.2932260115941366,
+        "test_acc_std": 0.016037222415128234,
+        "num_runs": 15
+      },
+      "U_RowNormLinear": {
+        "test_acc_mean": 0.39999998807907106,
+        "test_acc_std": 0.025884145388448195,
+        "num_runs": 15
+      },
+      "U_CosineLinear": {
+        "test_acc_mean": 0.5356136679649353,
+        "test_acc_std": 0.01749769874058463,
+        "num_runs": 15
+      },
+      "U_LogMagLinear": {
+        "test_acc_mean": 0.3624413033326467,
+        "test_acc_std": 0.016719451725099532,
+        "num_runs": 15
+      },
+      "U_SparsityAwareLinear": {
+        "test_acc_mean": 0.3624413033326467,
+        "test_acc_std": 0.016832071162580738,
+        "num_runs": 15
+      },
+      "X_Linear": {
+        "test_acc_mean": 0.8761904398600261,
+        "test_acc_std": 0.01140254165219369,
+        "num_runs": 15
+      },
+      "X_RowNormLinear": {
+        "test_acc_mean": 0.8744466423988342,
+        "test_acc_std": 0.015651125066685413,
+        "num_runs": 15
+      },
+      "X_CosineLinear": {
+        "test_acc_mean": 0.8690811196962992,
+        "test_acc_std": 0.015366870069758265,
+        "num_runs": 15
+      },
+      "X_LogMagLinear": {
+        "test_acc_mean": 0.864922837416331,
+        "test_acc_std": 0.014856055003591705,
+        "num_runs": 15
+      }
+    }
+  },
+  "cora_k10": {
+    "dataset": "cora",
+    "k_diffusion": 10,
+    "metadata": {
+      "num_nodes": 2485,
+      "num_classes": 7,
+      "d_eff": 1427,
+      "sparsity_U": 0.0013296316088542467,
+      "ref_nodes_pct": 25.432595573440643
+    },
+    "classifiers": {
+      "U_StandardMLP": {
+        "test_acc_mean": 0.5703554511070251,
+        "test_acc_std": 0.036342775962369935,
+        "num_runs": 15
+      },
+      "U_RowNormMLP": {
+        "test_acc_mean": 0.589000650246938,
+        "test_acc_std": 0.013254598414826126,
+        "num_runs": 15
+      },
+      "U_LogMagnitudeMLP": {
+        "test_acc_mean": 0.5488933483759563,
+        "test_acc_std": 0.013670240079100351,
+        "num_runs": 15
+      },
+      "U_SparsityAwareMLP": {
+        "test_acc_mean": 0.5467471361160279,
+        "test_acc_std": 0.017532621465450156,
+        "num_runs": 15
+      },
+      "U_RobustMagnitudeMLP": {
+        "test_acc_mean": 0.5467471400896708,
+        "test_acc_std": 0.025792920872402987,
+        "num_runs": 15
+      },
+      "U_TrimmedMagnitudeMLP": {
+        "test_acc_mean": 0.5475519696871439,
+        "test_acc_std": 0.024410192449341114,
+        "num_runs": 15
+      },
+      "U_AdaptiveMagnitudeMLP": {
+        "test_acc_mean": 0.5440643668174744,
+        "test_acc_std": 0.016621220419904294,
+        "num_runs": 15
+      },
+      "U_DensityOnlyMLP": {
+        "test_acc_mean": 0.5423205733299256,
+        "test_acc_std": 0.0203058677692541,
+        "num_runs": 15
+      },
+      "X_StandardMLP": {
+        "test_acc_mean": 0.8698859453201294,
+        "test_acc_std": 0.02018323543995532,
+        "num_runs": 15
+      },
+      "X_RowNormMLP": {
+        "test_acc_mean": 0.8627766211827596,
+        "test_acc_std": 0.015362187974742135,
+        "num_runs": 15
+      },
+      "U_Linear": {
+        "test_acc_mean": 0.29416497945785525,
+        "test_acc_std": 0.016066366815954438,
+        "num_runs": 15
+      },
+      "U_RowNormLinear": {
+        "test_acc_mean": 0.47672701080640156,
+        "test_acc_std": 0.01857897879502941,
+        "num_runs": 15
+      },
+      "U_CosineLinear": {
+        "test_acc_mean": 0.5742454409599305,
+        "test_acc_std": 0.01617687470160379,
+        "num_runs": 15
+      },
+      "U_LogMagLinear": {
+        "test_acc_mean": 0.3989268799622854,
+        "test_acc_std": 0.01737800926430375,
+        "num_runs": 15
+      },
+      "U_SparsityAwareLinear": {
+        "test_acc_mean": 0.3958417018254598,
+        "test_acc_std": 0.020059822039766143,
+        "num_runs": 15
+      },
+      "X_Linear": {
+        "test_acc_mean": 0.8685445586840311,
+        "test_acc_std": 0.010913943054660438,
+        "num_runs": 15
+      },
+      "X_RowNormLinear": {
+        "test_acc_mean": 0.8723004301389058,
+        "test_acc_std": 0.010541595132383388,
+        "num_runs": 15
+      },
+      "X_CosineLinear": {
+        "test_acc_mean": 0.8819583853085836,
+        "test_acc_std": 0.012308602156573669,
+        "num_runs": 15
+      },
+      "X_LogMagLinear": {
+        "test_acc_mean": 0.8704224944114685,
+        "test_acc_std": 0.011681587083558344,
+        "num_runs": 15
+      }
+    }
+  },
+  "citeseer_k2": {
+    "dataset": "citeseer",
+    "k_diffusion": 2,
+    "metadata": {
+      "num_nodes": 2120,
+      "num_classes": 6,
+      "d_eff": 2023,
+      "sparsity_U": 0.02463322731978474,
+      "ref_nodes_pct": 0.0
+    },
+    "classifiers": {
+      "U_StandardMLP": {
+        "test_acc_mean": 0.4369496901830037,
+        "test_acc_std": 0.050019770716494945,
+        "num_runs": 15
+      },
+      "U_RowNormMLP": {
+        "test_acc_mean": 0.5279874304930369,
+        "test_acc_std": 0.04233795656909702,
+        "num_runs": 15
+      },
+      "U_LogMagnitudeMLP": {
+        "test_acc_mean": 0.31525157690048217,
+        "test_acc_std": 0.01980133666792039,
+        "num_runs": 15
+      },
+      "U_SparsityAwareMLP": {
+        "test_acc_mean": 0.32232704758644104,
+        "test_acc_std": 0.017259823136211494,
+        "num_runs": 15
+      },
+      "U_RobustMagnitudeMLP": {
+        "test_acc_mean": 0.3327044089635213,
+        "test_acc_std": 0.02759154191760687,
+        "num_runs": 15
+      },
+      "U_TrimmedMagnitudeMLP": {
+        "test_acc_mean": 0.31556604504585267,
+        "test_acc_std": 0.026546730846918522,
+        "num_runs": 15
+      },
+      "U_AdaptiveMagnitudeMLP": {
+        "test_acc_mean": 0.3174528310696284,
+        "test_acc_std": 0.028246802860632216,
+        "num_runs": 15
+      },
+      "U_DensityOnlyMLP": {
+        "test_acc_mean": 0.3139937102794647,
+        "test_acc_std": 0.02747571187098535,
+        "num_runs": 15
+      },
+      "X_StandardMLP": {
+        "test_acc_mean": 0.7452830274899801,
+        "test_acc_std": 0.02333197810926146,
+        "num_runs": 15
+      },
+      "X_RowNormMLP": {
+        "test_acc_mean": 0.7764151056607564,
+        "test_acc_std": 0.013649387217889063,
+        "num_runs": 15
+      },
+      "U_Linear": {
+        "test_acc_mean": 0.2517295648654302,
+        "test_acc_std": 0.014448306676724114,
+        "num_runs": 15
+      },
+      "U_RowNormLinear": {
+        "test_acc_mean": 0.06242138519883156,
+        "test_acc_std": 0.007648042810257852,
+        "num_runs": 15
+      },
+      "U_CosineLinear": {
+        "test_acc_mean": 0.2845911999543508,
+        "test_acc_std": 0.0180372671850537,
+        "num_runs": 15
+      },
+      "U_LogMagLinear": {
+        "test_acc_mean": 0.12531446516513825,
+        "test_acc_std": 0.027864367622951407,
+        "num_runs": 15
+      },
+      "U_SparsityAwareLinear": {
+        "test_acc_mean": 0.12562893182039261,
+        "test_acc_std": 0.028529831808526425,
+        "num_runs": 15
+      },
+      "X_Linear": {
+        "test_acc_mean": 0.775314478079478,
+        "test_acc_std": 0.022332590478491322,
+        "num_runs": 15
+      },
+      "X_RowNormLinear": {
+        "test_acc_mean": 0.7745283126831055,
+        "test_acc_std": 0.018586743644681845,
+        "num_runs": 15
+      },
+      "X_CosineLinear": {
+        "test_acc_mean": 0.7814465522766113,
+        "test_acc_std": 0.022085458197323847,
+        "num_runs": 15
+      },
+      "X_LogMagLinear": {
+        "test_acc_mean": 0.776572338740031,
+        "test_acc_std": 0.01682022611175474,
+        "num_runs": 15
+      }
+    }
+  },
+  "citeseer_k10": {
+    "dataset": "citeseer",
+    "k_diffusion": 10,
+    "metadata": {
+      "num_nodes": 2120,
+      "num_classes": 6,
+      "d_eff": 1956,
+      "sparsity_U": 0.1098868503298993,
+      "ref_nodes_pct": 0.0
+    },
+    "classifiers": {
+      "U_StandardMLP": {
+        "test_acc_mean": 0.4611635287602743,
+        "test_acc_std": 0.06340709813848312,
+        "num_runs": 15
+      },
+      "U_RowNormMLP": {
+        "test_acc_mean": 0.5037735939025879,
+        "test_acc_std": 0.023909715022340298,
+        "num_runs": 15
+      },
+      "U_LogMagnitudeMLP": {
+        "test_acc_mean": 0.3632075528303782,
+        "test_acc_std": 0.018769396146094665,
+        "num_runs": 15
+      },
+      "U_SparsityAwareMLP": {
+        "test_acc_mean": 0.3660377383232117,
+        "test_acc_std": 0.02439185432716528,
+        "num_runs": 15
+      },
+      "U_RobustMagnitudeMLP": {
+        "test_acc_mean": 0.36713836590449017,
+        "test_acc_std": 0.023532436811841542,
+        "num_runs": 15
+      },
+      "U_TrimmedMagnitudeMLP": {
+        "test_acc_mean": 0.3767295678456624,
+        "test_acc_std": 0.030024448645851052,
+        "num_runs": 15
+      },
+      "U_AdaptiveMagnitudeMLP": {
+        "test_acc_mean": 0.3553459167480469,
+        "test_acc_std": 0.01764232088494679,
+        "num_runs": 15
+      },
+      "U_DensityOnlyMLP": {
+        "test_acc_mean": 0.34433962901433307,
+        "test_acc_std": 0.019938201915689378,
+        "num_runs": 15
+      },
+      "X_StandardMLP": {
+        "test_acc_mean": 0.7411949833234152,
+        "test_acc_std": 0.016350688539810563,
+        "num_runs": 15
+      },
+      "X_RowNormMLP": {
+        "test_acc_mean": 0.7588050365447998,
+        "test_acc_std": 0.020058111120983487,
+        "num_runs": 15
+      },
+      "U_Linear": {
+        "test_acc_mean": 0.24827044506867726,
+        "test_acc_std": 0.010458043690153525,
+        "num_runs": 15
+      },
+      "U_RowNormLinear": {
+        "test_acc_mean": 0.12279874334732692,
+        "test_acc_std": 0.004674865040321246,
+        "num_runs": 15
+      },
+      "U_CosineLinear": {
+        "test_acc_mean": 0.36037736336390175,
+        "test_acc_std": 0.015649197663708894,
+        "num_runs": 15
+      },
+      "U_LogMagLinear": {
+        "test_acc_mean": 0.14575471729040146,
+        "test_acc_std": 0.01462010441425707,
+        "num_runs": 15
+      },
+      "U_SparsityAwareLinear": {
+        "test_acc_mean": 0.13867924809455873,
+        "test_acc_std": 0.01536220616761631,
+        "num_runs": 15
+      },
+      "X_Linear": {
+        "test_acc_mean": 0.7657232761383057,
+        "test_acc_std": 0.02610252167617986,
+        "num_runs": 15
+      },
+      "X_RowNormLinear": {
+        "test_acc_mean": 0.7650943398475647,
+        "test_acc_std": 0.019577839569712967,
+        "num_runs": 15
+      },
+      "X_CosineLinear": {
+        "test_acc_mean": 0.7668239037195842,
+        "test_acc_std": 0.01942698947479222,
+        "num_runs": 15
+      },
+      "X_LogMagLinear": {
+        "test_acc_mean": 0.7619496901830037,
+        "test_acc_std": 0.020388182163982655,
+        "num_runs": 15
+      }
+    }
+  },
+  "pubmed_k2": {
+    "dataset": "pubmed",
+    "k_diffusion": 2,
+    "metadata": {
+      "num_nodes": 19717,
+      "num_classes": 3,
+      "d_eff": 500,
+      "sparsity_U": 0.0003356494395699143,
+      "ref_nodes_pct": 84.64776588730537
+    },
+    "classifiers": {
+      "U_StandardMLP": {
+        "test_acc_mean": 0.8838911175727844,
+        "test_acc_std": 0.005692530380849454,
+        "num_runs": 15
+      },
+      "U_RowNormMLP": {
+        "test_acc_mean": 0.8746112028757731,
+        "test_acc_std": 0.005892586427058064,
+        "num_runs": 15
+      },
+      "U_LogMagnitudeMLP": {
+        "test_acc_mean": 0.8791750987370809,
+        "test_acc_std": 0.006820984711907845,
+        "num_runs": 15
+      },
+      "U_SparsityAwareMLP": {
+        "test_acc_mean": 0.8797836105028788,
+        "test_acc_std": 0.006851708415567658,
+        "num_runs": 15
+      },
+      "U_RobustMagnitudeMLP": {
+        "test_acc_mean": 0.880797811349233,
+        "test_acc_std": 0.005315972793959126,
+        "num_runs": 15
+      },
+      "U_TrimmedMagnitudeMLP": {
+        "test_acc_mean": 0.8824881513913473,
+        "test_acc_std": 0.004981340916121077,
+        "num_runs": 15
+      },
+      "U_AdaptiveMagnitudeMLP": {
+        "test_acc_mean": 0.8801892995834351,
+        "test_acc_std": 0.00649659071769848,
+        "num_runs": 15
+      },
+      "U_DensityOnlyMLP": {
+        "test_acc_mean": 0.8787525177001954,
+        "test_acc_std": 0.005012514525187577,
+        "num_runs": 15
+      },
+      "X_StandardMLP": {
+        "test_acc_mean": 0.8958755652109782,
+        "test_acc_std": 0.004259499963993259,
+        "num_runs": 15
+      },
+      "X_RowNormMLP": {
+        "test_acc_mean": 0.8912102540334066,
+        "test_acc_std": 0.006106613468160614,
+        "num_runs": 15
+      },
+      "U_Linear": {
+        "test_acc_mean": 0.5270452876885732,
+        "test_acc_std": 0.061140470762254415,
+        "num_runs": 15
+      },
+      "U_RowNormLinear": {
+        "test_acc_mean": 0.7474137862523397,
+        "test_acc_std": 0.003676846664817493,
+        "num_runs": 15
+      },
+      "U_CosineLinear": {
+        "test_acc_mean": 0.8643170952796936,
+        "test_acc_std": 0.00421519465420665,
+        "num_runs": 15
+      },
+      "U_LogMagLinear": {
+        "test_acc_mean": 0.7236646215120951,
+        "test_acc_std": 0.0038618015402796546,
+        "num_runs": 15
+      },
+      "U_SparsityAwareLinear": {
+        "test_acc_mean": 0.7228532552719116,
+        "test_acc_std": 0.003731536371258259,
+        "num_runs": 15
+      },
+      "X_Linear": {
+        "test_acc_mean": 0.8195063988367717,
+        "test_acc_std": 0.007441798013422157,
+        "num_runs": 15
+      },
+      "X_RowNormLinear": {
+        "test_acc_mean": 0.8698275566101075,
+        "test_acc_std": 0.006362569469628772,
+        "num_runs": 15
+      },
+      "X_CosineLinear": {
+        "test_acc_mean": 0.8847193717956543,
+        "test_acc_std": 0.007028198243158049,
+        "num_runs": 15
+      },
+      "X_LogMagLinear": {
+        "test_acc_mean": 0.869523306687673,
+        "test_acc_std": 0.007533343920990768,
+        "num_runs": 15
+      }
+    }
+  },
+  "pubmed_k10": {
+    "dataset": "pubmed",
+    "k_diffusion": 10,
+    "metadata": {
+      "num_nodes": 19717,
+      "num_classes": 3,
+      "d_eff": 500,
+      "sparsity_U": 0.0005552568849216412,
+      "ref_nodes_pct": 77.43571537252117
+    },
+    "classifiers": {
+      "U_StandardMLP": {
+        "test_acc_mean": 0.8495942950248718,
+        "test_acc_std": 0.005540463700274346,
+        "num_runs": 15
+      },
+      "U_RowNormMLP": {
+        "test_acc_mean": 0.8390297293663025,
+        "test_acc_std": 0.005569528126690274,
+        "num_runs": 15
+      },
+      "U_LogMagnitudeMLP": {
+        "test_acc_mean": 0.8469911813735962,
+        "test_acc_std": 0.004156838556259581,
+        "num_runs": 15
+      },
+      "U_SparsityAwareMLP": {
+        "test_acc_mean": 0.848597006003062,
+        "test_acc_std": 0.003837309727496995,
+        "num_runs": 15
+      },
+      "U_RobustMagnitudeMLP": {
+        "test_acc_mean": 0.8477349400520324,
+        "test_acc_std": 0.005126362197362893,
+        "num_runs": 15
+      },
+      "U_TrimmedMagnitudeMLP": {
+        "test_acc_mean": 0.8475659012794494,
+        "test_acc_std": 0.0057358261907657256,
+        "num_runs": 15
+      },
+      "U_AdaptiveMagnitudeMLP": {
+        "test_acc_mean": 0.8464502890904745,
+        "test_acc_std": 0.0046178559354141035,
+        "num_runs": 15
+      },
+      "U_DensityOnlyMLP": {
+        "test_acc_mean": 0.8459431886672973,
+        "test_acc_std": 0.00500275007346271,
+        "num_runs": 15
+      },
+      "X_StandardMLP": {
+        "test_acc_mean": 0.8521128932634989,
+        "test_acc_std": 0.004287377999394076,
+        "num_runs": 15
+      },
+      "X_RowNormMLP": {
+        "test_acc_mean": 0.855070972442627,
+        "test_acc_std": 0.003950608413124195,
+        "num_runs": 15
+      },
+      "U_Linear": {
+        "test_acc_mean": 0.5644354144732158,
+        "test_acc_std": 0.08582032241102928,
+        "num_runs": 15
+      },
+      "U_RowNormLinear": {
+        "test_acc_mean": 0.8374746243158976,
+        "test_acc_std": 0.0036754494722973847,
+        "num_runs": 15
+      },
+      "U_CosineLinear": {
+        "test_acc_mean": 0.8423934857050578,
+        "test_acc_std": 0.003532513114323736,
+        "num_runs": 15
+      },
+      "U_LogMagLinear": {
+        "test_acc_mean": 0.8293103257815043,
+        "test_acc_std": 0.005276599466535755,
+        "num_runs": 15
+      },
+      "U_SparsityAwareLinear": {
+        "test_acc_mean": 0.829851233959198,
+        "test_acc_std": 0.005580757634130776,
+        "num_runs": 15
+      },
+      "X_Linear": {
+        "test_acc_mean": 0.7686950524648031,
+        "test_acc_std": 0.0059516442884134805,
+        "num_runs": 15
+      },
+      "X_RowNormLinear": {
+        "test_acc_mean": 0.8409398118654887,
+        "test_acc_std": 0.00277388270056815,
+        "num_runs": 15
+      },
+      "X_CosineLinear": {
+        "test_acc_mean": 0.8489012638727824,
+        "test_acc_std": 0.0029561004622189213,
+        "num_runs": 15
+      },
+      "X_LogMagLinear": {
+        "test_acc_mean": 0.840787676970164,
+        "test_acc_std": 0.003631425498043297,
+        "num_runs": 15
+      }
+    }
+  },
+  "wikics_k2": {
+    "dataset": "wikics",
+    "k_diffusion": 2,
+    "metadata": {
+      "num_nodes": 11311,
+      "num_classes": 10,
+      "d_eff": 300,
+      "sparsity_U": 0.0009117967759997642,
+      "ref_nodes_pct": 78.09212271240385
+    },
+    "classifiers": {
+      "U_StandardMLP": {
+        "test_acc_mean": 0.4783620456854502,
+        "test_acc_std": 0.012536914994022265,
+        "num_runs": 15
+      },
+      "U_RowNormMLP": {
+        "test_acc_mean": 0.8036234855651856,
+        "test_acc_std": 0.008894802258224381,
+        "num_runs": 15
+      },
+      "U_LogMagnitudeMLP": {
+        "test_acc_mean": 0.795286480585734,
+        "test_acc_std": 0.006416745366377844,
+        "num_runs": 15
+      },
+      "U_SparsityAwareMLP": {
+        "test_acc_mean": 0.7966121474901835,
+        "test_acc_std": 0.0073668525053740995,
+        "num_runs": 15
+      },
+      "U_RobustMagnitudeMLP": {
+        "test_acc_mean": 0.7934894522031148,
+        "test_acc_std": 0.008121933363953933,
+        "num_runs": 15
+      },
+      "U_TrimmedMagnitudeMLP": {
+        "test_acc_mean": 0.7951686382293701,
+        "test_acc_std": 0.008208350883478845,
+        "num_runs": 15
+      },
+      "U_AdaptiveMagnitudeMLP": {
+        "test_acc_mean": 0.797878909111023,
+        "test_acc_std": 0.006650529462379909,
+        "num_runs": 15
+      },
+      "U_DensityOnlyMLP": {
+        "test_acc_mean": 0.7935778339703877,
+        "test_acc_std": 0.008836157694284322,
+        "num_runs": 15
+      },
+      "X_StandardMLP": {
+        "test_acc_mean": 0.8351745247840882,
+        "test_acc_std": 0.00961795137585641,
+        "num_runs": 15
+      },
+      "X_RowNormMLP": {
+        "test_acc_mean": 0.840064791838328,
+        "test_acc_std": 0.006359691526597451,
+        "num_runs": 15
+      },
+      "U_Linear": {
+        "test_acc_mean": 0.25449992120265963,
+        "test_acc_std": 0.031177387354051005,
+        "num_runs": 15
+      },
+      "U_RowNormLinear": {
+        "test_acc_mean": 0.6681690851847331,
+        "test_acc_std": 0.005938394556851209,
+        "num_runs": 15
+      },
+      "U_CosineLinear": {
+        "test_acc_mean": 0.7022536357243856,
+        "test_acc_std": 0.005791306786054916,
+        "num_runs": 15
+      },
+      "U_LogMagLinear": {
+        "test_acc_mean": 0.6257180611292521,
+        "test_acc_std": 0.0026217184143045164,
+        "num_runs": 15
+      },
+      "U_SparsityAwareLinear": {
+        "test_acc_mean": 0.6258653601010641,
+        "test_acc_std": 0.002911860340177688,
+        "num_runs": 15
+      },
+      "X_Linear": {
+        "test_acc_mean": 0.7771983901659648,
+        "test_acc_std": 0.011041028547858158,
+        "num_runs": 15
+      },
+      "X_RowNormLinear": {
+        "test_acc_mean": 0.7046987652778626,
+        "test_acc_std": 0.00873331663388384,
+        "num_runs": 15
+      },
+      "X_CosineLinear": {
+        "test_acc_mean": 0.7439387122790019,
+        "test_acc_std": 0.00936123919234861,
+        "num_runs": 15
+      },
+      "X_LogMagLinear": {
+        "test_acc_mean": 0.7033730904261272,
+        "test_acc_std": 0.009996863614345321,
+        "num_runs": 15
+      }
+    }
+  },
+  "wikics_k10": {
+    "dataset": "wikics",
+    "k_diffusion": 10,
+    "metadata": {
+      "num_nodes": 11311,
+      "num_classes": 10,
+      "d_eff": 300,
+      "sparsity_U": 0.0030760616509003034,
+      "ref_nodes_pct": 50.31385377066573
+    },
+    "classifiers": {
+      "U_StandardMLP": {
+        "test_acc_mean": 0.49474148750305175,
+        "test_acc_std": 0.008249370949082586,
+        "num_runs": 15
+      },
+      "U_RowNormMLP": {
+        "test_acc_mean": 0.7904551347096761,
+        "test_acc_std": 0.008982755132616933,
+        "num_runs": 15
+      },
+      "U_LogMagnitudeMLP": {
+        "test_acc_mean": 0.7996464610099793,
+        "test_acc_std": 0.00985830562769799,
+        "num_runs": 15
+      },
+      "U_SparsityAwareMLP": {
+        "test_acc_mean": 0.8017970124880472,
+        "test_acc_std": 0.007846720769785862,
+        "num_runs": 15
+      },
+      "U_RobustMagnitudeMLP": {
+        "test_acc_mean": 0.7992635011672974,
+        "test_acc_std": 0.009591470304965339,
+        "num_runs": 15
+      },
+      "U_TrimmedMagnitudeMLP": {
+        "test_acc_mean": 0.7983797113100688,
+        "test_acc_std": 0.009702127495910538,
+        "num_runs": 15
+      },
+      "U_AdaptiveMagnitudeMLP": {
+        "test_acc_mean": 0.8002356648445129,
+        "test_acc_std": 0.009172426615162781,
+        "num_runs": 15
+      },
+      "U_DensityOnlyMLP": {
+        "test_acc_mean": 0.797702145576477,
+        "test_acc_std": 0.009156436239467904,
+        "num_runs": 15
+      },
+      "X_StandardMLP": {
+        "test_acc_mean": 0.7808808286984762,
+        "test_acc_std": 0.010898234698543657,
+        "num_runs": 15
+      },
+      "X_RowNormMLP": {
+        "test_acc_mean": 0.7820886492729187,
+        "test_acc_std": 0.010700544165193263,
+        "num_runs": 15
+      },
+      "U_Linear": {
+        "test_acc_mean": 0.25311532815297444,
+        "test_acc_std": 0.031977053497010986,
+        "num_runs": 15
+      },
+      "U_RowNormLinear": {
+        "test_acc_mean": 0.7370157440503439,
+        "test_acc_std": 0.007766678272350768,
+        "num_runs": 15
+      },
+      "U_CosineLinear": {
+        "test_acc_mean": 0.7548092365264892,
+        "test_acc_std": 0.00786990310689714,
+        "num_runs": 15
+      },
+      "U_LogMagLinear": {
+        "test_acc_mean": 0.7281484564145406,
+        "test_acc_std": 0.007828999074270475,
+        "num_runs": 15
+      },
+      "U_SparsityAwareLinear": {
+        "test_acc_mean": 0.7279716968536377,
+        "test_acc_std": 0.007386857402677542,
+        "num_runs": 15
+      },
+      "X_Linear": {
+        "test_acc_mean": 0.6010016083717347,
+        "test_acc_std": 0.01307028028145787,
+        "num_runs": 15
+      },
+      "X_RowNormLinear": {
+        "test_acc_mean": 0.5638532757759094,
+        "test_acc_std": 0.007399534145681605,
+        "num_runs": 15
+      },
+      "X_CosineLinear": {
+        "test_acc_mean": 0.5876859505971272,
+        "test_acc_std": 0.008250426825016819,
+        "num_runs": 15
+      },
+      "X_LogMagLinear": {
+        "test_acc_mean": 0.5407865524291993,
+        "test_acc_std": 0.012878382561895227,
+        "num_runs": 15
+      }
+    }
+  },
+  "amazon-computers_k2": {
+    "dataset": "amazon-computers",
+    "k_diffusion": 2,
+    "metadata": {
+      "num_nodes": 13381,
+      "num_classes": 10,
+      "d_eff": 767,
+      "sparsity_U": 0.0008086150681457207,
+      "ref_nodes_pct": 57.962783050594126
+    },
+    "classifiers": {
+      "U_StandardMLP": {
+        "test_acc_mean": 0.7061885476112366,
+        "test_acc_std": 0.04674570785228561,
+        "num_runs": 15
+      },
+      "U_RowNormMLP": {
+        "test_acc_mean": 0.8830282886823019,
+        "test_acc_std": 0.006033949884705078,
+        "num_runs": 15
+      },
+      "U_LogMagnitudeMLP": {
+        "test_acc_mean": 0.8778981765111288,
+        "test_acc_std": 0.006598066603207232,
+        "num_runs": 15
+      },
+      "U_SparsityAwareMLP": {
+        "test_acc_mean": 0.8779728809992472,
+        "test_acc_std": 0.0075978084004883605,
+        "num_runs": 15
+      },
+      "U_RobustMagnitudeMLP": {
+        "test_acc_mean": 0.8783464272816975,
+        "test_acc_std": 0.0054623270341431045,
+        "num_runs": 15
+      },
+      "U_TrimmedMagnitudeMLP": {
+        "test_acc_mean": 0.8785954634348552,
+        "test_acc_std": 0.0054029615799836735,
+        "num_runs": 15
+      },
+      "U_AdaptiveMagnitudeMLP": {
+        "test_acc_mean": 0.878744884332021,
+        "test_acc_std": 0.006702881422246862,
+        "num_runs": 15
+      },
+      "U_DensityOnlyMLP": {
+        "test_acc_mean": 0.8816087921460469,
+        "test_acc_std": 0.006033336341128747,
+        "num_runs": 15
+      },
+      "X_StandardMLP": {
+        "test_acc_mean": 0.9083800514539083,
+        "test_acc_std": 0.005586608846006059,
+        "num_runs": 15
+      },
+      "X_RowNormMLP": {
+        "test_acc_mean": 0.9009090105692545,
+        "test_acc_std": 0.00529420191656612,
+        "num_runs": 15
+      },
+      "U_Linear": {
+        "test_acc_mean": 0.3987299382686615,
+        "test_acc_std": 0.026574544705075677,
+        "num_runs": 15
+      },
+      "U_RowNormLinear": {
+        "test_acc_mean": 0.7427717765172323,
+        "test_acc_std": 0.004586850192800799,
+        "num_runs": 15
+      },
+      "U_CosineLinear": {
+        "test_acc_mean": 0.8440294067064921,
+        "test_acc_std": 0.005241931804492144,
+        "num_runs": 15
+      },
+      "U_LogMagLinear": {
+        "test_acc_mean": 0.5400323947270711,
+        "test_acc_std": 0.004810309226866086,
+        "num_runs": 15
+      },
+      "U_SparsityAwareLinear": {
+        "test_acc_mean": 0.5404557506243388,
+        "test_acc_std": 0.004922206404640763,
+        "num_runs": 15
+      },
+      "X_Linear": {
+        "test_acc_mean": 0.8909974018732707,
+        "test_acc_std": 0.004430865125851883,
+        "num_runs": 15
+      },
+      "X_RowNormLinear": {
+        "test_acc_mean": 0.7817706743876139,
+        "test_acc_std": 0.003588694652088398,
+        "num_runs": 15
+      },
+      "X_CosineLinear": {
+        "test_acc_mean": 0.8129996498425801,
+        "test_acc_std": 0.003926861207402345,
+        "num_runs": 15
+      },
+      "X_LogMagLinear": {
+        "test_acc_mean": 0.7820695082346598,
+        "test_acc_std": 0.004812502093625706,
+        "num_runs": 15
+      }
+    }
+  },
+  "amazon-computers_k10": {
+    "dataset": "amazon-computers",
+    "k_diffusion": 10,
+    "metadata": {
+      "num_nodes": 13381,
+      "num_classes": 10,
+      "d_eff": 767,
+      "sparsity_U": 0.006584186435708769,
+      "ref_nodes_pct": 15.992825648307301
+    },
+    "classifiers": {
+      "U_StandardMLP": {
+        "test_acc_mean": 0.7247167468070984,
+        "test_acc_std": 0.04395332971229803,
+        "num_runs": 15
+      },
+      "U_RowNormMLP": {
+        "test_acc_mean": 0.8857427716255188,
+        "test_acc_std": 0.005404463837535664,
+        "num_runs": 15
+      },
+      "U_LogMagnitudeMLP": {
+        "test_acc_mean": 0.894085439046224,
+        "test_acc_std": 0.005891976563767084,
+        "num_runs": 15
+      },
+      "U_SparsityAwareMLP": {
+        "test_acc_mean": 0.8947827458381653,
+        "test_acc_std": 0.006139105504951276,
+        "num_runs": 15
+      },
+      "U_RobustMagnitudeMLP": {
+        "test_acc_mean": 0.8928402622540792,
+        "test_acc_std": 0.004438557580889518,
+        "num_runs": 15
+      },
+      "U_TrimmedMagnitudeMLP": {
+        "test_acc_mean": 0.8930644035339356,
+        "test_acc_std": 0.005659399330553884,
+        "num_runs": 15
+      },
+      "U_AdaptiveMagnitudeMLP": {
+        "test_acc_mean": 0.8937118887901306,
+        "test_acc_std": 0.005107097489924101,
+        "num_runs": 15
+      },
+      "U_DensityOnlyMLP": {
+        "test_acc_mean": 0.8947578390439351,
+        "test_acc_std": 0.0049132568343547125,
+        "num_runs": 15
+      },
+      "X_StandardMLP": {
+        "test_acc_mean": 0.8117046634356181,
+        "test_acc_std": 0.00858625816688089,
+        "num_runs": 15
+      },
+      "X_RowNormMLP": {
+        "test_acc_mean": 0.7902876655260722,
+        "test_acc_std": 0.005390557173856468,
+        "num_runs": 15
+      },
+      "U_Linear": {
+        "test_acc_mean": 0.4009214401245117,
+        "test_acc_std": 0.028311395081111582,
+        "num_runs": 15
+      },
+      "U_RowNormLinear": {
+        "test_acc_mean": 0.8232349793116251,
+        "test_acc_std": 0.005396419955556069,
+        "num_runs": 15
+      },
+      "U_CosineLinear": {
+        "test_acc_mean": 0.864500081539154,
+        "test_acc_std": 0.0019070367545462,
+        "num_runs": 15
+      },
+      "U_LogMagLinear": {
+        "test_acc_mean": 0.7307931939760844,
+        "test_acc_std": 0.005303334031008226,
+        "num_runs": 15
+      },
+      "U_SparsityAwareLinear": {
+        "test_acc_mean": 0.730245320002238,
+        "test_acc_std": 0.005959484720603943,
+        "num_runs": 15
+      },
+      "X_Linear": {
+        "test_acc_mean": 0.7796040574709574,
+        "test_acc_std": 0.004777972829669203,
+        "num_runs": 15
+      },
+      "X_RowNormLinear": {
+        "test_acc_mean": 0.6904246131579082,
+        "test_acc_std": 0.0047671841528661085,
+        "num_runs": 15
+      },
+      "X_CosineLinear": {
+        "test_acc_mean": 0.7094757994016011,
+        "test_acc_std": 0.005867613012602311,
+        "num_runs": 15
+      },
+      "X_LogMagLinear": {
+        "test_acc_mean": 0.6914456725120545,
+        "test_acc_std": 0.003993109892898472,
+        "num_runs": 15
+      }
+    }
+  },
+  "amazon-photo_k2": {
+    "dataset": "amazon-photo",
+    "k_diffusion": 2,
+    "metadata": {
+      "num_nodes": 7487,
+      "num_classes": 8,
+      "d_eff": 745,
+      "sparsity_U": 0.0005907331096495671,
+      "ref_nodes_pct": 66.16802457593161
+    },
+    "classifiers": {
+      "U_StandardMLP": {
+        "test_acc_mean": 0.8133511662483215,
+        "test_acc_std": 0.033423910296709894,
+        "num_runs": 15
+      },
+      "U_RowNormMLP": {
+        "test_acc_mean": 0.9008901119232178,
+        "test_acc_std": 0.0071933823865320875,
+        "num_runs": 15
+      },
+      "U_LogMagnitudeMLP": {
+        "test_acc_mean": 0.8846017201741536,
+        "test_acc_std": 0.005244268888601787,
+        "num_runs": 15
+      },
+      "U_SparsityAwareMLP": {
+        "test_acc_mean": 0.8860703547795613,
+        "test_acc_std": 0.007151132161034976,
+        "num_runs": 15
+      },
+      "U_RobustMagnitudeMLP": {
+        "test_acc_mean": 0.8875389854113261,
+        "test_acc_std": 0.005322985788728691,
+        "num_runs": 15
+      },
+      "U_TrimmedMagnitudeMLP": {
+        "test_acc_mean": 0.8857588251431783,
+        "test_acc_std": 0.005232939546898447,
+        "num_runs": 15
+      },
+      "U_AdaptiveMagnitudeMLP": {
+        "test_acc_mean": 0.8846907297770182,
+        "test_acc_std": 0.00615440670037149,
+        "num_runs": 15
+      },
+      "U_DensityOnlyMLP": {
+        "test_acc_mean": 0.8825990597407023,
+        "test_acc_std": 0.0057676506255959535,
+        "num_runs": 15
+      },
+      "X_StandardMLP": {
+        "test_acc_mean": 0.9460169514020283,
+        "test_acc_std": 0.006846356287384647,
+        "num_runs": 15
+      },
+      "X_RowNormMLP": {
+        "test_acc_mean": 0.9443703095118204,
+        "test_acc_std": 0.006543720757215663,
+        "num_runs": 15
+      },
+      "U_Linear": {
+        "test_acc_mean": 0.3262127379576365,
+        "test_acc_std": 0.05157794761236061,
+        "num_runs": 15
+      },
+      "U_RowNormLinear": {
+        "test_acc_mean": 0.6947930812835693,
+        "test_acc_std": 0.007069808488732658,
+        "num_runs": 15
+      },
+      "U_CosineLinear": {
+        "test_acc_mean": 0.8639519731203715,
+        "test_acc_std": 0.005644441426629284,
+        "num_runs": 15
+      },
+      "U_LogMagLinear": {
+        "test_acc_mean": 0.5938585122426351,
+        "test_acc_std": 0.008774593369940534,
+        "num_runs": 15
+      },
+      "U_SparsityAwareLinear": {
+        "test_acc_mean": 0.593992014726003,
+        "test_acc_std": 0.00868405350057382,
+        "num_runs": 15
+      },
+      "X_Linear": {
+        "test_acc_mean": 0.9380507667859396,
+        "test_acc_std": 0.008437663181365941,
+        "num_runs": 15
+      },
+      "X_RowNormLinear": {
+        "test_acc_mean": 0.9000890493392945,
+        "test_acc_std": 0.005766638300390158,
+        "num_runs": 15
+      },
+      "X_CosineLinear": {
+        "test_acc_mean": 0.9114375074704488,
+        "test_acc_std": 0.006062973915586484,
+        "num_runs": 15
+      },
+      "X_LogMagLinear": {
+        "test_acc_mean": 0.9010681351025899,
+        "test_acc_std": 0.0063526657576755095,
+        "num_runs": 15
+      }
+    }
+  },
+  "amazon-photo_k10": {
+    "dataset": "amazon-photo",
+    "k_diffusion": 10,
+    "metadata": {
+      "num_nodes": 7487,
+      "num_classes": 8,
+      "d_eff": 745,
+      "sparsity_U": 0.004117382882006664,
+      "ref_nodes_pct": 21.236810471483906
+    },
+    "classifiers": {
+      "U_StandardMLP": {
+        "test_acc_mean": 0.8223409334818522,
+        "test_acc_std": 0.024890548731212433,
+        "num_runs": 15
+      },
+      "U_RowNormMLP": {
+        "test_acc_mean": 0.8942145427068074,
+        "test_acc_std": 0.003868508528911995,
+        "num_runs": 15
+      },
+      "U_LogMagnitudeMLP": {
+        "test_acc_mean": 0.8983979026476542,
+        "test_acc_std": 0.004436117681190202,
+        "num_runs": 15
+      },
+      "U_SparsityAwareMLP": {
+        "test_acc_mean": 0.899554991722107,
+        "test_acc_std": 0.004681580561256712,
+        "num_runs": 15
+      },
+      "U_RobustMagnitudeMLP": {
+        "test_acc_mean": 0.8993324836095175,
+        "test_acc_std": 0.00452889463681839,
+        "num_runs": 15
+      },
+      "U_TrimmedMagnitudeMLP": {
+        "test_acc_mean": 0.899866525332133,
+        "test_acc_std": 0.003815410568090609,
+        "num_runs": 15
+      },
+      "U_AdaptiveMagnitudeMLP": {
+        "test_acc_mean": 0.9001335501670837,
+        "test_acc_std": 0.0055413964025105384,
+        "num_runs": 15
+      },
+      "U_DensityOnlyMLP": {
+        "test_acc_mean": 0.8975523273150127,
+        "test_acc_std": 0.003967088514284396,
+        "num_runs": 15
+      },
+      "X_StandardMLP": {
+        "test_acc_mean": 0.8980418761571248,
+        "test_acc_std": 0.00819570725484133,
+        "num_runs": 15
+      },
+      "X_RowNormMLP": {
+        "test_acc_mean": 0.8871829509735107,
+        "test_acc_std": 0.01124458378771368,
+        "num_runs": 15
+      },
+      "U_Linear": {
+        "test_acc_mean": 0.3144192427396774,
+        "test_acc_std": 0.04814005466147682,
+        "num_runs": 15
+      },
+      "U_RowNormLinear": {
+        "test_acc_mean": 0.7723186810811361,
+        "test_acc_std": 0.009344095839261933,
+        "num_runs": 15
+      },
+      "U_CosineLinear": {
+        "test_acc_mean": 0.8724967002868652,
+        "test_acc_std": 0.0061858687984729785,
+        "num_runs": 15
+      },
+      "U_LogMagLinear": {
+        "test_acc_mean": 0.7394748806953431,
+        "test_acc_std": 0.010943219406201765,
+        "num_runs": 15
+      },
+      "U_SparsityAwareLinear": {
+        "test_acc_mean": 0.7395193934440613,
+        "test_acc_std": 0.010631282888169955,
+        "num_runs": 15
+      },
+      "X_Linear": {
+        "test_acc_mean": 0.8747663974761963,
+        "test_acc_std": 0.005400201231847367,
+        "num_runs": 15
+      },
+      "X_RowNormLinear": {
+        "test_acc_mean": 0.7949266076087952,
+        "test_acc_std": 0.01483358687659092,
+        "num_runs": 15
+      },
+      "X_CosineLinear": {
+        "test_acc_mean": 0.8063195705413818,
+        "test_acc_std": 0.013652293298195176,
+        "num_runs": 15
+      },
+      "X_LogMagLinear": {
+        "test_acc_mean": 0.7879840135574341,
+        "test_acc_std": 0.01595596336731391,
+        "num_runs": 15
+      }
+    }
+  },
+  "coauthor-cs_k2": {
+    "dataset": "coauthor-cs",
+    "k_diffusion": 2,
+    "metadata": {
+      "num_nodes": 18333,
+      "num_classes": 15,
+      "d_eff": 6803,
+      "sparsity_U": 0.0005097683320298874,
+      "ref_nodes_pct": 5.912834778814161
+    },
+    "classifiers": {
+      "U_StandardMLP": {
+        "test_acc_mean": 0.593547773361206,
+        "test_acc_std": 0.028889122358519568,
+        "num_runs": 15
+      },
+      "U_RowNormMLP": {
+        "test_acc_mean": 0.7657033522923787,
+        "test_acc_std": 0.03548424552149171,
+        "num_runs": 15
+      },
+      "U_LogMagnitudeMLP": {
+        "test_acc_mean": 0.6998727520306905,
+        "test_acc_std": 0.007871270219337123,
+        "num_runs": 15
+      },
+      "U_SparsityAwareMLP": {
+        "test_acc_mean": 0.6968920111656189,
+        "test_acc_std": 0.005026224569900101,
+        "num_runs": 15
+      },
+      "U_RobustMagnitudeMLP": {
+        "test_acc_mean": 0.6894946972529093,
+        "test_acc_std": 0.011267361598244634,
+        "num_runs": 15
+      },
+      "U_TrimmedMagnitudeMLP": {
+        "test_acc_mean": 0.6923300385475158,
+        "test_acc_std": 0.008748982040832107,
+        "num_runs": 15
+      },
+      "U_AdaptiveMagnitudeMLP": {
+        "test_acc_mean": 0.7003634730974834,
+        "test_acc_std": 0.007461232307484228,
+        "num_runs": 15
+      },
+      "U_DensityOnlyMLP": {
+        "test_acc_mean": 0.697110120455424,
+        "test_acc_std": 0.007364658810236005,
+        "num_runs": 15
+      },
+      "X_StandardMLP": {
+        "test_acc_mean": 0.9402580499649048,
+        "test_acc_std": 0.0030372741456228852,
+        "num_runs": 15
+      },
+      "X_RowNormMLP": {
+        "test_acc_mean": 0.9407487829526265,
+        "test_acc_std": 0.0045778429568783694,
+        "num_runs": 15
+      },
+      "U_Linear": {
+        "test_acc_mean": 0.2897673467795054,
+        "test_acc_std": 0.027756146575551376,
+        "num_runs": 15
+      },
+      "U_RowNormLinear": {
+        "test_acc_mean": 0.7027262568473815,
+        "test_acc_std": 0.006416754843592964,
+        "num_runs": 15
+      },
+      "U_CosineLinear": {
+        "test_acc_mean": 0.7200654029846192,
+        "test_acc_std": 0.006538691386344951,
+        "num_runs": 15
+      },
+      "U_LogMagLinear": {
+        "test_acc_mean": 0.24191202223300934,
+        "test_acc_std": 0.007488539642365484,
+        "num_runs": 15
+      },
+      "U_SparsityAwareLinear": {
+        "test_acc_mean": 0.24131223956743877,
+        "test_acc_std": 0.008131978607937912,
+        "num_runs": 15
+      },
+      "X_Linear": {
+        "test_acc_mean": 0.942439079284668,
+        "test_acc_std": 0.002085482746573843,
+        "num_runs": 15
+      },
+      "X_RowNormLinear": {
+        "test_acc_mean": 0.9291893521944682,
+        "test_acc_std": 0.0019544935957107215,
+        "num_runs": 15
+      },
+      "X_CosineLinear": {
+        "test_acc_mean": 0.9382769584655761,
+        "test_acc_std": 0.002783469910516414,
+        "num_runs": 15
+      },
+      "X_LogMagLinear": {
+        "test_acc_mean": 0.9289348880449931,
+        "test_acc_std": 0.0023905809071930405,
+        "num_runs": 15
+      }
+    }
+  },
+  "coauthor-cs_k10": {
+    "dataset": "coauthor-cs",
+    "k_diffusion": 10,
+    "metadata": {
+      "num_nodes": 18333,
+      "num_classes": 15,
+      "d_eff": 6803,
+      "sparsity_U": 0.0011970711949950946,
+      "ref_nodes_pct": 0.3818251240931653
+    },
+    "classifiers": {
+      "U_StandardMLP": {
+        "test_acc_mean": 0.6294983386993408,
+        "test_acc_std": 0.026232812712291474,
+        "num_runs": 15
+      },
+      "U_RowNormMLP": {
+        "test_acc_mean": 0.6998363931973776,
+        "test_acc_std": 0.01648683036357662,
+        "num_runs": 15
+      },
+      "U_LogMagnitudeMLP": {
+        "test_acc_mean": 0.6966193755467732,
+        "test_acc_std": 0.005264099396238847,
+        "num_runs": 15
+      },
+      "U_SparsityAwareMLP": {
+        "test_acc_mean": 0.6984914302825928,
+        "test_acc_std": 0.006007283420122743,
+        "num_runs": 15
+      },
+      "U_RobustMagnitudeMLP": {
+        "test_acc_mean": 0.692475434144338,
+        "test_acc_std": 0.005358137038958182,
+        "num_runs": 15
+      },
+      "U_TrimmedMagnitudeMLP": {
+        "test_acc_mean": 0.6936931769053142,
+        "test_acc_std": 0.008178764580272658,
+        "num_runs": 15
+      },
+      "U_AdaptiveMagnitudeMLP": {
+        "test_acc_mean": 0.6993638396263122,
+        "test_acc_std": 0.00619888683523772,
+        "num_runs": 15
+      },
+      "U_DensityOnlyMLP": {
+        "test_acc_mean": 0.7006906270980835,
+        "test_acc_std": 0.0052760053101751254,
+        "num_runs": 15
+      },
+      "X_StandardMLP": {
+        "test_acc_mean": 0.912468159198761,
+        "test_acc_std": 0.004721500259183078,
+        "num_runs": 15
+      },
+      "X_RowNormMLP": {
+        "test_acc_mean": 0.915067215760549,
+        "test_acc_std": 0.0036398457755776508,
+        "num_runs": 15
+      },
+      "U_Linear": {
+        "test_acc_mean": 0.28898581067721046,
+        "test_acc_std": 0.02759575218122148,
+        "num_runs": 15
+      },
+      "U_RowNormLinear": {
+        "test_acc_mean": 0.7122500697771709,
+        "test_acc_std": 0.004557451047376128,
+        "num_runs": 15
+      },
+      "U_CosineLinear": {
+        "test_acc_mean": 0.71888401110967,
+        "test_acc_std": 0.004788604604211125,
+        "num_runs": 15
+      },
+      "U_LogMagLinear": {
+        "test_acc_mean": 0.26819337407747906,
+        "test_acc_std": 0.009685768207171902,
+        "num_runs": 15
+      },
+      "U_SparsityAwareLinear": {
+        "test_acc_mean": 0.2686295767625173,
+        "test_acc_std": 0.007813651366812528,
+        "num_runs": 15
+      },
+      "X_Linear": {
+        "test_acc_mean": 0.903271496295929,
+        "test_acc_std": 0.0014398620662255375,
+        "num_runs": 15
+      },
+      "X_RowNormLinear": {
+        "test_acc_mean": 0.8865321278572083,
+        "test_acc_std": 0.0024246110171333977,
+        "num_runs": 15
+      },
+      "X_CosineLinear": {
+        "test_acc_mean": 0.9008541862169902,
+        "test_acc_std": 0.0014585469710451258,
+        "num_runs": 15
+      },
+      "X_LogMagLinear": {
+        "test_acc_mean": 0.8854779760042827,
+        "test_acc_std": 0.0025232698924624194,
+        "num_runs": 15
+      }
+    }
+  },
+  "coauthor-physics_k2": {
+    "dataset": "coauthor-physics",
+    "k_diffusion": 2,
+    "metadata": {
+      "num_nodes": 34493,
+      "num_classes": 5,
+      "d_eff": 7701,
+      "sparsity_U": 0.0021895821314527578,
+      "ref_nodes_pct": 0.0
+    },
+    "classifiers": {
+      "U_StandardMLP": {
+        "test_acc_mean": 0.8258647044499715,
+        "test_acc_std": 0.03991223517854796,
+        "num_runs": 15
+      },
+      "U_RowNormMLP": {
+        "test_acc_mean": 0.9146859566370646,
+        "test_acc_std": 0.009768396155350434,
+        "num_runs": 15
+      },
+      "U_LogMagnitudeMLP": {
+        "test_acc_mean": 0.8858646909395854,
+        "test_acc_std": 0.005751962031977252,
+        "num_runs": 15
+      },
+      "U_SparsityAwareMLP": {
+        "test_acc_mean": 0.8868598620096843,
+        "test_acc_std": 0.005962298882248249,
+        "num_runs": 15
+      },
+      "U_RobustMagnitudeMLP": {
+        "test_acc_mean": 0.8763188044230144,
+        "test_acc_std": 0.006472009253232849,
+        "num_runs": 15
+      },
+      "U_TrimmedMagnitudeMLP": {
+        "test_acc_mean": 0.8742801467577617,
+        "test_acc_std": 0.009954291799299301,
+        "num_runs": 15
+      },
+      "U_AdaptiveMagnitudeMLP": {
+        "test_acc_mean": 0.886579672495524,
+        "test_acc_std": 0.004162150081555034,
+        "num_runs": 15
+      },
+      "U_DensityOnlyMLP": {
+        "test_acc_mean": 0.8802221814791361,
+        "test_acc_std": 0.006787781644127799,
+        "num_runs": 15
+      },
+      "X_StandardMLP": {
+        "test_acc_mean": 0.9668115456899007,
+        "test_acc_std": 0.0015437769012691786,
+        "num_runs": 15
+      },
+      "X_RowNormMLP": {
+        "test_acc_mean": 0.9655361890792846,
+        "test_acc_std": 0.0015275527339178236,
+        "num_runs": 15
+      },
+      "U_Linear": {
+        "test_acc_mean": 0.5082898259162902,
+        "test_acc_std": 0.004717971299690144,
+        "num_runs": 15
+      },
+      "U_RowNormLinear": {
+        "test_acc_mean": 0.7869468172391255,
+        "test_acc_std": 0.0036092373690183414,
+        "num_runs": 15
+      },
+      "U_CosineLinear": {
+        "test_acc_mean": 0.8415072004000346,
+        "test_acc_std": 0.0029191481836863807,
+        "num_runs": 15
+      },
+      "U_LogMagLinear": {
+        "test_acc_mean": 0.5101352413495381,
+        "test_acc_std": 0.004774404197739151,
+        "num_runs": 15
+      },
+      "U_SparsityAwareLinear": {
+        "test_acc_mean": 0.5102898240089416,
+        "test_acc_std": 0.00461680014947054,
+        "num_runs": 15
+      },
+      "X_Linear": {
+        "test_acc_mean": 0.9633912642796835,
+        "test_acc_std": 0.001007977613694303,
+        "num_runs": 15
+      },
+      "X_RowNormLinear": {
+        "test_acc_mean": 0.957352610429128,
+        "test_acc_std": 0.0010102977900061532,
+        "num_runs": 15
+      },
+      "X_CosineLinear": {
+        "test_acc_mean": 0.9601062377293904,
+        "test_acc_std": 0.00165282579525444,
+        "num_runs": 15
+      },
+      "X_LogMagLinear": {
+        "test_acc_mean": 0.9570820808410645,
+        "test_acc_std": 0.0017130523012698347,
+        "num_runs": 15
+      }
+    }
+  },
+  "coauthor-physics_k10": {
+    "dataset": "coauthor-physics",
+    "k_diffusion": 10,
+    "metadata": {
+      "num_nodes": 34493,
+      "num_classes": 5,
+      "d_eff": 7701,
+      "sparsity_U": 0.003181113253773446,
+      "ref_nodes_pct": 0.0
+    },
+    "classifiers": {
+      "U_StandardMLP": {
+        "test_acc_mean": 0.8458357016245525,
+        "test_acc_std": 0.027927316680095928,
+        "num_runs": 15
+      },
+      "U_RowNormMLP": {
+        "test_acc_mean": 0.8644733985265096,
+        "test_acc_std": 0.011127678923046842,
+        "num_runs": 15
+      },
+      "U_LogMagnitudeMLP": {
+        "test_acc_mean": 0.8793429533640543,
+        "test_acc_std": 0.004228586965816745,
+        "num_runs": 15
+      },
+      "U_SparsityAwareMLP": {
+        "test_acc_mean": 0.8804733951886495,
+        "test_acc_std": 0.004308835960844623,
+        "num_runs": 15
+      },
+      "U_RobustMagnitudeMLP": {
+        "test_acc_mean": 0.8671787063280741,
+        "test_acc_std": 0.00793763171399694,
+        "num_runs": 15
+      },
+      "U_TrimmedMagnitudeMLP": {
+        "test_acc_mean": 0.86954585313797,
+        "test_acc_std": 0.005255861006222485,
+        "num_runs": 15
+      },
+      "U_AdaptiveMagnitudeMLP": {
+        "test_acc_mean": 0.8809274911880494,
+        "test_acc_std": 0.0043254784813749345,
+        "num_runs": 15
+      },
+      "U_DensityOnlyMLP": {
+        "test_acc_mean": 0.878714934984843,
+        "test_acc_std": 0.004483194696015059,
+        "num_runs": 15
+      },
+      "X_StandardMLP": {
+        "test_acc_mean": 0.9540289402008056,
+        "test_acc_std": 0.0017034965101146648,
+        "num_runs": 15
+      },
+      "X_RowNormMLP": {
+        "test_acc_mean": 0.9531303922335307,
+        "test_acc_std": 0.0019137804701079215,
+        "num_runs": 15
+      },
+      "U_Linear": {
+        "test_acc_mean": 0.5082898259162902,
+        "test_acc_std": 0.004717971299690144,
+        "num_runs": 15
+      },
+      "U_RowNormLinear": {
+        "test_acc_mean": 0.813400932153066,
+        "test_acc_std": 0.001076585338810351,
+        "num_runs": 15
+      },
+      "U_CosineLinear": {
+        "test_acc_mean": 0.8497874021530152,
+        "test_acc_std": 0.002381908992712987,
+        "num_runs": 15
+      },
+      "U_LogMagLinear": {
+        "test_acc_mean": 0.5092366933822632,
+        "test_acc_std": 0.005405227048987241,
+        "num_runs": 15
+      },
+      "U_SparsityAwareLinear": {
+        "test_acc_mean": 0.5090724428494772,
+        "test_acc_std": 0.005367364574192273,
+        "num_runs": 15
+      },
+      "X_Linear": {
+        "test_acc_mean": 0.9445603450139364,
+        "test_acc_std": 0.0020806745309317237,
+        "num_runs": 15
+      },
+      "X_RowNormLinear": {
+        "test_acc_mean": 0.9404927094777426,
+        "test_acc_std": 0.0016733052947920028,
+        "num_runs": 15
+      },
+      "X_CosineLinear": {
+        "test_acc_mean": 0.9468791762987773,
+        "test_acc_std": 0.0021239858087090642,
+        "num_runs": 15
+      },
+      "X_LogMagLinear": {
+        "test_acc_mean": 0.9411787072817485,
+        "test_acc_std": 0.0019729014784606886,
+        "num_runs": 15
+      }
+    }
+  },
+  "ogbn-arxiv_k2": {
+    "dataset": "ogbn-arxiv",
+    "k_diffusion": 2,
+    "metadata": {
+      "num_nodes": 169343,
+      "num_classes": 40,
+      "d_eff": 128,
+      "sparsity_U": 0.0019278550043403033,
+      "ref_nodes_pct": 79.37440579179535
+    },
+    "classifiers": {
+      "U_StandardMLP": {
+        "test_acc_mean": 0.15891939997673035,
+        "test_acc_std": 0.0021348266203229317,
+        "num_runs": 15
+      },
+      "U_RowNormMLP": {
+        "test_acc_mean": 0.6981419324874878,
+        "test_acc_std": 0.0024594919925828,
+        "num_runs": 15
+      },
+      "U_LogMagnitudeMLP": {
+        "test_acc_mean": 0.688503114382426,
+        "test_acc_std": 0.0031965769137466096,
+        "num_runs": 15
+      },
+      "U_SparsityAwareMLP": {
+        "test_acc_mean": 0.6889420429865519,
+        "test_acc_std": 0.0024855647719218502,
+        "num_runs": 15
+      },
+      "U_RobustMagnitudeMLP": {
+        "test_acc_mean": 0.6799232482910156,
+        "test_acc_std": 0.004504521025205782,
+        "num_runs": 15
+      },
+      "U_TrimmedMagnitudeMLP": {
+        "test_acc_mean": 0.6798248330752055,
+        "test_acc_std": 0.003737469603097444,
+        "num_runs": 15
+      },
+      "U_AdaptiveMagnitudeMLP": {
+        "test_acc_mean": 0.6942682902018229,
+        "test_acc_std": 0.0028047202551458534,
+        "num_runs": 15
+      },
+      "U_DensityOnlyMLP": {
+        "test_acc_mean": 0.695541787147522,
+        "test_acc_std": 0.0026028251375695434,
+        "num_runs": 15
+      },
+      "X_StandardMLP": {
+        "test_acc_mean": 0.6700029611587525,
+        "test_acc_std": 0.0037708498244100573,
+        "num_runs": 15
+      },
+      "X_RowNormMLP": {
+        "test_acc_mean": 0.6884814620018005,
+        "test_acc_std": 0.0028336873380840214,
+        "num_runs": 15
+      },
+      "U_Linear": {
+        "test_acc_mean": 0.15892333686351776,
+        "test_acc_std": 0.0021335921270121865,
+        "num_runs": 15
+      },
+      "U_RowNormLinear": {
+        "test_acc_mean": 0.5546895106633504,
+        "test_acc_std": 0.002626838665179466,
+        "num_runs": 15
+      },
+      "U_CosineLinear": {
+        "test_acc_mean": 0.5887274901072185,
+        "test_acc_std": 0.0031882492943721163,
+        "num_runs": 15
+      },
+      "U_LogMagLinear": {
+        "test_acc_mean": 0.5010176281134288,
+        "test_acc_std": 0.0013938933456627048,
+        "num_runs": 15
+      },
+      "U_SparsityAwareLinear": {
+        "test_acc_mean": 0.5011081715424855,
+        "test_acc_std": 0.0015296243126486293,
+        "num_runs": 15
+      },
+      "X_Linear": {
+        "test_acc_mean": 0.5875110864639282,
+        "test_acc_std": 0.001884345672068107,
+        "num_runs": 15
+      },
+      "X_RowNormLinear": {
+        "test_acc_mean": 0.4529121220111847,
+        "test_acc_std": 0.0005165670971432054,
+        "num_runs": 15
+      },
+      "X_CosineLinear": {
+        "test_acc_mean": 0.5704970081647237,
+        "test_acc_std": 0.002287054926996154,
+        "num_runs": 15
+      },
+      "X_LogMagLinear": {
+        "test_acc_mean": 0.4562917113304138,
+        "test_acc_std": 0.0009139445836877431,
+        "num_runs": 15
+      }
+    }
+  },
+  "ogbn-arxiv_k10": {
+    "dataset": "ogbn-arxiv",
+    "k_diffusion": 10,
+    "metadata": {
+      "num_nodes": 169343,
+      "num_classes": 40,
+      "d_eff": 128,
+      "sparsity_U": 0.008513785630347874,
+      "ref_nodes_pct": 58.52323390987523
+    },
+    "classifiers": {
+      "U_StandardMLP": {
+        "test_acc_mean": 0.15891939997673035,
+        "test_acc_std": 0.0021348266203229317,
+        "num_runs": 15
+      },
+      "U_RowNormMLP": {
+        "test_acc_mean": 0.7258458932240804,
+        "test_acc_std": 0.0027920001405871927,
+        "num_runs": 15
+      },
+      "U_LogMagnitudeMLP": {
+        "test_acc_mean": 0.712307854493459,
+        "test_acc_std": 0.00177222717304751,
+        "num_runs": 15
+      },
+      "U_SparsityAwareMLP": {
+        "test_acc_mean": 0.7126601735750834,
+        "test_acc_std": 0.0022803567199859193,
+        "num_runs": 15
+      },
+      "U_RobustMagnitudeMLP": {
+        "test_acc_mean": 0.707812229792277,
+        "test_acc_std": 0.0028965407563311487,
+        "num_runs": 15
+      },
+      "U_TrimmedMagnitudeMLP": {
+        "test_acc_mean": 0.7078653812408447,
+        "test_acc_std": 0.0025718655759346125,
+        "num_runs": 15
+      },
+      "U_AdaptiveMagnitudeMLP": {
+        "test_acc_mean": 0.7149631102879842,
+        "test_acc_std": 0.0021910672886831283,
+        "num_runs": 15
+      },
+      "U_DensityOnlyMLP": {
+        "test_acc_mean": 0.7157642086346944,
+        "test_acc_std": 0.0017061910770626515,
+        "num_runs": 15
+      },
+      "X_StandardMLP": {
+        "test_acc_mean": 0.6601909359296163,
+        "test_acc_std": 0.003380978123688337,
+        "num_runs": 15
+      },
+      "X_RowNormMLP": {
+        "test_acc_mean": 0.6611495018005371,
+        "test_acc_std": 0.0043343226331775285,
+        "num_runs": 15
+      },
+      "U_Linear": {
+        "test_acc_mean": 0.15899222791194917,
+        "test_acc_std": 0.002149737223749295,
+        "num_runs": 15
+      },
+      "U_RowNormLinear": {
+        "test_acc_mean": 0.6294203440348307,
+        "test_acc_std": 0.0036355024446037294,
+        "num_runs": 15
+      },
+      "U_CosineLinear": {
+        "test_acc_mean": 0.6792953570683797,
+        "test_acc_std": 0.002030797336979393,
+        "num_runs": 15
+      },
+      "U_LogMagLinear": {
+        "test_acc_mean": 0.6236335198084514,
+        "test_acc_std": 0.0018774156347680846,
+        "num_runs": 15
+      },
+      "U_SparsityAwareLinear": {
+        "test_acc_mean": 0.6231532494227091,
+        "test_acc_std": 0.0015441993446941068,
+        "num_runs": 15
+      },
+      "X_Linear": {
+        "test_acc_mean": 0.5051648577054342,
+        "test_acc_std": 0.0029658606118302057,
+        "num_runs": 15
+      },
+      "X_RowNormLinear": {
+        "test_acc_mean": 0.35699439644813535,
+        "test_acc_std": 0.0019940512399367694,
+        "num_runs": 15
+      },
+      "X_CosineLinear": {
+        "test_acc_mean": 0.48866450985272725,
+        "test_acc_std": 0.0022290231230299336,
+        "num_runs": 15
+      },
+      "X_LogMagLinear": {
+        "test_acc_mean": 0.36164945165316265,
+        "test_acc_std": 0.001855673968002901,
+        "num_runs": 15
+      }
+    }
+  }
+}
