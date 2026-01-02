@@ -114,8 +114,9 @@ LEARNING_RATE = 0.01
 WEIGHT_DECAY = 5e-4
 
 # Regularization for whitening (handles rank-deficient matrices)
-# Testing with original epsilon to compare results
-WHITENING_EPS = 1e-3  # Handles rank-deficient matrices; 1e-6 causes overflow
+# Updated to 1e-6 for proper whitening per Professor Koutis's verification
+# With eps=1e-6, Gram matrix K approaches identity (Wadia's condition satisfied)
+WHITENING_EPS = 1e-6  # Proper whitening; verified K eigenvalues ≈ 1
 
 # Device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -136,6 +137,7 @@ print(f'Dataset: {DATASET_NAME}')
 print(f'Split type: {SPLIT_TYPE}')
 print(f'Component: {COMPONENT_TYPE}')
 print(f'Diffusion k: {K_DIFFUSION}')
+print(f'Whitening eps: {WHITENING_EPS}')
 print(f'Device: {device}')
 print(f'Timestamp: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
 print('='*80)
@@ -390,6 +392,92 @@ def analyze_whitening_effect(X, X_white, name=""):
         'uniformity_whitened': float(entropy_white / max_entropy_white) if max_entropy_white > 0 else 0,
         'whitening_indicators': int(dist_white < dist_X) + int(cond_white < cond_X) + int(entropy_white > entropy_X),
     }
+
+def analyze_gram_matrix(X, name=""):
+    """
+    Analyze the Gram matrix K = XX^T (n×n sample-sample matrix).
+
+    THIS IS WHAT WADIA SAYS DETERMINES GENERALIZATION!
+
+    Wadia's key prediction:
+      - n > d: K retains structure, some generalization possible
+      - n ≤ d: After full whitening, K → Identity, complete collapse expected
+
+    Our notation (X is n×d):
+      - F = X^T @ X (d×d) - feature covariance (what whitening targets)
+      - K = X @ X^T (n×n) - Gram matrix (what determines generalization!)
+
+    Args:
+        X: (n, d) feature matrix (samples × features)
+        name: identifier for this analysis
+
+    Returns:
+        dict with Gram matrix statistics including Wadia criterion check
+    """
+    n, d = X.shape
+
+    # Center the data
+    X_centered = X - X.mean(axis=0)
+
+    # For Gram matrix eigenvalues, we use the trick that eigenvalues of XX^T
+    # equal eigenvalues of X^T X (plus zeros if n > d)
+    # This is computationally cheaper when d < n
+
+    # Compute feature covariance F = X^T X / (n-1) which is (d×d)
+    F = X_centered.T @ X_centered / (n - 1)
+    eig_F = np.linalg.eigvalsh(F)
+    eig_F = np.sort(eig_F)[::-1]  # Descending order
+
+    # Gram matrix K = XX^T / (n-1) has same non-zero eigenvalues as F
+    # K is (n×n), F is (d×d)
+    # Non-zero eigenvalues: min(n, d)
+
+    if n > d:
+        # K has d non-zero eigenvalues (same as F) plus (n-d) zeros
+        eig_K = eig_F  # Non-zero part
+    else:
+        # K is n×n, can have at most n non-zero eigenvalues
+        # But F is d×d with d > n, so F has n non-zero eigenvalues
+        eig_K = eig_F[:n]
+
+    # Filter positive eigenvalues for statistics
+    eig_K_pos = eig_K[eig_K > 1e-10]
+    eig_F_pos = eig_F[eig_F > 1e-10]
+
+    # Wadia criterion: after proper whitening, K eigenvalues should be ≈ 1
+    stats = {
+        'name': name,
+        'n_samples': n,
+        'n_features': d,
+        'wadia_regime': 'n <= d (collapse expected)' if n <= d else 'n > d (structure retained)',
+
+        # Feature covariance F = X^T X statistics
+        'F_shape': f'{d}x{d}',
+        'F_n_nonzero_eig': len(eig_F_pos),
+        'F_eig_mean': float(eig_F_pos.mean()) if len(eig_F_pos) > 0 else 0,
+        'F_eig_std': float(eig_F_pos.std()) if len(eig_F_pos) > 0 else 0,
+        'F_dist_from_1_mean': float(np.abs(eig_F_pos - 1).mean()) if len(eig_F_pos) > 0 else float('inf'),
+
+        # Gram matrix K = XX^T statistics (THIS IS KEY!)
+        'K_shape': f'{n}x{n}',
+        'K_n_nonzero_eig': len(eig_K_pos),
+        'K_eig_min': float(eig_K_pos.min()) if len(eig_K_pos) > 0 else 0,
+        'K_eig_max': float(eig_K_pos.max()) if len(eig_K_pos) > 0 else 0,
+        'K_eig_mean': float(eig_K_pos.mean()) if len(eig_K_pos) > 0 else 0,
+        'K_eig_std': float(eig_K_pos.std()) if len(eig_K_pos) > 0 else 0,
+        'K_dist_from_1_mean': float(np.abs(eig_K_pos - 1).mean()) if len(eig_K_pos) > 0 else float('inf'),
+        'K_dist_from_1_max': float(np.abs(eig_K_pos - 1).max()) if len(eig_K_pos) > 0 else float('inf'),
+        'K_condition_number': float(eig_K_pos.max() / eig_K_pos.min()) if len(eig_K_pos) > 0 else float('inf'),
+
+        # Wadia criterion check
+        'K_is_approximately_identity': bool(np.abs(eig_K_pos - 1).mean() < 0.1) if len(eig_K_pos) > 0 else False,
+
+        # First and last eigenvalues for inspection
+        'K_eig_first_10': eig_K_pos[:10].tolist() if len(eig_K_pos) > 0 else [],
+        'K_eig_last_10': eig_K_pos[-10:].tolist() if len(eig_K_pos) > 0 else [],
+    }
+
+    return stats
 
 # ============================================================================
 # Graph and Data Utilities
@@ -706,19 +794,69 @@ for variant_name, variant_data in feature_variants_fixed.items():
     if variant_name != 'original' and variant_data.get('features') is not None:
         analysis = analyze_whitening_effect(X, variant_data['features'], variant_name)
         whitening_analysis[variant_name] = analysis
-        
+
         print(f'\n  {variant_name}:')
         print(f'    Distance from I: {analysis["dist_from_I_original"]:.2f} → {analysis["dist_from_I_whitened"]:.2f}')
         print(f'    Condition number: {analysis["condition_original"]:.2f} → {analysis["condition_whitened"]:.2f}')
         print(f'    Uniformity: {analysis["uniformity_original"]*100:.1f}% → {analysis["uniformity_whitened"]*100:.1f}%')
         print(f'    Whitening indicators: {analysis["whitening_indicators"]}/3')
-        
+
         # Warn about numerical instability
         if analysis["condition_whitened"] > 1e10:
             print(f'    ⚠️  WARNING: Extreme condition number ({analysis["condition_whitened"]:.2e}) may cause numerical issues')
 
 if feature_variants_per_split:
     print(f'\n  Note: {list(feature_variants_per_split.keys())} will be analyzed per split')
+
+# ============================================================================
+# GRAM MATRIX ANALYSIS (Wadia Criterion Verification)
+# ============================================================================
+
+print('\n' + '='*70)
+print('GRAM MATRIX ANALYSIS (Wadia Criterion Verification)')
+print('='*70)
+print(f'\nWadia\'s key insight: Gram matrix K = XX^T determines generalization')
+print(f'  - Our data: n={n} samples, d={d} features')
+print(f'  - Regime: {"n ≤ d → K should become identity (COLLAPSE EXPECTED!)" if n <= d else "n > d → K retains structure"}')
+
+gram_matrix_analysis = {}
+
+# Analyze original features
+print('\n  Original features:')
+gram_orig = analyze_gram_matrix(X, 'original')
+gram_matrix_analysis['original'] = gram_orig
+print(f'    K mean|eig-1|: {gram_orig["K_dist_from_1_mean"]:.4f}')
+print(f'    K condition #: {gram_orig["K_condition_number"]:.2f}')
+
+# Analyze Full ZCA (Wadia's method - most important!)
+if 'full_zca_whiten' in feature_variants_fixed:
+    print('\n  Full ZCA whitening (Wadia\'s method):')
+    X_full_zca = feature_variants_fixed['full_zca_whiten']['features']
+    gram_full_zca = analyze_gram_matrix(X_full_zca, 'full_zca')
+    gram_matrix_analysis['full_zca'] = gram_full_zca
+    print(f'    K mean|eig-1|: {gram_full_zca["K_dist_from_1_mean"]:.4f}')
+    print(f'    K condition #: {gram_full_zca["K_condition_number"]:.2f}')
+    print(f'    K ≈ Identity?: {gram_full_zca["K_is_approximately_identity"]}')
+
+    # Wadia criterion check
+    print('\n  *** WADIA CRITERION CHECK ***')
+    if gram_full_zca["K_is_approximately_identity"]:
+        print(f'    ✓ K IS approaching identity (mean|eig-1| = {gram_full_zca["K_dist_from_1_mean"]:.4f} < 0.1)')
+        if n <= d:
+            print(f'    → Wadia predicts COLLAPSE in n ≤ d regime')
+            print(f'    → If no collapse observed, likely due to Adam optimizer vs standard GD')
+    else:
+        print(f'    ✗ K is NOT identity (mean|eig-1| = {gram_full_zca["K_dist_from_1_mean"]:.4f})')
+        print(f'    → Whitening incomplete, may explain lack of collapse')
+
+# Analyze Rayleigh-Ritz
+if 'rayleigh_ritz' in feature_variants_fixed:
+    print('\n  Rayleigh-Ritz:')
+    X_rr = feature_variants_fixed['rayleigh_ritz']['features']
+    gram_rr = analyze_gram_matrix(X_rr, 'rayleigh_ritz')
+    gram_matrix_analysis['rayleigh_ritz'] = gram_rr
+    print(f'    K mean|eig-1|: {gram_rr["K_dist_from_1_mean"]:.4f}')
+    print(f'    K condition #: {gram_rr["K_condition_number"]:.2f}')
 
 # ============================================================================
 # Run All Experiments
@@ -934,10 +1072,13 @@ results_dict = {
         'num_random_splits': NUM_RANDOM_SPLITS,
         'num_seeds': NUM_SEEDS,
         'epochs': EPOCHS,
+        'whitening_eps': WHITENING_EPS,
+        'wadia_regime': 'n <= d (collapse expected)' if n <= d else 'n > d (structure retained)',
         'timestamp': datetime.now().isoformat(),
     },
     'final_results': final_results,
     'whitening_analysis': whitening_analysis,
+    'gram_matrix_analysis': gram_matrix_analysis,  # Wadia criterion verification
     # For random splits, per-split whitening diagnostics vary; we save fixed variants only
     'feature_diagnostics': {k: v.get('diagnostics') for k, v in feature_variants_fixed.items() if v.get('diagnostics')},
 }

@@ -91,6 +91,7 @@ def load_all_results(results_dir, dataset_filter=None, k_filter=None, splits_fil
                 'metadata': metadata,
                 'final_results': data.get('final_results', {}),
                 'whitening_analysis': data.get('whitening_analysis', {}),
+                'gram_matrix_analysis': data.get('gram_matrix_analysis', {}),
             })
             
         except Exception as e:
@@ -298,6 +299,137 @@ def print_koutis_conclusion(all_metrics):
         print('\n  Note: Train-whitening often IMPROVES MLP (negative damage).')
         print('  This is different from Wadia\'s full-data whitening.')
 
+def print_wadia_verification_table(results):
+    """
+    Print Wadia criterion verification summary table.
+
+    This addresses Professor Koutis's request to verify post-whitening geometry:
+    - Is the Gram matrix K = XX^T approaching identity after whitening?
+    - What is the effective rank?
+    """
+
+    print('\n' + '='*130)
+    print('WADIA CRITERION VERIFICATION (Professor Koutis\'s Request)')
+    print('='*130)
+    print('\nKey: K = XX^T (Gram matrix) determines generalization per Wadia et al.')
+    print('     Wadia predicts: n ≤ d → K should become identity → collapse')
+    print('     K ≈ I means mean|eig-1| < 0.1')
+    print()
+
+    # Header
+    print(f'{"Dataset":<15} {"k":>3} {"n":>7} {"d":>7} {"Regime":<12} '
+          f'{"K_orig":>10} {"K_fullzca":>10} {"K≈I?":>6} {"EffRank":>8} {"Damage":>8}')
+    print('-'*130)
+
+    for r in sorted(results, key=lambda x: (x['dataset'], x['k'])):
+        gram = r.get('gram_matrix_analysis', {})
+        metadata = r.get('metadata', {})
+        final = r.get('final_results', {})
+
+        # Get dimensions
+        n = metadata.get('num_nodes', 0)
+        d = metadata.get('num_features', 0)
+        k = r.get('k', 0)
+        regime = 'n≤d' if n <= d else 'n>d'
+
+        # Get Gram matrix statistics
+        gram_orig = gram.get('original', {})
+        gram_fullzca = gram.get('full_zca', {})
+
+        K_orig_dist = gram_orig.get('K_dist_from_1_mean', float('nan'))
+        K_fullzca_dist = gram_fullzca.get('K_dist_from_1_mean', float('nan'))
+        K_is_identity = gram_fullzca.get('K_is_approximately_identity', False)
+        eff_rank = gram_fullzca.get('K_n_nonzero_eig', 0)
+
+        # Get Full ZCA damage
+        orig_mlp = final.get('original_MLP', {}).get('test_acc_mean', 0) * 100
+        fullzca_mlp = final.get('full_zca_whiten_MLP', {}).get('test_acc_mean', 0) * 100
+        damage = orig_mlp - fullzca_mlp if orig_mlp > 0 and fullzca_mlp > 0 else float('nan')
+
+        # Format K≈I indicator
+        k_identity_str = '✓ YES' if K_is_identity else '✗ NO'
+
+        print(f'{r["dataset"]:<15} {k:>3} {n:>7} {d:>7} {regime:<12} '
+              f'{K_orig_dist:>10.4f} {K_fullzca_dist:>10.4f} {k_identity_str:>6} '
+              f'{eff_rank:>8} {damage:>+8.1f}')
+
+    # Summary statistics
+    print('-'*130)
+
+    # Count cases where K ≈ I
+    n_identity = sum(1 for r in results
+                     if r.get('gram_matrix_analysis', {}).get('full_zca', {}).get('K_is_approximately_identity', False))
+    n_total = len(results)
+
+    # Count cases in n ≤ d regime
+    n_wadia_regime = sum(1 for r in results
+                         if r.get('metadata', {}).get('num_nodes', 0) <= r.get('metadata', {}).get('num_features', 0))
+
+    print(f'\nSummary:')
+    print(f'  - K ≈ Identity after Full ZCA: {n_identity}/{n_total} cases')
+    print(f'  - Cases in Wadia regime (n ≤ d): {n_wadia_regime}/{n_total}')
+
+    # Check if whitening is working
+    avg_K_dist = np.mean([r.get('gram_matrix_analysis', {}).get('full_zca', {}).get('K_dist_from_1_mean', float('nan'))
+                         for r in results if 'gram_matrix_analysis' in r and 'full_zca' in r.get('gram_matrix_analysis', {})])
+
+    if not np.isnan(avg_K_dist):
+        print(f'  - Average K mean|eig-1| after Full ZCA: {avg_K_dist:.4f}')
+        if avg_K_dist < 0.1:
+            print(f'  → Whitening IS working (K approaching identity)')
+            print(f'  → If collapse not observed, likely due to optimizer (Adam vs GD)')
+        else:
+            print(f'  → Whitening NOT complete (K not identity)')
+            print(f'  → May need smaller eps or data is severely rank-deficient')
+
+
+def print_wadia_regime_analysis(results):
+    """Analyze results separately for n>d and n≤d regimes."""
+
+    print('\n' + '='*100)
+    print('WADIA REGIME ANALYSIS: n>d vs n≤d')
+    print('='*100)
+
+    # Separate by regime
+    n_greater_d = [r for r in results
+                   if r.get('metadata', {}).get('num_nodes', 0) > r.get('metadata', {}).get('num_features', 0)]
+    n_leq_d = [r for r in results
+               if r.get('metadata', {}).get('num_nodes', 0) <= r.get('metadata', {}).get('num_features', 0)]
+
+    for regime_name, regime_results in [('n > d (structure retained)', n_greater_d),
+                                         ('n ≤ d (collapse expected)', n_leq_d)]:
+        if not regime_results:
+            continue
+
+        print(f'\n{regime_name}: {len(regime_results)} experiments')
+        print('-'*60)
+
+        # Compute average Full ZCA damage
+        damages = []
+        recoveries = []
+        for r in regime_results:
+            final = r.get('final_results', {})
+            orig_mlp = final.get('original_MLP', {}).get('test_acc_mean', 0) * 100
+            fullzca_mlp = final.get('full_zca_whiten_MLP', {}).get('test_acc_mean', 0) * 100
+            fullzca_mlp_rn = final.get('full_zca_whiten_MLP+RowNorm', {}).get('test_acc_mean', 0) * 100
+
+            if orig_mlp > 0 and fullzca_mlp > 0:
+                damages.append(orig_mlp - fullzca_mlp)
+                recoveries.append(fullzca_mlp_rn - fullzca_mlp)
+
+        if damages:
+            avg_damage = np.mean(damages)
+            avg_recovery = np.mean(recoveries)
+            n_damaged = sum(1 for d in damages if d > 0)
+            n_recovered = sum(1 for r in recoveries if r > 0)
+
+            print(f'  Full ZCA (Wadia) damage:   {avg_damage:+.1f}pp avg ({n_damaged}/{len(damages)} cases damaged)')
+            print(f'  RowNorm recovery:          {avg_recovery:+.1f}pp avg ({n_recovered}/{len(recoveries)} cases helped)')
+
+            if avg_damage > 0 and avg_recovery > 0:
+                print(f'  Recovery rate:             {avg_recovery/avg_damage*100:.1f}% of damage recovered')
+
+
 def generate_latex_table(all_metrics):
     """Generate LaTeX table for paper."""
     
@@ -365,6 +497,10 @@ print_damage_table(all_metrics)
 print_recovery_table(all_metrics)
 print_key_findings(all_metrics)
 print_koutis_conclusion(all_metrics)
+
+# NEW: Wadia verification tables
+print_wadia_verification_table(results)
+print_wadia_regime_analysis(results)
 
 if args.latex:
     generate_latex_table(all_metrics)
