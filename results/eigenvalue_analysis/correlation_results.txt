@@ -1,0 +1,31 @@
+CORRELATION ANALYSIS: Eigenvalue Metrics vs RowNorm Recovery (k=10)
+======================================================================
+
+Condition Number (κ):
+  rownorm_fixed:  Pearson r=-0.0760 (p=0.845860 ns), Spearman ρ=+0.0500 (p=0.898353), N=9
+  rownorm_random:  Pearson r=-0.1200 (p=0.758444 ns), Spearman ρ=+0.2333 (p=0.545699), N=9
+
+Eigenvalue Entropy H(λ):
+  rownorm_fixed:  Pearson r=-0.5842 (p=0.098539 ns), Spearman ρ=-0.5833 (p=0.099186), N=9
+  rownorm_random:  Pearson r=-0.6963 (p=0.037182 *), Spearman ρ=-0.7000 (p=0.035770), N=9
+
+Effective Rank (95%):
+  rownorm_fixed:  Pearson r=-0.3247 (p=0.393884 ns), Spearman ρ=-0.5833 (p=0.099186), N=9
+  rownorm_random:  Pearson r=-0.4061 (p=0.278177 ns), Spearman ρ=-0.7000 (p=0.035770), N=9
+
+
+Raw RowNorm Recovery Values:
+Dataset                   Fixed     Random
+---------------------------------------------
+cora                    +2.84pp    +4.64pp
+citeseer                -0.03pp    +9.22pp
+pubmed                  -0.84pp    -0.67pp
+coauthor-cs             +4.43pp    +6.27pp
+coauthor-physics        +5.25pp    +4.49pp
+amazon-computers       +15.10pp   +15.45pp
+amazon-photo            +8.42pp    +9.30pp
+ogbn-arxiv             +64.73pp   +56.67pp
+wikics                 +12.90pp   +29.89pp
+
+Average fixed: +12.53pp
+Average random: +15.03pp

@@ -1,0 +1,77 @@
+================================================================================
+LABEL SMOOTHNESS DIAGNOSTIC REPORT
+================================================================================
+
+Split Type: RANDOM
+K Value: 10
+Datasets Analyzed: 9
+Analysis Date: 2026-02-11 15:06:43
+
+================================================================================
+HYPOTHESIS
+================================================================================
+
+Label smoothness (y^T L y / y^T D y) should predict Part A gaps:
+  - Low smoothness (labels rough on graph) → Negative Part A
+  - High smoothness (labels smooth on graph) → Positive Part A
+
+================================================================================
+MAIN FINDINGS
+================================================================================
+
+Correlation: 0.4794 (MODERATE positive)
+
+≈ PARTIAL SUPPORT
+  Moderate correlation suggests label smoothness plays a role
+  but is not the sole determinant of basis sensitivity.
+
+================================================================================
+DETAILED RESULTS
+================================================================================
+
+Dataset              Smoothness   Part A     Interpretation
+--------------------------------------------------------------------------------
+ogbn-arxiv           0.3222       0.76       Very Smooth
+cora                 0.1315       -17.96     Very Smooth
+citeseer             0.1683       -15.03     Very Smooth
+pubmed               0.1617       -1.35      Very Smooth
+wikics               0.3285       -3.22      Very Smooth
+amazon-photo         0.1626       -2.80      Very Smooth
+amazon-computers     0.2113       5.49       Very Smooth
+coauthor-cs          0.1726       -11.92     Very Smooth
+coauthor-physics     0.0641       -7.94      Very Smooth
+
+================================================================================
+SUMMARY STATISTICS
+================================================================================
+
+Label Smoothness:
+  Mean: 0.1914
+  Std:  0.0857
+  Min:  0.0641 (coauthor-physics)
+  Max:  0.3285 (wikics)
+
+Part A Gap:
+  Mean: -6.00pp
+  Std:  7.75pp
+  Min:  -17.96pp (cora)
+  Max:  5.49pp (amazon-computers)
+
+================================================================================
+INTERPRETATION GUIDE
+================================================================================
+
+Label Smoothness (Rayleigh Quotient):
+  [0.0, 0.5)  = Very Smooth (strong graph-label alignment)
+  [0.5, 1.0)  = Smooth (moderate alignment)
+  [1.0, 1.5)  = Rough (weak alignment)
+  [1.5, 2.0]  = Very Rough (poor alignment)
+
+Part A Gap:
+  Positive = Eigenvectors outperform diffused features
+  Negative = Diffused features outperform eigenvectors
+  Near zero = No basis sensitivity (span equivalence holds)
+
+================================================================================
+END OF REPORT
+================================================================================
