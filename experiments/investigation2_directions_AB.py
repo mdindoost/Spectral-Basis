@@ -65,7 +65,7 @@ from utils import (
 DATASET_NAME = sys.argv[1] if len(sys.argv) > 1 else 'ogbn-arxiv'
 USE_RANDOM_SPLITS = '--random-splits' in sys.argv
 
-# EXTENDED: Now supports 10 datasets!
+# EXTENDED: Now supports 9 datasets!
 VALID_DATASETS = [
     'ogbn-arxiv',           # OGB
     'cora',                 # Planetoid
