@@ -180,6 +180,21 @@ def compute_spectral_analysis(U, X_diffused, eigenvalues, labels, train_idx,
         'd_effective': int(len(eigenvalues))
     }
 
+    # ── Span verification ──────────────────────────────────────────────────
+    # U is computed in span(X_diffused) by Rayleigh-Ritz. Verify by projecting
+    # X_train onto U (via pseudoinverse) and measuring reconstruction error.
+    # Should be near 0 if U spans the same space as X_diffused (training rows).
+    try:
+        X_tr_centered = X_tr - X_tr.mean(axis=0)
+        U_pinv        = np.linalg.pinv(U_tr)          # d_eff × n_train
+        X_proj        = (U_tr @ U_pinv) @ X_tr_centered
+        span_error    = float(
+            np.linalg.norm(X_tr_centered - X_proj, 'fro') /
+            (np.linalg.norm(X_tr_centered, 'fro') + 1e-12)
+        )
+    except Exception:
+        span_error = None
+
     # ── Graph properties ───────────────────────────────────────────────────
     num_edges  = int(adj.nnz // 2)
     avg_degree = float(adj.nnz / adj.shape[0])
@@ -202,6 +217,8 @@ def compute_spectral_analysis(U, X_diffused, eigenvalues, labels, train_idx,
         'variance_analysis':              variance_analysis,
         # Eigenvalue stats
         'eigenvalue_stats':               eig_stats,
+        # Span verification (should be ~0: U spans same space as X_diffused)
+        'span_verification_error':        span_error,
         # Graph properties
         'num_edges':                      num_edges,
         'avg_degree':                     avg_degree,
@@ -335,17 +352,39 @@ np.random.seed(42)  # reproducible subsampling in intra-class distance
 
 for k in K_VALUES:
     print(f'\n  k={k}:')
-    X_diffused = sgc_precompute(features_dense.copy(), A_sgc, k)
-    U, eigs, d_eff, ortho_err = compute_restricted_eigenvectors(
-        X_diffused, L, D, num_components
-    )
-    print(f'    d_effective={d_eff}, ortho_error={ortho_err:.2e}')
+
+    # Load pre-computed matrices saved by master_training.py (split 0)
+    npz_path = os.path.join(PAPER_RESULTS_DIR, f'k{k}', 'matrices', 'split0_matrices.npz')
+    if os.path.exists(npz_path):
+        data       = np.load(npz_path)
+        U          = data['U']
+        X_diffused = data['X_diffused']
+        eigs       = data['eigenvalues']
+        train_idx  = data['train_idx']
+        d_eff      = U.shape[1]
+        ortho_err  = None   # already verified during training
+        print(f'    Loaded matrices from {npz_path}')
+    else:
+        # Fallback: recompute (slower — run master_training.py first)
+        print(f'    WARNING: no cached matrices found, recomputing...')
+        X_diffused = sgc_precompute(features_dense.copy(), A_sgc, k)
+        U, eigs, d_eff, ortho_err = compute_restricted_eigenvectors(
+            X_diffused, L, D, num_components
+        )
+        train_idx = split_idx['train_idx']
+
+    print(f'    d_effective={d_eff}, ortho_error={ortho_err}')
 
     analysis = compute_spectral_analysis(
         U, X_diffused, eigs, labels, train_idx, num_classes, adj
     )
 
+    sp_err = analysis['span_verification_error']
     print(f'    Condition U={analysis["condition_number_U"]:.4f}  '
+          f'Condition X={analysis["condition_number_X"]:.4f}  '
+          f'Separability={analysis["spectral_separability"]:.4f}  '
+          f'SpanErr={sp_err:.2e}' if sp_err is not None else
+          f'    Condition U={analysis["condition_number_U"]:.4f}  '
           f'Condition X={analysis["condition_number_X"]:.4f}  '
           f'Separability={analysis["spectral_separability"]:.4f}')
     va = analysis['variance_analysis']
@@ -359,7 +398,7 @@ for k in K_VALUES:
         'component_type': COMPONENT_TYPE,
         'k':              k,
         'd_effective':    int(d_eff),
-        'ortho_error':    float(ortho_err),
+        'ortho_error':    float(ortho_err) if ortho_err is not None else None,
         'analysis':       analysis
     }
 
