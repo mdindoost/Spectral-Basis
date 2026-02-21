@@ -594,7 +594,7 @@ for k in K_VALUES:
     k_dir = os.path.join(OUTPUT_BASE, f'k{k}')
     os.makedirs(os.path.join(k_dir, 'metrics'),     exist_ok=True)
     os.makedirs(os.path.join(k_dir, 'diagnostics'), exist_ok=True)
-    os.makedirs(os.path.join(k_dir, 'matrices'),    exist_ok=True)
+    # os.makedirs(os.path.join(k_dir, 'matrices'),    exist_ok=True)  # disabled: no .npz caching
     if k == 10 and track_dynamics:
         os.makedirs(os.path.join(k_dir, 'training_curves'), exist_ok=True)
 
@@ -624,18 +624,18 @@ for k in K_VALUES:
         )
         print(f'  d_effective={d_eff}, ortho_error={ortho_err:.2e}')
 
-        # Save matrices to disk for reuse by master_analytics.py (avoids recomputation)
-        npz_path = os.path.join(k_dir, 'matrices', f'split{split_i}_matrices.npz')
-        np.savez_compressed(
-            npz_path,
-            U=U,
-            X_diffused=X_diffused,
-            eigenvalues=eigenvalues,
-            train_idx=tr_idx,
-            val_idx=va_idx,
-            test_idx=te_idx
-        )
-        print(f'  Saved matrices: {npz_path}')
+        # .npz matrix caching disabled (files were too large; analytics will recompute)
+        # npz_path = os.path.join(k_dir, 'matrices', f'split{split_i}_matrices.npz')
+        # np.savez_compressed(
+        #     npz_path,
+        #     U=U,
+        #     X_diffused=X_diffused,
+        #     eigenvalues=eigenvalues,
+        #     train_idx=tr_idx,
+        #     val_idx=va_idx,
+        #     test_idx=te_idx
+        # )
+        # print(f'  Saved matrices: {npz_path}')
 
         metadata_k.update({
             'd_effective':    int(d_eff),
