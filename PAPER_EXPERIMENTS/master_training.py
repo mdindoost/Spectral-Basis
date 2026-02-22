@@ -15,7 +15,7 @@ Unified experiment covering:
           All 3 core methods tracked: SGC+MLP, Restricted+StandardMLP, Restricted+RowNorm
           Logs: val_acc, train_acc, train_loss, val_loss per epoch + convergence metrics
 
-Models imported from utils.py (experiments/utils.py):
+Models imported from utils.py (src/utils.py):
   SGC, StandardMLP, RowNormMLP, LogMagnitudeMLP, SpectralRowNormMLP, NestedSpheresClassifier
 
 DualStreamMLP defined locally (not in utils.py):
@@ -29,8 +29,8 @@ Training protocol (unified, canonical new paper numbers):
   All methods: 500 epochs, patience=100 early stopping on val_acc, eval every epoch
 
 Graph convention (exact match to investigation3/4/partAB):
-  adj, D, L = build_graph_matrices(...)
-  # D holds Laplacian, L holds degree matrix (intentionally swapped vs utils.py return order)
+  adj, L, D = build_graph_matrices(...)
+  # L holds Laplacian, D holds degree matrix (correct order matching src/utils.py)
   compute_restricted_eigenvectors(X_diffused, L, D, num_components)
 
 k sweep: [1, 2, 4, 6, 8, 10, 12, 20, 30] (default)
@@ -101,9 +101,9 @@ def _patched_torch_load(*args, **kwargs):
     return _original_torch_load(*args, **kwargs)
 torch.load = _patched_torch_load
 
-# Import all utilities from experiments/utils.py
-_EXPERIMENTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'experiments')
-sys.path.insert(0, _EXPERIMENTS_DIR)
+# Import all utilities from src/utils.py
+_SRC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src')
+sys.path.insert(0, _SRC_DIR)
 from utils import (
     # Dataset
     load_dataset,
@@ -489,16 +489,12 @@ print(f'Nodes: {num_nodes:,}, Features: {X_raw.shape[1]}, Classes: {num_classes}
 
 # ============================================================================
 # Step 2: Build initial graph matrices
-# CRITICAL CONVENTION: adj, D, L = build_graph_matrices(...)
-# utils.py returns (adj, L, D) where L=Laplacian, D=degree.
-# By assigning to (adj, D, L) we intentionally swap names:
-#   variable D holds the Laplacian
-#   variable L holds the degree matrix
-# This matches investigation3/investigation4/partAB throughout.
+# src/utils.py returns (adj, L, D) where L=Laplacian, D=degree.
+# Assigned correctly: L=Laplacian, D=degree (swap bug fixed).
 # ============================================================================
 
 print('\n[Step 2] Building graph matrices...')
-adj, D, L = build_graph_matrices(edge_index, num_nodes)
+adj, L, D = build_graph_matrices(edge_index, num_nodes)
 
 # ============================================================================
 # Step 3: Extract LCC (if requested)
@@ -520,7 +516,7 @@ if COMPONENT_TYPE == 'lcc':
     print('Rebuilding graph matrices for LCC...')
     adj_coo        = adj.tocoo()
     edge_index_lcc = np.vstack([adj_coo.row, adj_coo.col])
-    adj, D, L      = build_graph_matrices(edge_index_lcc, adj.shape[0])
+    adj, L, D      = build_graph_matrices(edge_index_lcc, adj.shape[0])
     num_components = 0   # LCC has exactly 1 connected component
 
 else:

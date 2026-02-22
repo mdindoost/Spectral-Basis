@@ -1,0 +1,403 @@
+nohup: ignoring input
+=== cora fixed ===
+/home/md724/Spectral-Basis/venv/lib/python3.12/site-packages/outdated/__init__.py:36: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import parse_version
+================================================================================
+MASTER TRAINING EXPERIMENT
+================================================================================
+Dataset:      cora
+k values:     [1, 2, 4, 6, 8, 10, 12, 20, 30]
+Split type:   fixed  (1 split(s) x 15 seeds)
+Component:    lcc
+Device:       cuda
+Output base:  /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc
+================================================================================
+
+[Step 1] Loading dataset...
+Nodes: 2,708, Features: 1433, Classes: 7
+
+[Step 2] Building graph matrices...
+
+[Step 3] Extracting largest connected component...
+Rebuilding graph matrices for LCC...
+After step 3: nodes=2,485, classes=7, disconnected_components_to_skip=0
+
+[Step 4] Preparing splits...
+Fixed split: Train=122, Val=459, Test=915
+
+[Step 5] Computing SGC normalized adjacency...
+A_sgc = D^{-1/2}(A+I)D^{-1/2}
+
+================================================================================
+K = 1
+================================================================================
+  X_diffused shape: (2485, 1433)
+
+  --- Split 1/1 (train=122, val=459, test=915) ---
+  Computing restricted eigenvectors...
+  d_effective=1427, ortho_error=1.32e-10
+
+  Aggregating results for k=1 (1 splits x 15 seeds = 15 runs/method)...
+
+  Method                                                 Test Acc       Std     n
+  ------------------------------------------------------------------------------
+  sgc_mlp_baseline                                          62.71%     1.13%    15
+  restricted_standard_mlp                                   39.50%     1.50%    15
+  restricted_rownorm_mlp                                    34.65%     1.26%    15
+
+  Framework Analysis (k=1):
+    Part A (SGC+MLP - Restricted+Std): +23.213 pp
+    Part B (RowNorm - Restricted+Std): -4.845 pp
+    Remaining Gap:                     +28.058 pp
+
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k1/metrics/results.json
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k1/diagnostics/fisher_diagnostic.json
+
+================================================================================
+K = 2
+================================================================================
+  X_diffused shape: (2485, 1433)
+
+  --- Split 1/1 (train=122, val=459, test=915) ---
+  Computing restricted eigenvectors...
+  d_effective=1427, ortho_error=1.47e-10
+
+  Aggregating results for k=2 (1 splits x 15 seeds = 15 runs/method)...
+
+  Method                                                 Test Acc       Std     n
+  ------------------------------------------------------------------------------
+  sgc_mlp_baseline                                          64.29%     1.38%    15
+  restricted_standard_mlp                                   36.87%     1.24%    15
+  restricted_rownorm_mlp                                    30.11%     1.53%    15
+
+  Framework Analysis (k=2):
+    Part A (SGC+MLP - Restricted+Std): +27.417 pp
+    Part B (RowNorm - Restricted+Std): -6.761 pp
+    Remaining Gap:                     +34.179 pp
+
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k2/metrics/results.json
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k2/diagnostics/fisher_diagnostic.json
+
+================================================================================
+K = 4
+================================================================================
+  X_diffused shape: (2485, 1433)
+
+  --- Split 1/1 (train=122, val=459, test=915) ---
+  Computing restricted eigenvectors...
+  d_effective=1427, ortho_error=1.64e-10
+
+  Aggregating results for k=4 (1 splits x 15 seeds = 15 runs/method)...
+
+  Method                                                 Test Acc       Std     n
+  ------------------------------------------------------------------------------
+  sgc_mlp_baseline                                          71.82%     1.16%    15
+  restricted_standard_mlp                                   37.37%     1.94%    15
+  restricted_rownorm_mlp                                    28.95%     1.95%    15
+
+  Framework Analysis (k=4):
+    Part A (SGC+MLP - Restricted+Std): +34.448 pp
+    Part B (RowNorm - Restricted+Std): -8.415 pp
+    Remaining Gap:                     +42.863 pp
+
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k4/metrics/results.json
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k4/diagnostics/fisher_diagnostic.json
+
+================================================================================
+K = 6
+================================================================================
+  X_diffused shape: (2485, 1433)
+
+  --- Split 1/1 (train=122, val=459, test=915) ---
+  Computing restricted eigenvectors...
+  d_effective=1427, ortho_error=1.67e-10
+
+  Aggregating results for k=6 (1 splits x 15 seeds = 15 runs/method)...
+
+  Method                                                 Test Acc       Std     n
+  ------------------------------------------------------------------------------
+  sgc_mlp_baseline                                          73.81%     1.08%    15
+  restricted_standard_mlp                                   36.20%     0.84%    15
+  restricted_rownorm_mlp                                    30.27%     1.15%    15
+
+  Framework Analysis (k=6):
+    Part A (SGC+MLP - Restricted+Std): +37.610 pp
+    Part B (RowNorm - Restricted+Std): -5.931 pp
+    Remaining Gap:                     +43.541 pp
+
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k6/metrics/results.json
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k6/diagnostics/fisher_diagnostic.json
+
+================================================================================
+K = 8
+================================================================================
+  X_diffused shape: (2485, 1433)
+
+  --- Split 1/1 (train=122, val=459, test=915) ---
+  Computing restricted eigenvectors...
+  d_effective=1427, ortho_error=1.67e-10
+
+  Aggregating results for k=8 (1 splits x 15 seeds = 15 runs/method)...
+
+  Method                                                 Test Acc       Std     n
+  ------------------------------------------------------------------------------
+  sgc_mlp_baseline                                          75.22%     1.46%    15
+  restricted_standard_mlp                                   36.90%     1.16%    15
+  restricted_rownorm_mlp                                    30.13%     2.09%    15
+
+  Framework Analysis (k=8):
+    Part A (SGC+MLP - Restricted+Std): +38.317 pp
+    Part B (RowNorm - Restricted+Std): -6.769 pp
+    Remaining Gap:                     +45.086 pp
+
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k8/metrics/results.json
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k8/diagnostics/fisher_diagnostic.json
+
+================================================================================
+K = 10
+================================================================================
+  X_diffused shape: (2485, 1433)
+
+  --- Split 1/1 (train=122, val=459, test=915) ---
+  Computing restricted eigenvectors...
+  d_effective=1427, ortho_error=1.67e-10
+  Saved dynamics: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k10/training_curves/split0_dynamics.json
+
+  Aggregating results for k=10 (1 splits x 15 seeds = 15 runs/method)...
+
+  Method                                                 Test Acc       Std     n
+  ------------------------------------------------------------------------------
+  sgc_mlp_baseline                                          76.05%     1.42%    15
+  restricted_standard_mlp                                   38.22%     1.09%    15
+  restricted_rownorm_mlp                                    30.02%     0.85%    15
+  log_magnitude                                             33.46%     2.07%    15
+  dual_stream                                               32.24%     3.18%    15
+  spectral_rownorm_alpha-1.0                                66.04%     1.91%    15
+  spectral_rownorm_alpha-0.5                                61.11%     1.92%    15
+  spectral_rownorm_alpha0.0                                 31.96%     2.63%    15
+  spectral_rownorm_alpha0.5                                 25.30%     2.22%    15
+  spectral_rownorm_alpha1.0                                 22.59%     2.18%    15
+  nested_spheres_a-1.0_b-1.0                                65.76%     1.71%    15
+  nested_spheres_a-1.0_b-0.5                                64.50%     1.25%    15
+  nested_spheres_a-1.0_b0.0                                 65.57%     1.35%    15
+  nested_spheres_a-1.0_b0.5                                 65.08%     1.32%    15
+  nested_spheres_a-1.0_b1.0                                 64.47%     1.53%    15
+  nested_spheres_a-0.5_b-1.0                                55.21%     2.95%    15
+  nested_spheres_a-0.5_b-0.5                                56.79%     2.57%    15
+  nested_spheres_a-0.5_b0.0                                 61.48%     1.67%    15
+  nested_spheres_a-0.5_b0.5                                 55.92%     2.89%    15
+  nested_spheres_a-0.5_b1.0                                 54.07%     2.71%    15
+  nested_spheres_a0.0_b-1.0                                 33.15%     3.33%    15
+  nested_spheres_a0.0_b-0.5                                 33.65%     2.20%    15
+  nested_spheres_a0.0_b0.0                                  31.58%     2.37%    15
+  nested_spheres_a0.0_b0.5                                  32.65%     3.40%    15
+  nested_spheres_a0.0_b1.0                                  33.46%     2.07%    15
+  nested_spheres_a0.5_b-1.0                                 26.43%     2.41%    15
+  nested_spheres_a0.5_b-0.5                                 26.58%     2.69%    15
+  nested_spheres_a0.5_b0.0                                  27.07%     2.35%    15
+  nested_spheres_a0.5_b0.5                                  26.08%     2.77%    15
+  nested_spheres_a0.5_b1.0                                  26.15%     2.65%    15
+  nested_spheres_a1.0_b-1.0                                 24.60%     2.06%    15
+  nested_spheres_a1.0_b-0.5                                 24.90%     2.85%    15
+  nested_spheres_a1.0_b0.0                                  24.53%     3.02%    15
+  nested_spheres_a1.0_b0.5                                  24.63%     2.80%    15
+  nested_spheres_a1.0_b1.0                                  24.58%     2.54%    15
+
+  Framework Analysis (k=10):
+    Part A (SGC+MLP - Restricted+Std): +37.829 pp
+    Part B (RowNorm - Restricted+Std): -8.204 pp
+    Remaining Gap:                     +46.033 pp
+
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k10/metrics/results.json
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k10/diagnostics/fisher_diagnostic.json
+
+================================================================================
+K = 12
+================================================================================
+  X_diffused shape: (2485, 1433)
+
+  --- Split 1/1 (train=122, val=459, test=915) ---
+  Computing restricted eigenvectors...
+  d_effective=1427, ortho_error=1.67e-10
+
+  Aggregating results for k=12 (1 splits x 15 seeds = 15 runs/method)...
+
+  Method                                                 Test Acc       Std     n
+  ------------------------------------------------------------------------------
+  sgc_mlp_baseline                                          76.45%     1.23%    15
+  restricted_standard_mlp                                   38.47%     0.99%    15
+  restricted_rownorm_mlp                                    31.44%     2.04%    15
+
+  Framework Analysis (k=12):
+    Part A (SGC+MLP - Restricted+Std): +37.982 pp
+    Part B (RowNorm - Restricted+Std): -7.031 pp
+    Remaining Gap:                     +45.013 pp
+
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k12/metrics/results.json
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k12/diagnostics/fisher_diagnostic.json
+
+================================================================================
+K = 20
+================================================================================
+  X_diffused shape: (2485, 1433)
+
+  --- Split 1/1 (train=122, val=459, test=915) ---
+  Computing restricted eigenvectors...
+  d_effective=1427, ortho_error=1.67e-10
+
+  Aggregating results for k=20 (1 splits x 15 seeds = 15 runs/method)...
+
+  Method                                                 Test Acc       Std     n
+  ------------------------------------------------------------------------------
+  sgc_mlp_baseline                                          77.14%     1.00%    15
+  restricted_standard_mlp                                   39.25%     1.28%    15
+  restricted_rownorm_mlp                                    31.36%     1.34%    15
+
+  Framework Analysis (k=20):
+    Part A (SGC+MLP - Restricted+Std): +37.887 pp
+    Part B (RowNorm - Restricted+Std): -7.891 pp
+    Remaining Gap:                     +45.778 pp
+
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k20/metrics/results.json
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k20/diagnostics/fisher_diagnostic.json
+
+================================================================================
+K = 30
+================================================================================
+  X_diffused shape: (2485, 1433)
+
+  --- Split 1/1 (train=122, val=459, test=915) ---
+  Computing restricted eigenvectors...
+  d_effective=1377, ortho_error=1.66e-10
+
+  Aggregating results for k=30 (1 splits x 15 seeds = 15 runs/method)...
+
+  Method                                                 Test Acc       Std     n
+  ------------------------------------------------------------------------------
+  sgc_mlp_baseline                                          77.68%     1.13%    15
+  restricted_standard_mlp                                   39.64%     0.96%    15
+  restricted_rownorm_mlp                                    31.37%     1.33%    15
+
+  Framework Analysis (k=30):
+    Part A (SGC+MLP - Restricted+Std): +38.040 pp
+    Part B (RowNorm - Restricted+Std): -8.262 pp
+    Remaining Gap:                     +46.302 pp
+
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k30/metrics/results.json
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k30/diagnostics/fisher_diagnostic.json
+
+================================================================================
+MASTER TRAINING EXPERIMENT COMPLETE
+================================================================================
+Results saved to: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc
+/home/md724/Spectral-Basis/venv/lib/python3.12/site-packages/outdated/__init__.py:36: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import parse_version
+================================================================================
+MASTER ANALYTICS (Exp 2 + Exp 8)
+================================================================================
+Dataset:       cora
+Split type:    fixed
+Component:     lcc
+k values:      [1, 2, 4, 6, 8, 10, 12, 20, 30]
+Results dir:   /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc
+================================================================================
+
+[Step 1] Loading dataset and graph...
+Nodes: 2,708, Features: 1433, Classes: 7
+
+[Step 2] Extracting LCC...
+After LCC: nodes=2,485, classes=7
+
+================================================================================
+EXP 2: SPECTRAL ANALYSIS (all k values)
+================================================================================
+
+  k=1:
+    WARNING: no cached matrices found, recomputing...
+    d_effective=1427, ortho_error=1.3199363824156762e-10
+    Condition U=4.5992  Condition X=15.8873  Separability=0.2492  SpanErr=2.16e-15
+    Var ratio U=188.46  Var ratio X=151383388978.58  Reduction=803246391.14x
+    Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/analytics/exp2_spectral_analysis_k1.json
+
+  k=2:
+    WARNING: no cached matrices found, recomputing...
+    d_effective=1427, ortho_error=1.4699996775391355e-10
+    Condition U=3.8768  Condition X=23.0310  Separability=0.2494  SpanErr=2.12e-15
+    Var ratio U=413.44  Var ratio X=127281751256.57  Reduction=307859820.36x
+    Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/analytics/exp2_spectral_analysis_k2.json
+
+  k=4:
+    WARNING: no cached matrices found, recomputing...
+    d_effective=1427, ortho_error=1.6369705591046113e-10
+    Condition U=3.3455  Condition X=79.3410  Separability=0.2496  SpanErr=2.08e-15
+    Var ratio U=2931.93  Var ratio X=104222916887.30  Reduction=35547528.67x
+    Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/analytics/exp2_spectral_analysis_k4.json
+
+  k=6:
+    WARNING: no cached matrices found, recomputing...
+    d_effective=1427, ortho_error=1.670122928842943e-10
+    Condition U=3.2988  Condition X=215.1710  Separability=0.2498  SpanErr=2.26e-15
+    Var ratio U=4341.19  Var ratio X=90345536244.13  Reduction=20811242.56x
+    Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/analytics/exp2_spectral_analysis_k6.json
+
+  k=8:
+    WARNING: no cached matrices found, recomputing...
+    d_effective=1427, ortho_error=1.670760196859078e-10
+    Condition U=3.2918  Condition X=420.1133  Separability=0.2496  SpanErr=2.38e-15
+    Var ratio U=18551.24  Var ratio X=80278654210.80  Reduction=4327402.07x
+    Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/analytics/exp2_spectral_analysis_k8.json
+
+  k=10:
+    WARNING: no cached matrices found, recomputing...
+    d_effective=1427, ortho_error=1.6705659078297685e-10
+    Condition U=3.2935  Condition X=661.5213  Separability=0.2495  SpanErr=2.61e-15
+    Var ratio U=101387.11  Var ratio X=72350864023.50  Reduction=713610.08x
+    Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/analytics/exp2_spectral_analysis_k10.json
+
+  k=12:
+    WARNING: no cached matrices found, recomputing...
+    d_effective=1427, ortho_error=1.6703638472392868e-10
+    Condition U=3.2913  Condition X=937.9460  Separability=0.2496  SpanErr=2.53e-15
+    Var ratio U=1104555.74  Var ratio X=65824330481.05  Reduction=59593.49x
+    Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/analytics/exp2_spectral_analysis_k12.json
+
+  k=20:
+    WARNING: no cached matrices found, recomputing...
+    d_effective=1427, ortho_error=1.67065028477964e-10
+    Condition U=3.2880  Condition X=2605.2683  Separability=0.2494  SpanErr=2.71e-15
+    Var ratio U=819909622.26  Var ratio X=47874510786.15  Reduction=58.39x
+    Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/analytics/exp2_spectral_analysis_k20.json
+
+  k=30:
+    WARNING: no cached matrices found, recomputing...
+    d_effective=1377, ortho_error=1.664928195310722e-10
+    Condition U=3.2405  Condition X=7009.1385  Separability=0.2498  SpanErr=2.79e-15
+    Var ratio U=835766908.65  Var ratio X=35166796593.13  Reduction=42.08x
+    Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/analytics/exp2_spectral_analysis_k30.json
+
+================================================================================
+EXP 8: k-SENSITIVITY ANALYSIS
+================================================================================
+
+     k    SGC+MLP      R+Std       R+RN     Part A     Part B    Rem.Gap     Fisher   n_runs
+  -----------------------------------------------------------------------------------------------
+     1     62.71%     39.50%     34.65%    +23.213     -4.845    +28.058    0.00481       15
+     2     64.29%     36.87%     30.11%    +27.417     -6.761    +34.178    0.00492       15
+     4     71.82%     37.37%     28.95%    +34.448     -8.415    +42.863    0.00436       15
+     6     73.81%     36.20%     30.27%    +37.610     -5.931    +43.541    0.00393       15
+     8     75.22%     36.90%     30.13%    +38.317     -6.769    +45.086    0.00363       15
+    10     76.05%     38.22%     30.02%    +37.829     -8.204    +46.033    0.00344       15
+    12     76.45%     38.47%     31.44%    +37.982     -7.031    +45.013    0.00327       15
+    20     77.14%     39.25%     31.36%    +37.887     -7.891    +45.778    0.00294       15
+    30     77.68%     39.64%     31.37%    +38.040     -8.262    +46.302    0.00315       15
+
+  Saved JSON: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/analytics/exp8_k_sensitivity.json
+  Saved CSV:  /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/analytics/exp8_k_sensitivity.csv
+
+================================================================================
+MASTER ANALYTICS COMPLETE
+================================================================================
+Analytics saved to: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/analytics
+=== cora random ===
+/home/md724/Spectral-Basis/venv/lib/python3.12/site-packages/outdated/__init__.py:36: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import parse_version

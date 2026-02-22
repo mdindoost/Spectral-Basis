@@ -64,9 +64,9 @@ import numpy as np
 import scipy.sparse as sp
 import networkx as nx
 
-# Import all utilities from experiments/utils.py
-_EXPERIMENTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'experiments')
-sys.path.insert(0, _EXPERIMENTS_DIR)
+# Import all utilities from src/utils.py
+_SRC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src')
+sys.path.insert(0, _SRC_DIR)
 
 # Patch for OGB compatibility (must come before utils import which triggers torch)
 try:
@@ -305,8 +305,8 @@ print('\n[Step 1] Loading dataset and graph...')
  train_idx_orig, val_idx_orig, test_idx_orig) = load_dataset(DATASET_NAME, root='./dataset')
 print(f'Nodes: {num_nodes:,}, Features: {X_raw.shape[1]}, Classes: {num_classes}')
 
-# Build graph matrices (same swapped convention as master_training.py)
-adj, D, L = build_graph_matrices(edge_index, num_nodes)
+# Build graph matrices: adj, L=Laplacian, D=degree (correct order from src/utils.py)
+adj, L, D = build_graph_matrices(edge_index, num_nodes)
 
 if COMPONENT_TYPE == 'lcc':
     print('\n[Step 2] Extracting LCC...')
@@ -321,7 +321,7 @@ if COMPONENT_TYPE == 'lcc':
     )
     adj_coo      = adj.tocoo()
     edge_idx_lcc = np.vstack([adj_coo.row, adj_coo.col])
-    adj, D, L    = build_graph_matrices(edge_idx_lcc, adj.shape[0])
+    adj, L, D    = build_graph_matrices(edge_idx_lcc, adj.shape[0])
     num_components = 0
 else:
     split_idx = {
