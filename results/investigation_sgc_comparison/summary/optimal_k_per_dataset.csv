@@ -1,9 +1,0 @@
-Dataset,Best K (SGC),SGC Acc,Best K (RowNorm),RowNorm Acc,Best Improvement,K at Best Imp
-amazon-computers,2,87.13%,4,87.25%,+12.14pp,10
-citeseer,4,75.59%,8,26.61%,-48.72pp,8
-coauthor-cs,2,93.65%,2,71.25%,-20.16pp,10
-coauthor-physics,2,96.00%,2,82.83%,-11.70pp,10
-cora,2,88.44%,10,62.94%,-23.87pp,10
-ogbn-arxiv,2,59.95%,10,68.40%,+18.67pp,10
-pubmed,2,81.09%,2,85.82%,+9.13pp,10
-wikics,2,76.60%,10,79.70%,+24.84pp,10

@@ -1,0 +1,188 @@
+{
+  "fisher_score": 0.15202559846814961,
+  "mean_fisher_score": 0.14403759517655979,
+  "std_fisher_score": 0.00458159170252262,
+  "per_split": [
+    {
+      "split": 0,
+      "fisher_score": 0.15202559846814961,
+      "fisher_score_U": 0.15202559846814961,
+      "between_class_variance": 0.03925192310321761,
+      "within_class_variance": 0.25819285369523576,
+      "per_feature_U_stats": {
+        "mean": 0.0004207935373532429,
+        "std": 0.00711764207247721,
+        "max": 0.3333717964339633,
+        "top5": [
+          0.3333717964339633,
+          0.3322079142225018,
+          0.17859725719176373,
+          0.16255283149772676,
+          0.15611955295125307
+        ]
+      },
+      "note": "Computed on training set only to prevent data leakage",
+      "fisher_score_X_diffused": 0.5484819301658517,
+      "between_class_variance_X": 0.36831048744097594,
+      "within_class_variance_X": 0.671508881486041,
+      "per_feature_X_stats": {
+        "mean": 0.012611770247786798,
+        "std": 0.03366389044679024,
+        "max": 0.2952037187468411,
+        "top5": [
+          0.2952037187468411,
+          0.2800782213928162,
+          0.2666618054318137,
+          0.2527865887824452,
+          0.21726723769881667
+        ],
+        "n_cols_sampled": 500
+      }
+    },
+    {
+      "split": 1,
+      "fisher_score": 0.14074917168742018,
+      "fisher_score_U": 0.14074917168742018,
+      "between_class_variance": 0.03676248304941234,
+      "within_class_variance": 0.2611914699651343,
+      "per_feature_U_stats": {
+        "mean": 0.0003940429478019336,
+        "std": 0.00630219202315498,
+        "max": 0.30011249962477693,
+        "top5": [
+          0.30011249962477693,
+          0.2678679131972208,
+          0.17235689878270602,
+          0.1543757597008215,
+          0.15015656875015027
+        ]
+      },
+      "note": "Computed on training set only to prevent data leakage",
+      "fisher_score_X_diffused": 0.5661609615117107,
+      "between_class_variance_X": 0.37318193870057265,
+      "within_class_variance_X": 0.6591445968018295,
+      "per_feature_X_stats": {
+        "mean": 0.012676480002506443,
+        "std": 0.03336010837783806,
+        "max": 0.2967599065867092,
+        "top5": [
+          0.2967599065867092,
+          0.27723469532834416,
+          0.24914720674962484,
+          0.23494745904817368,
+          0.2256150017984461
+        ],
+        "n_cols_sampled": 500
+      }
+    },
+    {
+      "split": 2,
+      "fisher_score": 0.14492558668139122,
+      "fisher_score_U": 0.14492558668139122,
+      "between_class_variance": 0.037847587573967195,
+      "within_class_variance": 0.261151867248759,
+      "per_feature_U_stats": {
+        "mean": 0.00038970908255091664,
+        "std": 0.006208825062650938,
+        "max": 0.3006010265045205,
+        "top5": [
+          0.3006010265045205,
+          0.24944243300957428,
+          0.17623770771491132,
+          0.16081425422110054,
+          0.12757013278874804
+        ]
+      },
+      "note": "Computed on training set only to prevent data leakage",
+      "fisher_score_X_diffused": 0.5487613619175115,
+      "between_class_variance_X": 0.36724095320618505,
+      "within_class_variance_X": 0.6692179491700216,
+      "per_feature_X_stats": {
+        "mean": 0.01248340287446241,
+        "std": 0.03281287978577489,
+        "max": 0.28624753373616507,
+        "top5": [
+          0.28624753373616507,
+          0.27995840360041147,
+          0.26128666621176827,
+          0.2458078990106874,
+          0.21672049346860867
+        ],
+        "n_cols_sampled": 500
+      }
+    },
+    {
+      "split": 3,
+      "fisher_score": 0.14388331530460555,
+      "fisher_score_U": 0.14388331530460555,
+      "between_class_variance": 0.03725354717599541,
+      "within_class_variance": 0.258914990227522,
+      "per_feature_U_stats": {
+        "mean": 0.0003849686793024845,
+        "std": 0.006234011092470223,
+        "max": 0.29641023166281094,
+        "top5": [
+          0.29641023166281094,
+          0.27750224446216143,
+          0.16152285326267238,
+          0.14622873156012295,
+          0.1337480843872196
+        ]
+      },
+      "note": "Computed on training set only to prevent data leakage",
+      "fisher_score_X_diffused": 0.546399464474407,
+      "between_class_variance_X": 0.3678673623864866,
+      "within_class_variance_X": 0.6732571795990793,
+      "per_feature_X_stats": {
+        "mean": 0.012578269242122117,
+        "std": 0.03362364099101532,
+        "max": 0.29672018467902106,
+        "top5": [
+          0.29672018467902106,
+          0.2849115787219994,
+          0.2682659246781825,
+          0.24804174182638888,
+          0.2415462577545007
+        ],
+        "n_cols_sampled": 500
+      }
+    },
+    {
+      "split": 4,
+      "fisher_score": 0.13860430374123234,
+      "fisher_score_U": 0.13860430374123234,
+      "between_class_variance": 0.035789916740714,
+      "within_class_variance": 0.2582164894932273,
+      "per_feature_U_stats": {
+        "mean": 0.0003938683980304119,
+        "std": 0.006488048477492711,
+        "max": 0.30722162335653974,
+        "top5": [
+          0.30722162335653974,
+          0.2963654325065357,
+          0.1635438877929644,
+          0.15359033268020186,
+          0.14210757347634104
+        ]
+      },
+      "note": "Computed on training set only to prevent data leakage",
+      "fisher_score_X_diffused": 0.5587542639761846,
+      "between_class_variance_X": 0.3681918213717468,
+      "within_class_variance_X": 0.6589512512202322,
+      "per_feature_X_stats": {
+        "mean": 0.012562482093155419,
+        "std": 0.03353867589633633,
+        "max": 0.29152585707932965,
+        "top5": [
+          0.29152585707932965,
+          0.2741636260812479,
+          0.25632456197570747,
+          0.2502262490040337,
+          0.24812125507090366
+        ],
+        "n_cols_sampled": 500
+      }
+    }
+  ],
+  "note": "Fisher score computed on training set only (no leakage)"
+}

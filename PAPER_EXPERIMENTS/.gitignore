@@ -1,2 +1,2 @@
-# Generated results — not tracked in git
-PAPER_RESULTS/
+# Generated results — now tracked in git
+# PAPER_RESULTS/ (removed: intentionally tracked for paper reproducibility)

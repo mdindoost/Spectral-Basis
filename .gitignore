@@ -10,7 +10,7 @@ __pycache__/
 .Python
 
 # Results and data
-#results/
+results/
 *.pt
 *.pth
 *.npz
