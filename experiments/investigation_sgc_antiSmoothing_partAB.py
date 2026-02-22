@@ -246,7 +246,20 @@ def compute_restricted_eigenvectors(X, L, D, num_components=0):
     idx = np.argsort(eigenvalues)
     eigenvalues = eigenvalues[idx]
     V = V[:, idx]
-    
+
+    # Eigenvalue range check: normalized Laplacian eigenvalues must lie in [0, 2]
+    # Violation means L and D were passed swapped to this function
+    eig_min = float(eigenvalues.min())
+    eig_max = float(eigenvalues.max())
+    if eig_min < -0.01 or eig_max > 2.1:
+        import warnings
+        warnings.warn(
+            f"EIGENVALUE ALARM: values out of [0, 2] range: "
+            f"min={eig_min:.4f}, max={eig_max:.4f}. "
+            f"L and D may be swapped!",
+            stacklevel=2
+        )
+
     # Drop component eigenvalues if needed
     if num_components > 0:
         eigenvalues = eigenvalues[num_components:]
