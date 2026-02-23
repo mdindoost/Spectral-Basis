@@ -81,13 +81,20 @@ class NestedSpheresMLP(nn.Module):
         return self.mlp(X_augmented)
     
 class StandardMLP(nn.Module):
-    """Standard MLP with bias and no normalization"""
+    """Standard MLP with bias and no normalization.
+
+    WARNING: No dropout — causes severe overfitting on small datasets (e.g. Cora:
+    train_acc ~100%, test_acc ~38%). This creates an architectural confound when
+    comparing against RowNormMLP (which benefits implicitly from row-normalization
+    acting as a form of regularisation). Do NOT report StandardMLP test accuracy as
+    a general baseline; use it only to measure the specific RowNorm effect (Part B).
+    """
     def __init__(self, input_dim, hidden_dim, output_dim):
         super().__init__()
         self.fc1 = nn.Linear(input_dim, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, hidden_dim)
         self.fc3 = nn.Linear(hidden_dim, output_dim)
-    
+
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
@@ -168,18 +175,23 @@ class LogMagnitudeMLP(nn.Module):
 
 class SpectralRowNormMLP(nn.Module):
     """
-    RowNorm with eigenvalue weighting (nested spheres)
-    
-    Each eigenvector is weighted by f(λ) = λ^alpha before normalization:
-        V_weighted = V * (eigenvalues ** alpha)
-        V_normalized = V_weighted / ||V_weighted||_row
-    
+    Eigenvalue-weighted row-normalisation MLP (spectral alpha sweep, Section 4).
+
+    Applies V_weighted = V * |eigenvalues|^alpha, then row-normalises the result
+    before feeding into a 3-layer MLP with bias and Dropout(0.5).
+
+    NOTE: This architecture differs from RowNormMLP in three ways:
+      - Has bias=True in all Linear layers (RowNormMLP uses bias=False)
+      - Applies normalisation at the INPUT only (RowNormMLP re-normalises after each layer)
+      - Has Dropout(0.5) (RowNormMLP has no dropout)
+    Therefore alpha=0 does NOT reproduce RowNormMLP; see C-2 in CODE_REVIEW.md.
+
     Args:
-        input_dim: Number of features
+        input_dim: Number of input features (= d_effective eigenvectors)
         hidden_dim: Hidden layer dimension
         num_classes: Number of output classes
-        eigenvalues: Eigenvalues corresponding to eigenvectors (shape: d)
-        alpha: Weighting exponent (0 = standard RowNorm, 1 = linear eigenvalue weighting)
+        eigenvalues: Eigenvalues (shape: d_effective) for weighting
+        alpha: Weighting exponent. alpha=0 gives uniform weights (all ones).
     """
     def __init__(self, input_dim, hidden_dim, num_classes, eigenvalues, alpha=0.5):
         super(SpectralRowNormMLP, self).__init__()
@@ -191,8 +203,10 @@ class SpectralRowNormMLP(nn.Module):
         if abs(alpha) < 1e-8:
             self.eigenvalue_weights = torch.ones(input_dim)
         else:
-            # Ensure eigenvalues are positive (they should be from symmetric matrices)
-            eigenvalues_safe = torch.abs(eigenvalues) + 1e-8
+            # Clamp to a reasonable floor before raising to alpha (especially negative alpha).
+            # Without clamping, near-zero eigenvalues give weights ~1/λ → very large numbers
+            # for alpha=-1, making the model collapse onto a single eigenvector direction.
+            eigenvalues_safe = torch.clamp(torch.abs(eigenvalues), min=1e-4)
             self.eigenvalue_weights = eigenvalues_safe ** alpha
         
         # Register as buffer (not a parameter, but saved with model)
@@ -390,11 +404,10 @@ def load_dataset(dataset_name, root='./dataset'):
         num_classes = dataset.num_classes
         
         # Amazon datasets don't have pre-defined splits
-        # Create standard 60/20/20 split
+        # Create standard 60/20/20 split using a local RNG to avoid mutating global state.
         print(f"Creating 60/20/20 split for {dataset_name}...")
         indices = np.arange(num_nodes)
-        np.random.seed(42)
-        np.random.shuffle(indices)
+        np.random.default_rng(42).shuffle(indices)
         
         train_size = int(0.6 * num_nodes)
         val_size = int(0.2 * num_nodes)
@@ -418,11 +431,10 @@ def load_dataset(dataset_name, root='./dataset'):
         num_classes = dataset.num_classes
         
         # Coauthor datasets don't have pre-defined splits
-        # Create standard 60/20/20 split
+        # Create standard 60/20/20 split using a local RNG to avoid mutating global state.
         print(f"Creating 60/20/20 split for {dataset_name}...")
         indices = np.arange(num_nodes)
-        np.random.seed(42)
-        np.random.shuffle(indices)
+        np.random.default_rng(42).shuffle(indices)
         
         train_size = int(0.6 * num_nodes)
         val_size = int(0.2 * num_nodes)
@@ -516,8 +528,10 @@ def extract_subgraph(adj, features, labels, mask, split_idx):
     return adj_sub, features_sub, labels_sub, split_idx_sub
 
 def compute_sgc_normalized_adjacency(adj):
-    """Compute SGC-style normalized adjacency: D^{-1/2} A D^{-1/2}"""
-    adj = adj + sp.eye(adj.shape[0])
+    """Compute SGC-style normalized adjacency: D^{-1/2} A~ D^{-1/2}
+    where A~ = A + I. adj must already include self-loops (from build_graph_matrices).
+    Do NOT add self-loops here again."""
+    # adj already has self-loops added by build_graph_matrices — do not add again
     adj = sp.coo_matrix(adj)
     
     row_sum = np.array(adj.sum(1))
@@ -546,10 +560,11 @@ def compute_restricted_eigenvectors(X, L, D, num_components=0):
     """
     num_nodes, dimension = X.shape
     
-    # QR decomposition for numerical stability
-    Q, R = np.linalg.qr(X)
-    rank_X = np.sum(np.abs(np.diag(R)) > 1e-10)
-    
+    # Determine numerical rank via SVD (reliable for near-degenerate X at high k),
+    # then use QR only for the orthonormal basis Q needed downstream.
+    rank_X = np.linalg.matrix_rank(X, tol=1e-10)
+    Q, _ = np.linalg.qr(X)
+
     if rank_X < dimension:
         Q = Q[:, :rank_X]
         dimension = rank_X

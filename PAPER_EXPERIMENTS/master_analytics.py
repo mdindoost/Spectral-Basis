@@ -103,13 +103,19 @@ def compute_spectral_analysis(U, X_diffused, eigenvalues, labels, train_idx,
     n, d_eff = U.shape
     d_raw    = X_diffused.shape[1]
 
-    # ── U: singular values, condition number, variance ─────────────────────
-    sv_U     = np.linalg.svd(U, compute_uv=False)
-    cond_U   = float(sv_U[0] / sv_U[-1]) if sv_U[-1] > 1e-12 else float('inf')
+    # ── U: singular values, condition number, variance (training nodes only) ──
+    # Use U[train_idx] so cond_U and cond_X are computed on the same number of rows
+    # and are directly comparable (both n_train x d matrices).
+    # For fixed splits (n_train << d_eff), U_tr is wide: rank <= n_train, so the
+    # smallest d_eff - n_train singular values are 0. Using sv_U[-1] would always give
+    # inf. Instead use the rank-truncated condition number: max/min of non-zero sv only.
+    U_tr     = U[train_idx]
+    sv_U     = np.linalg.svd(U_tr, compute_uv=False)
+    sv_U_pos = sv_U[sv_U > 1e-12]
+    cond_U   = float(sv_U_pos[0] / sv_U_pos[-1]) if len(sv_U_pos) > 1 else float('inf')
     tv_U     = float(np.sum(sv_U ** 2))
     expl_U   = [float(np.sum(sv_U[:i+1]**2) / tv_U * 100) for i in range(min(d_eff, 20))]
 
-    U_tr     = U[train_idx]
     var_U    = np.var(U_tr, axis=0)
     var_ratio_U = float(var_U.max() / (var_U.min() + 1e-12))
 
@@ -168,6 +174,10 @@ def compute_spectral_analysis(U, X_diffused, eigenvalues, labels, train_idx,
                 intra_dists.append(float(np.linalg.norm(U_c[i] - U_c[j])))
     intra_class_mean_dist = float(np.mean(intra_dists)) if intra_dists else 0.0
 
+    # spectral_separability = inter-class centroid distance / intra-class mean pairwise distance,
+    # computed on row-normalised U restricted to training nodes.
+    # Values <1 mean classes overlap (intra > inter), values >1 mean classes are well-separated.
+    # On most real datasets this is <1 (overlap), so HIGHER is better but typical values are small.
     spectral_separability = (inter_class_centroid_dist / intra_class_mean_dist
                               if intra_class_mean_dist > 1e-10 else 0.0)
 
@@ -181,9 +191,13 @@ def compute_spectral_analysis(U, X_diffused, eigenvalues, labels, train_idx,
     }
 
     # ── Span verification ──────────────────────────────────────────────────
-    # U is computed in span(X_diffused) by Rayleigh-Ritz. Verify by projecting
-    # X_train onto U (via pseudoinverse) and measuring reconstruction error.
-    # Should be near 0 if U spans the same space as X_diffused (training rows).
+    # WARNING: This metric is MEANINGLESS for most datasets.
+    # When d_eff >= n_train (e.g. Cora: d_eff=1427, n_train=140), U_tr has more
+    # columns than rows, so pinv(U_tr) is a right-inverse and U_tr @ pinv(U_tr) = I.
+    # This forces span_error = 0 always, regardless of whether U actually spans X.
+    # DO NOT report this value in the paper or use it as a validation metric.
+    # The correct check (project U onto col(X_diffused) using all nodes) is
+    # guaranteed near-zero by Rayleigh-Ritz construction anyway.
     try:
         X_tr_centered = X_tr - X_tr.mean(axis=0)
         U_pinv        = np.linalg.pinv(U_tr)          # d_eff × n_train
@@ -196,8 +210,10 @@ def compute_spectral_analysis(U, X_diffused, eigenvalues, labels, train_idx,
         span_error = None
 
     # ── Graph properties ───────────────────────────────────────────────────
-    num_edges  = int(adj.nnz // 2)
-    avg_degree = float(adj.nnz / adj.shape[0])
+    # adj.nnz includes self-loop entries; subtract them before halving.
+    diag_nnz   = int(adj.diagonal().sum())
+    num_edges  = int((adj.nnz - diag_nnz) // 2)
+    avg_degree = float((adj.nnz - diag_nnz) / adj.shape[0])
 
     return {
         # U analysis
@@ -319,7 +335,10 @@ if COMPONENT_TYPE == 'lcc':
     adj, X_raw, labels, split_idx = extract_subgraph(
         adj, X_raw, labels, lcc_mask, split_idx_orig_dict
     )
-    adj_coo      = adj.tocoo()
+    # adj from extract_subgraph already has self-loops — strip before rebuilding
+    # so build_graph_matrices adds them exactly once (same fix as master_training.py).
+    adj_no_loops = adj - sp.diags(adj.diagonal())
+    adj_coo      = adj_no_loops.tocoo()
     edge_idx_lcc = np.vstack([adj_coo.row, adj_coo.col])
     adj, L, D    = build_graph_matrices(edge_idx_lcc, adj.shape[0])
     num_components = 0
@@ -334,7 +353,18 @@ else:
 
 num_nodes   = X_raw.shape[0]
 num_classes = len(np.unique(labels))
-train_idx   = split_idx['train_idx']
+
+# For spectral analysis, use the same train_idx that master_training.py used for split 0.
+# For random splits, master_training.py generates: np.random.seed(0), shuffle, take first 60%.
+# Using fixed split's train_idx here when SPLIT_TYPE='random' would analyze the wrong nodes.
+if SPLIT_TYPE == 'random':
+    # Replicate master_training.py split 0 exactly (same legacy API: seed=0, shuffle, 60%)
+    np.random.seed(0)
+    _indices = np.arange(num_nodes)
+    np.random.shuffle(_indices)
+    train_idx = _indices[:int(0.6 * num_nodes)]
+else:
+    train_idx = split_idx['train_idx']
 
 features_dense = X_raw.toarray() if sp.issparse(X_raw) else X_raw.copy()
 A_sgc          = compute_sgc_normalized_adjacency(adj)
@@ -371,7 +401,7 @@ for k in K_VALUES:
         U, eigs, d_eff, ortho_err = compute_restricted_eigenvectors(
             X_diffused, L, D, num_components
         )
-        train_idx = split_idx['train_idx']
+        # train_idx is already set above (split 0 random or fixed), do not override here
 
     print(f'    d_effective={d_eff}, ortho_error={ortho_err}')
 

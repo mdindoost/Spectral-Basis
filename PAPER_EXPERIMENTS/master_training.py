@@ -149,10 +149,11 @@ class DualStreamMLP(nn.Module):
         self.classifier = nn.Linear(hidden_dir // 2 + hidden_mag, num_classes)
 
     def forward(self, X):
-        X_norm = X / (torch.norm(X, dim=1, keepdim=True) + 1e-10)
         M = torch.norm(X, dim=1, keepdim=True)
+        X_norm = X / (M + 1e-10)
+        log_M  = torch.log(M + 1e-10)   # log-magnitude: stable scale, consistent with LogMagnitudeMLP
         h_dir = self.mlp_direction(X_norm)
-        h_mag = self.mlp_magnitude(M)
+        h_mag = self.mlp_magnitude(log_M)
         return self.classifier(torch.cat([h_dir, h_mag], dim=1))
 
 
@@ -254,6 +255,10 @@ def train_model(model, X_train, y_train, X_val, y_val, X_test, y_test,
         n_ep    = len(dyn['val_acc'])
         max_acc = max(dyn['val_acc'])
 
+        # NOTE: speed_to_XX measures epochs to reach XX% of THIS MODEL'S OWN peak accuracy.
+        # These are NOT absolute thresholds and CANNOT be compared across methods with
+        # different peak accuracies (e.g., RowNorm peak=85% vs Std peak=60% gives different
+        # targets for speed_to_90). Use checkpoint_val_accs for cross-method comparisons.
         def speed_to(pct):
             target = pct * max_acc
             for i, v in enumerate(dyn['val_acc']):
@@ -261,9 +266,9 @@ def train_model(model, X_train, y_train, X_val, y_val, X_test, y_test,
                     return i + 1
             return None
 
-        dyn['speed_to_90'] = speed_to(0.90)
-        dyn['speed_to_95'] = speed_to(0.95)
-        dyn['speed_to_99'] = speed_to(0.99)
+        dyn['speed_to_90_pct_of_peak'] = speed_to(0.90)
+        dyn['speed_to_95_pct_of_peak'] = speed_to(0.95)
+        dyn['speed_to_99_pct_of_peak'] = speed_to(0.99)
         dyn['auc_normalized'] = (float(sum(dyn['val_acc'])) / (n_ep * max_acc)
                                   if max_acc > 0 else 0.0)
         if n_ep > 1:
@@ -306,17 +311,23 @@ def compute_fisher_diagnostic(U_train, y_train, num_classes, X_diffused_train=No
         and optionally fisher_score_X_diffused + per_feature_X_stats.
     """
     def _fisher_on_magnitudes(M, y, nc):
-        class_means, class_stds = [], []
+        # Unweighted Fisher = between_class_variance / within_class_variance.
+        # All classes receive equal weight regardless of size. This is standard for
+        # balanced datasets. For imbalanced datasets (e.g. ogbn-arxiv, 40 classes with
+        # unequal sizes), small classes are over-represented. Disclose in paper.
+        # Both numerator and denominator must be in units of magnitude² (dimensionless ratio).
+        class_means, class_vars = [], []
         for c in range(nc):
             mask = (y == c)
             if mask.sum() == 0:
-                class_means.append(0.0); class_stds.append(0.0)
+                class_means.append(0.0); class_vars.append(0.0)
             else:
                 M_c = M[mask]
                 class_means.append(float(M_c.mean()))
-                class_stds.append(float(M_c.std()))
-        cm = np.array(class_means); cs = np.array(class_stds)
-        bv = float(cm.var()); wv = float(cs.mean())
+                class_vars.append(float(M_c.var()))   # variance, not std
+        cm = np.array(class_means); cv = np.array(class_vars)
+        bv = float(cm.var())        # variance of class means (magnitude²)
+        wv = float(cv.mean())       # mean of within-class variances (magnitude²)
         return (bv / wv if wv > 0 else 0.0), bv, wv
 
     # Row-magnitude Fisher on U
@@ -514,7 +525,13 @@ if COMPONENT_TYPE == 'lcc':
     )
 
     print('Rebuilding graph matrices for LCC...')
-    adj_coo        = adj.tocoo()
+    # adj from extract_subgraph already has self-loops (inherited from the first
+    # build_graph_matrices call). Feeding adj.tocoo() directly into build_graph_matrices
+    # would include the (i,i) edges and trigger a second sp.eye addition — double self-loops.
+    # Fix: strip self-loops before extracting the edge list so build_graph_matrices
+    # adds them exactly once.
+    adj_no_loops   = adj - sp.diags(adj.diagonal())
+    adj_coo        = adj_no_loops.tocoo()
     edge_index_lcc = np.vstack([adj_coo.row, adj_coo.col])
     adj, L, D      = build_graph_matrices(edge_index_lcc, adj.shape[0])
     num_components = 0   # LCC has exactly 1 connected component
@@ -633,14 +650,17 @@ for k in K_VALUES:
         # )
         # print(f'  Saved matrices: {npz_path}')
 
-        metadata_k.update({
-            'd_effective':    int(d_eff),
-            'ortho_error':    float(ortho_err),
-            'num_components': int(num_components),
-            'num_nodes':      int(num_nodes),
-            'num_features':   int(X_raw.shape[1]),
-            'num_classes':    int(num_classes)
-        })
+        # Set metadata once (split 0 only): d_eff and ortho_err are identical across
+        # splits since U is recomputed from the same X_diffused, L, D every time.
+        if not metadata_k:
+            metadata_k.update({
+                'd_effective':    int(d_eff),
+                'ortho_error':    float(ortho_err),
+                'num_components': int(num_components),
+                'num_nodes':      int(num_nodes),
+                'num_features':   int(X_raw.shape[1]),
+                'num_classes':    int(num_classes)
+            })
 
         # Standard-scaled features for SGC+MLP and Restricted+StandardMLP
         scaler_sgc = StandardScaler()
@@ -857,25 +877,33 @@ for k in K_VALUES:
         'restricted_rownorm_acc_pct': float(restr_rn_acc),
         'part_a_pp':                  float(sgc_mlp_acc - restr_std_acc),
         'part_b_pp':                  float(restr_rn_acc - restr_std_acc),
-        'remaining_gap_pp':           float((sgc_mlp_acc - restr_std_acc)
-                                            - (restr_rn_acc - restr_std_acc))
+        # remaining_gap_pp = Part A - Part B = (SGC - Std) - (RowNorm - Std) = SGC - RowNorm.
+        # Algebraically this is just sgc_mlp_acc - restr_rn_acc — the portion of SGC's
+        # advantage over Std that RowNorm does NOT recover. Stored in simplified form.
+        'remaining_gap_pp':           float(sgc_mlp_acc - restr_rn_acc)
     }
 
     if k == 10:
-        # Best spectral alpha (Part B.6) — across all ALPHA_VALUES including 0.0
+        # Best spectral alpha (Part B.6) — selected on val_acc to avoid test-set leakage.
+        # We identify the best alpha using val_acc_mean, then report its test_acc_mean.
         best_alpha     = None
-        best_alpha_acc = -1.0
+        best_alpha_val = -1.0
         for alpha in ALPHA_VALUES:
             key = f'spectral_rownorm_alpha{alpha}'
-            if key in aggregated and aggregated[key]['test_acc_mean'] > best_alpha_acc:
-                best_alpha_acc = aggregated[key]['test_acc_mean']
+            if key in aggregated and aggregated[key]['val_acc_mean'] > best_alpha_val:
+                best_alpha_val = aggregated[key]['val_acc_mean']
                 best_alpha     = alpha
 
+        if best_alpha is not None:
+            best_alpha_test_acc = aggregated[f'spectral_rownorm_alpha{best_alpha}']['test_acc_mean']
+        else:
+            best_alpha_test_acc = None
+
         framework['best_spectral_alpha']   = best_alpha
-        framework['best_spectral_acc_pct'] = (float(best_alpha_acc * 100)
-                                               if best_alpha is not None else None)
-        framework['part_b6_pp'] = (float(best_alpha_acc * 100 - restr_rn_acc)
-                                    if best_alpha is not None else None)
+        framework['best_spectral_acc_pct'] = (float(best_alpha_test_acc * 100)
+                                               if best_alpha_test_acc is not None else None)
+        framework['part_b6_pp'] = (float(best_alpha_test_acc * 100 - restr_rn_acc)
+                                    if best_alpha_test_acc is not None else None)
 
         # Part B.5
         if 'log_magnitude' in aggregated:
@@ -887,19 +915,20 @@ for k in K_VALUES:
                 aggregated['dual_stream']['test_acc_mean'] * 100 - restr_rn_acc
             )
 
-        # Best NestedSpheres configuration
+        # Best NestedSpheres configuration — selected on val_acc to avoid test-set leakage
         best_ns_key = None
-        best_ns_acc = -1.0
+        best_ns_val = -1.0
         for alpha in NESTED_ALPHA_VALUES:
             for beta in NESTED_BETA_VALUES:
                 key = f'nested_spheres_a{alpha}_b{beta}'
-                if key in aggregated and aggregated[key]['test_acc_mean'] > best_ns_acc:
-                    best_ns_acc = aggregated[key]['test_acc_mean']
+                if key in aggregated and aggregated[key]['val_acc_mean'] > best_ns_val:
+                    best_ns_val = aggregated[key]['val_acc_mean']
                     best_ns_key = key
         if best_ns_key:
+            best_ns_test_acc = aggregated[best_ns_key]['test_acc_mean']
             framework['best_nested_spheres_key']     = best_ns_key
-            framework['best_nested_spheres_acc_pct'] = float(best_ns_acc * 100)
-            framework['part_b6_nested_pp']           = float(best_ns_acc * 100 - restr_rn_acc)
+            framework['best_nested_spheres_acc_pct'] = float(best_ns_test_acc * 100)
+            framework['part_b6_nested_pp']           = float(best_ns_test_acc * 100 - restr_rn_acc)
 
     print(f'\n  Framework Analysis (k={k}):')
     print(f'    Part A (SGC+MLP - Restricted+Std): {framework["part_a_pp"]:+.3f} pp')
@@ -929,10 +958,10 @@ for k in K_VALUES:
     if fisher_diags:
         fisher_scores = [d['fisher_score'] for d in fisher_diags]
         fisher_agg = {
-            'fisher_score':      float(fisher_diags[0]['fisher_score']),
-            'mean_fisher_score': float(np.mean(fisher_scores)),
-            'std_fisher_score':  float(np.std(fisher_scores)),
-            'per_split':         fisher_diags,
+            # fisher_score = mean across all splits (use this for reporting)
+            'fisher_score':     float(np.mean(fisher_scores)),
+            'std_fisher_score': float(np.std(fisher_scores)),
+            'per_split':        fisher_diags,
             'note': 'Fisher score computed on training set only (no leakage)'
         }
         fisher_path = os.path.join(k_dir, 'diagnostics', 'fisher_diagnostic.json')

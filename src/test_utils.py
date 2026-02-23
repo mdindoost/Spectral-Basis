@@ -334,6 +334,30 @@ class TestExtractSubgraph:
         assert len(split_sub['train']) == 2, "Node 1 (outside mask) should be dropped from train"
         assert len(split_sub['test']) == 1,  "Node 4 (outside mask) should be dropped from test"
 
+    def test_lcc_rebuild_no_double_self_loop(self):
+        """Full LCC rebuild pipeline must produce adj with diagonal exactly 1.
+
+        CRIT-1 bug: extract_subgraph preserves self-loops from the first
+        build_graph_matrices call. If adj.tocoo() is passed directly back into
+        build_graph_matrices, the (i,i) entries appear in the edge list and
+        sp.eye is added a second time — diagonal becomes 2 instead of 1.
+        The correct pipeline strips self-loops before rebuilding.
+        """
+        adj, L, D = build_graph_matrices(path_edge_index(5), 5)
+        mask = np.ones(5, dtype=bool)  # keep all nodes (trivial LCC)
+        adj_sub, _, _, _ = extract_subgraph(adj, np.eye(5), np.zeros(5), mask, None)
+
+        # Correct: strip self-loops before rebuild
+        adj_no_loops = adj_sub - sp.diags(adj_sub.diagonal())
+        adj_coo = adj_no_loops.tocoo()
+        edge_index_lcc = np.vstack([adj_coo.row, adj_coo.col])
+        adj_rebuilt, _, _ = build_graph_matrices(edge_index_lcc, adj_sub.shape[0])
+
+        assert np.allclose(adj_rebuilt.diagonal(), 1.0), (
+            f"LCC rebuild diagonal must be 1, got {adj_rebuilt.diagonal()} "
+            f"(double self-loop bug: CRIT-1)"
+        )
+
 
 # ============================================================================
 # 5. compute_sgc_normalized_adjacency
@@ -359,6 +383,15 @@ class TestComputeSGCNormalizedAdjacency:
         adj, L, D = build_graph_matrices(path_edge_index(4), 4)
         A_sgc = compute_sgc_normalized_adjacency(adj)
         assert A_sgc.shape == (4, 4)
+
+    def test_diagonal_equals_1_over_deg_plus_1(self):
+        """Diagonal of A_sgc must be 1/(deg+1) — SGC paper formula, no double self-loop."""
+        adj, L, D = build_graph_matrices(path_edge_index(5), 5)
+        A_sgc = compute_sgc_normalized_adjacency(adj)
+        true_deg = np.array(adj.sum(axis=1)).ravel() - 1.0  # subtract self-loop
+        expected = 1.0 / (true_deg + 1.0)
+        assert np.allclose(A_sgc.diagonal(), expected, atol=1e-10), \
+            "A_sgc diagonal must be 1/(deg+1), not 2/(deg+2) (double self-loop bug)"
 
 
 # ============================================================================
