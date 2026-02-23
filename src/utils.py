@@ -174,6 +174,42 @@ class LogMagnitudeMLP(nn.Module):
         return x
 
 
+class DualStreamMLP(nn.Module):
+    """Dual-Stream MLP with separate direction and magnitude branches.
+
+    Direction stream: input_dim -> hidden_dir -> hidden_dir//2 (with Dropout 0.5)
+    Magnitude stream: 1 -> hidden_mag -> hidden_mag (no dropout)
+    Classifier:       (hidden_dir//2 + hidden_mag) -> num_classes
+    """
+    def __init__(self, input_dim, hidden_dir, hidden_mag, num_classes):
+        super().__init__()
+
+        self.mlp_direction = nn.Sequential(
+            nn.Linear(input_dim, hidden_dir),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(hidden_dir, hidden_dir // 2),
+            nn.ReLU(),
+            nn.Dropout(0.5)
+        )
+
+        self.mlp_magnitude = nn.Sequential(
+            nn.Linear(1, hidden_mag),
+            nn.ReLU(),
+            nn.Linear(hidden_mag, hidden_mag)
+        )
+
+        self.classifier = nn.Linear(hidden_dir // 2 + hidden_mag, num_classes)
+
+    def forward(self, X):
+        M = torch.norm(X, dim=1, keepdim=True)
+        X_norm = X / (M + 1e-10)
+        log_M  = torch.log(M + 1e-10)
+        h_dir = self.mlp_direction(X_norm)
+        h_mag = self.mlp_magnitude(log_M)
+        return self.classifier(torch.cat([h_dir, h_mag], dim=1))
+
+
 class SpectralRowNormMLP(nn.Module):
     """
     Eigenvalue-weighted row-normalisation MLP (spectral alpha sweep, Section 4).

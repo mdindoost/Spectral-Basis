@@ -16,10 +16,8 @@ Unified experiment covering:
           Logs: val_acc, train_acc, train_loss, val_loss per epoch + convergence metrics
 
 Models imported from utils.py (src/utils.py):
-  SGC, StandardMLP, RowNormMLP, LogMagnitudeMLP, SpectralRowNormMLP, NestedSpheresClassifier
-
-DualStreamMLP defined locally (not in utils.py):
-  Exact reproduction from investigation3_magnitude_preservation.py
+  SGC, StandardMLP, RowNormMLP, LogMagnitudeMLP,
+  DualStreamMLP, SpectralRowNormMLP, NestedSpheresClassifier
 
 Graph/diffusion functions imported from utils.py:
   build_graph_matrices, get_largest_connected_component_nx, extract_subgraph,
@@ -112,50 +110,8 @@ from utils import (
     compute_sgc_normalized_adjacency, sgc_precompute, compute_restricted_eigenvectors,
     # Models
     SGC, StandardMLP, RowNormMLP, LogMagnitudeMLP,
-    SpectralRowNormMLP, NestedSpheresClassifier,
+    DualStreamMLP, SpectralRowNormMLP, NestedSpheresClassifier,
 )
-
-# ============================================================================
-# Local Model Definition
-# DualStreamMLP is not in utils.py — exact reproduction from investigation3
-# ============================================================================
-
-class DualStreamMLP(nn.Module):
-    """Dual-Stream MLP with separate direction and magnitude branches.
-    Exact reproduction from investigation3_magnitude_preservation.py.
-
-    Direction stream: input_dim -> hidden_dir -> hidden_dir//2 (with Dropout 0.5)
-    Magnitude stream: 1 -> hidden_mag -> hidden_mag (no dropout)
-    Classifier:       (hidden_dir//2 + hidden_mag) -> num_classes
-    """
-    def __init__(self, input_dim, hidden_dir, hidden_mag, num_classes):
-        super().__init__()
-
-        self.mlp_direction = nn.Sequential(
-            nn.Linear(input_dim, hidden_dir),
-            nn.ReLU(),
-            nn.Dropout(0.5),
-            nn.Linear(hidden_dir, hidden_dir // 2),
-            nn.ReLU(),
-            nn.Dropout(0.5)
-        )
-
-        self.mlp_magnitude = nn.Sequential(
-            nn.Linear(1, hidden_mag),
-            nn.ReLU(),
-            nn.Linear(hidden_mag, hidden_mag)
-        )
-
-        self.classifier = nn.Linear(hidden_dir // 2 + hidden_mag, num_classes)
-
-    def forward(self, X):
-        M = torch.norm(X, dim=1, keepdim=True)
-        X_norm = X / (M + 1e-10)
-        log_M  = torch.log(M + 1e-10)   # log-magnitude: stable scale, consistent with LogMagnitudeMLP
-        h_dir = self.mlp_direction(X_norm)
-        h_mag = self.mlp_magnitude(log_M)
-        return self.classifier(torch.cat([h_dir, h_mag], dim=1))
-
 
 # ============================================================================
 # Training Function (unified protocol for all methods)
