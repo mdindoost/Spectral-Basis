@@ -43,13 +43,14 @@ class NestedSpheresMLP(nn.Module):
     def __init__(self, input_dim, hidden_dim, num_classes, eigenvalues, alpha=0.5, beta=1.0):
         super().__init__()
         
-        # Eigenvalue weighting
+        # Eigenvalue weighting — clamp to 1e-4 (same floor as SpectralRowNormMLP)
+        # to prevent near-zero eigenvalues from exploding when alpha < 0.
         if abs(alpha) < 1e-8:
             eigenvalue_weights = torch.ones(input_dim)
         else:
-            eigenvalues_safe = torch.abs(eigenvalues) + 1e-8
+            eigenvalues_safe   = torch.clamp(torch.abs(eigenvalues), min=1e-4)
             eigenvalue_weights = eigenvalues_safe ** alpha
-        
+
         self.register_buffer('eigenvalue_weights', eigenvalue_weights)
         self.beta = beta
         
@@ -264,13 +265,14 @@ class NestedSpheresClassifier(nn.Module):
         self.alpha = alpha
         self.beta = beta
         
-        # Compute eigenvalue weights
+        # Compute eigenvalue weights — clamp to 1e-4 (same floor as SpectralRowNormMLP)
+        # to prevent near-zero eigenvalues from exploding when alpha < 0.
         if abs(alpha) < 1e-8:
             self.eigenvalue_weights = torch.ones(input_dim)
         else:
-            eigenvalues_safe = torch.abs(eigenvalues) + 1e-8
+            eigenvalues_safe        = torch.clamp(torch.abs(eigenvalues), min=1e-4)
             self.eigenvalue_weights = eigenvalues_safe ** alpha
-        
+
         self.register_buffer('weights', self.eigenvalue_weights)
         
         # MLP with one extra input (log-magnitude)

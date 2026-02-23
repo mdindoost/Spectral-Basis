@@ -354,10 +354,10 @@ def generate_table_3_3_crossover_analysis():
             k_vals.append(row['k'])
             part_a_vals.append(row['part_a'])
         
-        # Find crossover
+        # Find crossover — any sign change (consistent with Fig 3.2 detection)
         crossover_range = None
         for i in range(len(part_a_vals)-1):
-            if part_a_vals[i] > 0 and part_a_vals[i+1] < 0:
+            if part_a_vals[i] * part_a_vals[i+1] < 0:
                 crossover_range = f'{k_vals[i]}-{k_vals[i+1]}'
                 break
         
@@ -606,7 +606,8 @@ def generate_figure_5_1_recovery_cascade():
             ax.set_ylabel('Test Accuracy (%)', fontsize=13, fontweight='bold')
         # Use only present (non-None) acc values for ylim so a missing method (acc=0)
         # doesn't force y-axis to start at 0.
-        ax.set_ylim(min(accs) * 0.95, max(accs) * 1.05)
+        if accs:
+            ax.set_ylim(min(accs) * 0.95, max(accs) * 1.05)
         ax.grid(True, alpha=0.3, axis='y', linestyle='--')
         plt.setp(ax.xaxis.get_majorticklabels(), rotation=0, fontsize=11)
     
@@ -634,21 +635,20 @@ def generate_table_5_2_spectral_normalization():
         
         exps = data['experiments']
         rn_baseline = exps['restricted_rownorm_mlp']['test_acc_mean'] * 100
-        
-        best_alpha = None
-        best_acc = -1
+
+        # Collect test_acc for all alpha values (for display only — not for selection).
         alpha_accs = {}
-        
         for alpha in alphas:
             key = f'spectral_rownorm_alpha{alpha}'
             if key in exps:
-                acc = exps[key]['test_acc_mean'] * 100
-                alpha_accs[alpha] = acc
-                if acc > best_acc:
-                    best_acc = acc
-                    best_alpha = alpha
-        
-        improvement = best_acc - rn_baseline if best_alpha is not None else None
+                alpha_accs[alpha] = exps[key]['test_acc_mean'] * 100
+
+        # best_alpha was selected on val_acc during training (MAJOR-1 fix) and is
+        # stored in framework_analysis.  Read it here to avoid re-selecting on test.
+        fa         = data.get('framework_analysis', {})
+        best_alpha = fa.get('best_spectral_alpha')          # chosen on val set
+        best_acc   = alpha_accs.get(best_alpha) if best_alpha is not None else None
+        improvement = (best_acc - rn_baseline)  if best_acc  is not None else None
         
         rows.append({
             'dataset': ds,

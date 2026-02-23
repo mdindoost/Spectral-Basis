@@ -478,8 +478,9 @@ for k in K_VALUES:
     # Fisher loaded from diagnostics (available at all k)
     fisher_data = load_fisher_k(PAPER_RESULTS_DIR, k)
     if fisher_data:
-        row['fisher_score']      = fisher_data.get('fisher_score')
-        row['mean_fisher_score'] = fisher_data.get('mean_fisher_score')
+        # fisher_score = mean across all splits (M-4 fix promoted mean into this key;
+        # 'mean_fisher_score' was removed — do not read it).
+        row['fisher_score'] = fisher_data.get('fisher_score')
         # Also grab fisher_score_X_diffused if present (from per_split[0])
         per_split = fisher_data.get('per_split', [])
         if per_split:
@@ -532,7 +533,7 @@ print(f'\n  Saved JSON: {exp8_json_path}')
 if k_sensitivity_rows:
     all_cols = [
         'k', 'sgc_mlp', 'restr_std', 'restr_rn', 'part_a', 'part_b', 'rem_gap', 'n_runs',
-        'fisher_score', 'mean_fisher_score', 'fisher_score_X_diffused',
+        'fisher_score', 'fisher_score_X_diffused',
         'log_magnitude', 'dual_stream',
         'spec_alpha-1.0', 'spec_alpha-0.5', 'spec_alpha0.0', 'spec_alpha0.5', 'spec_alpha1.0',
         'best_spectral_alpha', 'part_b6', 'part_b5_logmag', 'part_b5_dual',

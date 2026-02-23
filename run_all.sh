@@ -3,7 +3,6 @@ set -e
 
 PYTHON=/home/md724/Spectral-Basis/venv/bin/python
 SCRIPTS=/home/md724/Spectral-Basis/PAPER_EXPERIMENTS
-LOG=/home/md724/Spectral-Basis/run_all.log
 
 echo "========================================================"
 echo " FULL PAPER PIPELINE"
