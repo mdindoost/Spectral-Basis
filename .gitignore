@@ -39,3 +39,4 @@ logs/
 Archive/
 
 run_all.log
+.pytest_cache/
