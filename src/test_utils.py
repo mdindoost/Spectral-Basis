@@ -1,5 +1,5 @@
 """
-Tests for src/utils.py
+Tests for src/graph_utils.py and src/models.py
 
 Run with:
     cd /home/md724/Spectral-Basis
@@ -11,28 +11,40 @@ most critical (the matrix-swap bug lived in their interaction).
 
 import sys
 import os
+import copy
 import warnings
 
 import pytest
 import numpy as np
 import scipy.sparse as sp
 import torch
+import torch.nn as nn
+from torch.utils.data import TensorDataset, DataLoader
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from utils import (
+from graph_utils import (
+    load_dataset,
     build_graph_matrices,
     get_largest_connected_component_nx,
     extract_subgraph,
     compute_sgc_normalized_adjacency,
     sgc_precompute,
     compute_restricted_eigenvectors,
+)
+
+from models import (
+    SGC,
     StandardMLP,
     RowNormMLP,
+    CosineRowNormMLP,
     LogMagnitudeMLP,
+    DualStreamMLP,
     SpectralRowNormMLP,
-    NestedSpheresClassifier,
     NestedSpheresMLP,
+    NestedSpheresClassifier,
+    train_simple,
+    train_with_selection,
 )
 
 
@@ -66,7 +78,24 @@ def two_component_adj():
 
 
 # ============================================================================
-# 1. build_graph_matrices
+# 1. load_dataset
+# ============================================================================
+
+class TestLoadDataset:
+
+    def test_unknown_dataset_raises_value_error(self):
+        """Requesting a non-existent dataset must raise ValueError."""
+        with pytest.raises(ValueError, match="Unknown dataset"):
+            load_dataset("not_a_real_dataset_xyz")
+
+    def test_unknown_dataset_case_insensitive_check(self):
+        """Dataset name is lowercased internally — unknown names must still raise."""
+        with pytest.raises(ValueError):
+            load_dataset("TOTALLY_FAKE_123")
+
+
+# ============================================================================
+# 2. build_graph_matrices
 # ============================================================================
 
 class TestBuildGraphMatrices:
@@ -131,7 +160,7 @@ class TestBuildGraphMatrices:
 
 
 # ============================================================================
-# 2. compute_restricted_eigenvectors
+# 3. compute_restricted_eigenvectors
 # ============================================================================
 
 @pytest.fixture(scope="module")
@@ -246,7 +275,7 @@ class TestComputeRestrictedEigenvectors:
 
 
 # ============================================================================
-# 3. get_largest_connected_component_nx
+# 4. get_largest_connected_component_nx
 # ============================================================================
 
 class TestGetLargestConnectedComponent:
@@ -266,8 +295,6 @@ class TestGetLargestConnectedComponent:
 
     def test_all_isolated_returns_one_node(self):
         """4 completely isolated nodes: LCC has size 1."""
-        adj = sp.eye(4, format='csr') * 0   # no edges, no self-loops
-        # Add nothing — each node is truly isolated
         adj = sp.csr_matrix((4, 4))
         mask = get_largest_connected_component_nx(adj)
         assert mask.sum() == 1, f"All isolated → LCC size 1, got {mask.sum()}"
@@ -279,7 +306,7 @@ class TestGetLargestConnectedComponent:
 
 
 # ============================================================================
-# 4. extract_subgraph
+# 5. extract_subgraph
 # ============================================================================
 
 class TestExtractSubgraph:
@@ -360,7 +387,7 @@ class TestExtractSubgraph:
 
 
 # ============================================================================
-# 5. compute_sgc_normalized_adjacency
+# 6. compute_sgc_normalized_adjacency
 # ============================================================================
 
 class TestComputeSGCNormalizedAdjacency:
@@ -395,7 +422,7 @@ class TestComputeSGCNormalizedAdjacency:
 
 
 # ============================================================================
-# 6. sgc_precompute
+# 7. sgc_precompute
 # ============================================================================
 
 class TestSGCPrecompute:
@@ -427,10 +454,11 @@ class TestSGCPrecompute:
 
 
 # ============================================================================
-# 7. Model architectures
+# 8. Model architectures
 # ============================================================================
 
 N, D_IN, H, C = 20, 10, 32, 3
+H_MAG = 8
 EIGS = torch.linspace(0.1, 1.9, D_IN)
 
 
@@ -440,9 +468,23 @@ class TestModelArchitectures:
         torch.manual_seed(0)
         return torch.randn(N, D_IN)
 
+    # ── SGC ──────────────────────────────────────────────────────────────────
+
+    def test_sgc_output_shape(self):
+        out = SGC(D_IN, C)(self._input())
+        assert out.shape == (N, C)
+
+    def test_sgc_has_bias(self):
+        model = SGC(D_IN, C)
+        assert model.W.bias is not None, "SGC must have bias"
+
+    # ── StandardMLP ──────────────────────────────────────────────────────────
+
     def test_standard_mlp_output_shape(self):
         out = StandardMLP(D_IN, H, C)(self._input())
         assert out.shape == (N, C)
+
+    # ── RowNormMLP ───────────────────────────────────────────────────────────
 
     def test_rownorm_mlp_output_shape(self):
         out = RowNormMLP(D_IN, H, C)(self._input())
@@ -453,9 +495,57 @@ class TestModelArchitectures:
         bias_params = [n for n, _ in model.named_parameters() if 'bias' in n]
         assert len(bias_params) == 0, f"RowNormMLP must have no bias, found: {bias_params}"
 
+    # ── CosineRowNormMLP ─────────────────────────────────────────────────────
+
+    def test_cosine_rownorm_mlp_output_shape(self):
+        out = CosineRowNormMLP(D_IN, H, C)(self._input())
+        assert out.shape == (N, C)
+
+    def test_cosine_rownorm_mlp_has_no_bias_in_linear_layers(self):
+        model = CosineRowNormMLP(D_IN, H, C)
+        linear_bias = [n for n, _ in model.named_parameters()
+                       if 'bias' in n and 'scale' not in n]
+        assert len(linear_bias) == 0, \
+            f"CosineRowNormMLP linear layers must have no bias, found: {linear_bias}"
+
+    def test_cosine_rownorm_mlp_has_scale_parameter(self):
+        model = CosineRowNormMLP(D_IN, H, C)
+        assert hasattr(model, 'scale'), "CosineRowNormMLP must have a scale parameter"
+        assert isinstance(model.scale, nn.Parameter)
+
+    # ── LogMagnitudeMLP ──────────────────────────────────────────────────────
+
     def test_log_magnitude_mlp_output_shape(self):
         out = LogMagnitudeMLP(D_IN, H, C)(self._input())
         assert out.shape == (N, C)
+
+    # ── DualStreamMLP ────────────────────────────────────────────────────────
+
+    def test_dual_stream_mlp_output_shape(self):
+        out = DualStreamMLP(D_IN, H, H_MAG, C)(self._input())
+        assert out.shape == (N, C)
+
+    def test_dual_stream_mlp_direction_stream_shape(self):
+        """Direction branch output must be hidden_dir // 2."""
+        model = DualStreamMLP(D_IN, H, H_MAG, C)
+        x = self._input()
+        M = torch.norm(x, dim=1, keepdim=True)
+        x_norm = x / (M + 1e-10)
+        h_dir = model.mlp_direction(x_norm)
+        assert h_dir.shape == (N, H // 2), \
+            f"Direction branch output must be (N, {H // 2}), got {h_dir.shape}"
+
+    def test_dual_stream_mlp_magnitude_stream_shape(self):
+        """Magnitude branch output must be hidden_mag."""
+        model = DualStreamMLP(D_IN, H, H_MAG, C)
+        x = self._input()
+        M = torch.norm(x, dim=1, keepdim=True)
+        log_M = torch.log(M + 1e-10)
+        h_mag = model.mlp_magnitude(log_M)
+        assert h_mag.shape == (N, H_MAG), \
+            f"Magnitude branch output must be (N, {H_MAG}), got {h_mag.shape}"
+
+    # ── SpectralRowNormMLP ───────────────────────────────────────────────────
 
     def test_spectral_rownorm_mlp_output_shape(self):
         out = SpectralRowNormMLP(D_IN, H, C, EIGS, alpha=0.5)(self._input())
@@ -467,31 +557,159 @@ class TestModelArchitectures:
         assert torch.allclose(model.eigenvalue_weights, torch.ones(D_IN)), \
             "alpha=0 eigenvalue weights must be all-ones"
 
-    def test_nested_spheres_classifier_output_shape(self):
-        out = NestedSpheresClassifier(D_IN, H, C, EIGS, alpha=0.5, beta=1.0)(self._input())
-        assert out.shape == (N, C)
+    def test_spectral_rownorm_mlp_negative_alpha(self):
+        """Negative alpha must produce finite outputs (no explosion from near-zero eigenvalues)."""
+        out = SpectralRowNormMLP(D_IN, H, C, EIGS, alpha=-1.0)(self._input())
+        assert torch.isfinite(out).all(), "alpha=-1 must produce finite outputs"
+
+    # ── NestedSpheresMLP ─────────────────────────────────────────────────────
 
     def test_nested_spheres_mlp_output_shape(self):
         out = NestedSpheresMLP(D_IN, H, C, EIGS, alpha=0.5, beta=1.0)(self._input())
         assert out.shape == (N, C)
 
+    def test_nested_spheres_mlp_alpha_zero(self):
+        """alpha=0 must use uniform eigenvalue weights (ones)."""
+        model = NestedSpheresMLP(D_IN, H, C, EIGS, alpha=0.0)
+        assert torch.allclose(model.eigenvalue_weights, torch.ones(D_IN))
+
+    # ── NestedSpheresClassifier ───────────────────────────────────────────────
+
+    def test_nested_spheres_classifier_output_shape(self):
+        out = NestedSpheresClassifier(D_IN, H, C, EIGS, alpha=0.5, beta=1.0)(self._input())
+        assert out.shape == (N, C)
+
+    def test_nested_spheres_classifier_beta_zero_no_magnitude(self):
+        """beta=0 should zero out the log-magnitude channel — output still finite."""
+        out = NestedSpheresClassifier(D_IN, H, C, EIGS, alpha=0.5, beta=0.0)(self._input())
+        assert torch.isfinite(out).all()
+
+    # ── Shared: no NaN/Inf ───────────────────────────────────────────────────
+
     def test_no_nan_or_inf_in_any_model(self):
         """All models must produce finite outputs on random input."""
         x = self._input()
         models = [
+            SGC(D_IN, C),
             StandardMLP(D_IN, H, C),
             RowNormMLP(D_IN, H, C),
+            CosineRowNormMLP(D_IN, H, C),
             LogMagnitudeMLP(D_IN, H, C),
+            DualStreamMLP(D_IN, H, H_MAG, C),
             SpectralRowNormMLP(D_IN, H, C, EIGS, alpha=0.5),
-            NestedSpheresClassifier(D_IN, H, C, EIGS, alpha=0.5, beta=1.0),
             NestedSpheresMLP(D_IN, H, C, EIGS, alpha=0.5, beta=1.0),
+            NestedSpheresClassifier(D_IN, H, C, EIGS, alpha=0.5, beta=1.0),
         ]
         for model in models:
             out = model(x)
             assert torch.isfinite(out).all(), \
                 f"{model.__class__.__name__} produced NaN or Inf in output"
 
-    def test_sgc_output_shape(self):
-        from utils import SGC
-        out = SGC(D_IN, C)(self._input())
-        assert out.shape == (N, C)
+
+# ============================================================================
+# 9. train_simple and train_with_selection
+# ============================================================================
+
+def _make_loader(X, y, batch_size=16):
+    ds = TensorDataset(torch.FloatTensor(X), torch.LongTensor(y))
+    return DataLoader(ds, batch_size=batch_size, shuffle=False)
+
+
+@pytest.fixture(scope="module")
+def small_classification_data():
+    """Tiny 2-class dataset for training function tests."""
+    torch.manual_seed(0)
+    np.random.seed(0)
+    n, d, c = 60, 8, 2
+    X = np.random.randn(n, d).astype(np.float32)
+    y = (X[:, 0] > 0).astype(int)
+    X_tr, y_tr = X[:40], y[:40]
+    X_va, y_va = X[40:50], y[40:50]
+    X_te, y_te = X[50:], y[50:]
+    loader = _make_loader(X_tr, y_tr)
+    X_va_t = torch.FloatTensor(X_va)
+    y_va_t = torch.LongTensor(y_va)
+    X_te_t = torch.FloatTensor(X_te)
+    y_te_t = torch.LongTensor(y_te)
+    return loader, X_va_t, y_va_t, X_te_t, y_te_t, d, c
+
+
+class TestTrainSimple:
+
+    def test_returns_dict_with_required_keys(self, small_classification_data):
+        loader, X_va, y_va, X_te, y_te, d, c = small_classification_data
+        model = StandardMLP(d, 16, c)
+        result = train_simple(model, loader, X_va, y_va, X_te, y_te,
+                              epochs=5, verbose=False)
+        assert 'model' in result
+        assert 'train_losses' in result
+        assert 'val_accs' in result
+        assert 'test_acc' in result
+
+    def test_train_losses_length_equals_epochs(self, small_classification_data):
+        loader, X_va, y_va, X_te, y_te, d, c = small_classification_data
+        model = StandardMLP(d, 16, c)
+        result = train_simple(model, loader, X_va, y_va, X_te, y_te,
+                              epochs=5, verbose=False)
+        assert len(result['train_losses']) == 5
+        assert len(result['val_accs']) == 5
+
+    def test_test_acc_in_0_1(self, small_classification_data):
+        loader, X_va, y_va, X_te, y_te, d, c = small_classification_data
+        model = StandardMLP(d, 16, c)
+        result = train_simple(model, loader, X_va, y_va, X_te, y_te,
+                              epochs=5, verbose=False)
+        assert 0.0 <= result['test_acc'] <= 1.0
+
+    def test_returned_model_is_nn_module(self, small_classification_data):
+        loader, X_va, y_va, X_te, y_te, d, c = small_classification_data
+        model = StandardMLP(d, 16, c)
+        result = train_simple(model, loader, X_va, y_va, X_te, y_te,
+                              epochs=3, verbose=False)
+        assert isinstance(result['model'], nn.Module)
+
+
+class TestTrainWithSelection:
+
+    def test_returns_dict_with_required_keys(self, small_classification_data):
+        loader, X_va, y_va, X_te, y_te, d, c = small_classification_data
+        model = StandardMLP(d, 16, c)
+        result = train_with_selection(model, loader, X_va, y_va, X_te, y_te,
+                                      epochs=5, verbose=False)
+        required = {
+            'model', 'train_losses', 'val_losses', 'val_accs',
+            'best_val_loss', 'best_val_acc',
+            'best_epoch_loss', 'best_epoch_acc',
+            'test_at_best_val_loss', 'test_at_best_val_acc'
+        }
+        assert required.issubset(result.keys())
+
+    def test_best_val_acc_ge_all_val_accs(self, small_classification_data):
+        loader, X_va, y_va, X_te, y_te, d, c = small_classification_data
+        model = StandardMLP(d, 16, c)
+        result = train_with_selection(model, loader, X_va, y_va, X_te, y_te,
+                                      epochs=10, verbose=False)
+        assert result['best_val_acc'] >= max(result['val_accs']) - 1e-6
+
+    def test_best_val_loss_le_all_val_losses(self, small_classification_data):
+        loader, X_va, y_va, X_te, y_te, d, c = small_classification_data
+        model = StandardMLP(d, 16, c)
+        result = train_with_selection(model, loader, X_va, y_va, X_te, y_te,
+                                      epochs=10, verbose=False)
+        assert result['best_val_loss'] <= min(result['val_losses']) + 1e-6
+
+    def test_test_accs_in_0_1(self, small_classification_data):
+        loader, X_va, y_va, X_te, y_te, d, c = small_classification_data
+        model = StandardMLP(d, 16, c)
+        result = train_with_selection(model, loader, X_va, y_va, X_te, y_te,
+                                      epochs=5, verbose=False)
+        assert 0.0 <= result['test_at_best_val_loss'] <= 1.0
+        assert 0.0 <= result['test_at_best_val_acc'] <= 1.0
+
+    def test_epoch_indices_within_range(self, small_classification_data):
+        loader, X_va, y_va, X_te, y_te, d, c = small_classification_data
+        model = StandardMLP(d, 16, c)
+        result = train_with_selection(model, loader, X_va, y_va, X_te, y_te,
+                                      epochs=8, verbose=False)
+        assert 0 <= result['best_epoch_loss'] < 8
+        assert 0 <= result['best_epoch_acc'] < 8
