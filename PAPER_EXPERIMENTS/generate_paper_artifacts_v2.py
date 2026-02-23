@@ -818,13 +818,17 @@ def generate_figure_6_1_training_curves():
         plt.close()
         print(f'    ✓ Saved: {out}')
 
-    # ── Combined multi-panel figure (val_acc only, one row per dataset) ───────
+    # ── Combined multi-panel figure (val_acc only, grid layout) ──────────────
     n = len(datasets_with_data)
-    fig, axes = plt.subplots(1, n, figsize=(6 * n, 5), sharey=False)
-    if n == 1:
-        axes = [axes]
+    ncols = 3
+    nrows = (n + ncols - 1) // ncols
+    fig, axes = plt.subplots(nrows, ncols, figsize=(6 * ncols, 5 * nrows), sharey=False)
+    axes_flat = axes.flatten() if n > 1 else [axes]
+    # Hide unused subplot slots
+    for i in range(n, len(axes_flat)):
+        axes_flat[i].set_visible(False)
 
-    for ax, (ds, all_dynamics) in zip(axes, datasets_with_data):
+    for ax, (ds, all_dynamics) in zip(axes_flat, datasets_with_data):
         for method_key, (label, color) in METHOD_KEYS.items():
             stats = _aggregate_dynamics(all_dynamics, method_key)
             if stats is None:
@@ -839,8 +843,8 @@ def generate_figure_6_1_training_curves():
         ax.set_xlabel('Epoch', fontsize=11)
         ax.grid(True, alpha=0.3, linestyle='--')
 
-    axes[0].set_ylabel('Validation Accuracy', fontsize=12, fontweight='bold')
-    handles, labels = axes[0].get_legend_handles_labels()
+    axes_flat[0].set_ylabel('Validation Accuracy', fontsize=12, fontweight='bold')
+    handles, labels = axes_flat[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc='lower center', ncol=3, fontsize=11,
                bbox_to_anchor=(0.5, -0.08))
     plt.suptitle('Optimization Dynamics: Validation Accuracy (k=10, Fixed Splits)',
@@ -852,9 +856,10 @@ def generate_figure_6_1_training_curves():
     print(f'  ✓ Saved combined: {out_all}')
 
 
-def generate_table_6_1_convergence_speed():
+def generate_table_6_1_convergence_speed(split_type='fixed'):
     """Table 6.1: Convergence Speed Metrics — all datasets with dynamics data."""
-    print('Generating Table 6.1: Convergence Speed (all datasets)...')
+    split_label = 'Fixed Splits' if split_type == 'fixed' else 'Random Splits'
+    print(f'Generating Table 6.1: Convergence Speed ({split_label})...')
 
     METHOD_KEYS = {
         'sgc_mlp_baseline':        'SGC+MLP',
@@ -887,13 +892,13 @@ def generate_table_6_1_convergence_speed():
 
     latex = latex_table_header(
         ['Dataset', 'Method', 'Speed to 90\\%', 'Speed to 95\\%', 'Speed to 99\\%', 'AUC'],
-        'Convergence Speed Metrics (Fixed Splits, k=10, \\% of own peak accuracy)',
-        'tab:convergence_speed'
+        f'Convergence Speed Metrics ({split_label}, k=10, \\% of own peak accuracy)',
+        f'tab:convergence_speed_{split_type}'
     )
 
     found_any = False
     for ds in DATASETS:
-        all_dynamics = load_dynamics(ds, 'fixed', 'lcc', 10)
+        all_dynamics = load_dynamics(ds, split_type, 'lcc', 10)
         if all_dynamics is None:
             continue
 
@@ -925,7 +930,7 @@ def generate_table_6_1_convergence_speed():
 
     latex += latex_table_footer()
 
-    output_path = TABLES_DIR / 'table_6_1_convergence_speed.tex'
+    output_path = TABLES_DIR / f'table_6_1_convergence_speed_{split_type}.tex'
     with open(output_path, 'w') as f:
         f.write(latex)
     print(f'  ✓ Saved: {output_path}')
@@ -969,7 +974,8 @@ def generate_section_6():
     print("SECTION 6: OPTIMIZATION DYNAMICS")
     print("="*80)
     generate_figure_6_1_training_curves()
-    generate_table_6_1_convergence_speed()
+    generate_table_6_1_convergence_speed('fixed')
+    generate_table_6_1_convergence_speed('random')
 
 def main():
     parser = argparse.ArgumentParser(description='Generate all paper artifacts')
