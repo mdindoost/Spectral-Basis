@@ -37,3 +37,5 @@ Thumbs.db
 logs/
 /reports/
 Archive/
+
+run_all.log
