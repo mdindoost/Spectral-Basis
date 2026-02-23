@@ -377,58 +377,59 @@ def generate_figure_3_2_part_a_vs_k():
     if crossover_datasets:
         print(f'  ✓ Crossover detected: {", ".join([f"{d} (k≈{k:.0f})" for d, k in crossover_datasets])}')
 
-def generate_table_3_3_crossover_analysis():
-    """Table 3.3: Over-Smoothing Crossover Analysis"""
-    print('Generating Table 3.3: Crossover Point Analysis...')
-    
+def generate_table_3_3_crossover_analysis(split_type='fixed'):
+    """Table 3.3: Over-Smoothing Crossover Analysis (fixed or random splits)."""
+    split_label = 'Fixed Splits' if split_type == 'fixed' else 'Random Splits'
+    print(f'Generating Table 3.3: Crossover Point Analysis ({split_label})...')
+
     rows = []
-    
+
     for ds in DATASETS:
-        k_sens = load_k_sensitivity(ds, 'fixed', 'lcc')
+        k_sens = load_k_sensitivity(ds, split_type, 'lcc')
         if k_sens is None:
             continue
-        
+
         k_vals = []
         part_a_vals = []
-        
+
         for row in k_sens['k_sensitivity']:
             k_vals.append(row['k'])
             part_a_vals.append(row['part_a'])
-        
+
         # Find crossover — any sign change (consistent with Fig 3.2 detection)
         crossover_range = None
         for i in range(len(part_a_vals)-1):
             if part_a_vals[i] * part_a_vals[i+1] < 0:
                 crossover_range = f'{k_vals[i]}-{k_vals[i+1]}'
                 break
-        
+
         rows.append({
             'dataset': ds,
-            'part_a_low_k': part_a_vals[0] if part_a_vals else None,  # k=1
+            'part_a_low_k':  part_a_vals[0]  if part_a_vals else None,  # k=1
             'part_a_high_k': part_a_vals[-1] if part_a_vals else None,  # k=30
             'crossover': crossover_range or 'No crossover',
             'trend': 'Crossover' if crossover_range else 'Monotonic'
         })
-    
+
     # Generate LaTeX
     latex = latex_table_header(
         ['Dataset', 'Part A (k=1)', 'Part A (k=30)', 'Crossover Range', 'Pattern'],
-        'Over-Smoothing Transition Analysis',
-        'tab:crossover_analysis'
+        f'Over-Smoothing Transition Analysis ({split_label})',
+        f'tab:crossover_analysis_{split_type}'
     )
-    
+
     for row in rows:
         if row['part_a_low_k'] is not None:
             latex += (f"{row['dataset']:<20} & {row['part_a_low_k']:>+7.2f}pp & "
                      f"{row['part_a_high_k']:>+7.2f}pp & {row['crossover']:<15} & "
                      f"{row['trend']} \\\\\n")
-    
+
     latex += latex_table_footer()
-    
-    output_path = TABLES_DIR / 'table_3_3_crossover_analysis.tex'
+
+    output_path = TABLES_DIR / f'table_3_3_crossover_analysis_{split_type}.tex'
     with open(output_path, 'w') as f:
         f.write(latex)
-    
+
     print(f'  ✓ Saved: {output_path}')
 
 # ============================================================================
@@ -942,7 +943,8 @@ def generate_section_3():
     generate_table_3_2_part_a_random()
     generate_figure_3_1_part_a_barchart()
     generate_figure_3_2_part_a_vs_k()  # CRITICAL
-    generate_table_3_3_crossover_analysis()
+    generate_table_3_3_crossover_analysis('fixed')
+    generate_table_3_3_crossover_analysis('random')
 
 def generate_section_4():
     """Generate all Section 4 artifacts"""
