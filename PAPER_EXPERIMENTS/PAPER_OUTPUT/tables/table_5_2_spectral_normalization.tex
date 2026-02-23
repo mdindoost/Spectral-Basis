@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\caption{Spectral Normalization: Optimal α Selection (k=10)}
+\label{tab:spectral_normalization}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Dataset} & \textbf{RowNorm} & \textbf{Best α} & \textbf{Best Acc} & \textbf{Δ vs RowNorm} \\
+\midrule
+cora                 &  33.03\% &   -1.0 &  80.12\% &   +47.09pp \\
+citeseer             &  26.93\% &   -0.5 &  68.46\% &   +41.53pp \\
+pubmed               &  47.72\% &   -1.0 &  51.83\% &    +4.11pp \\
+wikics               &  63.36\% &   -1.0 &  65.74\% &    +2.38pp \\
+amazon-computers     &  89.39\% &   -1.0 &  90.84\% &    +1.45pp \\
+amazon-photo         &  91.62\% &   -1.0 &  92.65\% &    +1.03pp \\
+coauthor-cs          &  72.68\% &   -1.0 &  87.59\% &   +14.91pp \\
+coauthor-physics     &  88.69\% &   -1.0 &  94.32\% &    +5.63pp \\
+\bottomrule
+\end{tabular}
+\end{table}

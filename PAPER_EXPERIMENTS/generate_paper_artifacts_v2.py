@@ -224,6 +224,47 @@ def generate_table_3_1_part_a():
     
     print(f'  ✓ Saved: {output_path}')
 
+def generate_table_3_2_part_a_random():
+    """Table 3.2: Part A at k=10 (Random Splits)"""
+    print('Generating Table 3.2: Part A (Random Splits, k=10)...')
+
+    rows = []
+    for ds in DATASETS:
+        data = load_results(ds, 'random', 'lcc', 10)
+        if data is None:
+            continue
+
+        part_a = data['framework_analysis']['part_a_pp']
+
+        sgc = data['experiments']['sgc_mlp_baseline']
+        restr = data['experiments']['restricted_standard_mlp']
+
+        std = np.sqrt((sgc['test_acc_std']*100)**2 + (restr['test_acc_std']*100)**2)
+
+        rows.append({
+            'dataset': ds,
+            'part_a': part_a,
+            'std': std
+        })
+
+    latex = latex_table_header(
+        ['Dataset', 'Part A (pp)', 'Std (pp)'],
+        'Part A: Basis Sensitivity (Random Splits, k=10)',
+        'tab:part_a_random'
+    )
+
+    for row in rows:
+        latex += f"{row['dataset']:<20} & {row['part_a']:>+7.2f} & {row['std']:>6.2f} \\\\\n"
+
+    latex += latex_table_footer()
+
+    output_path = TABLES_DIR / 'table_3_2_part_a_random.tex'
+    with open(output_path, 'w') as f:
+        f.write(latex)
+
+    print(f'  ✓ Saved: {output_path}')
+
+
 def generate_figure_3_1_part_a_barchart():
     """Figure 3.1: Part A Bar Chart"""
     print('Generating Figure 3.1: Part A Bar Chart...')
@@ -898,6 +939,7 @@ def generate_section_3():
     print("SECTION 3: BASIS SENSITIVITY + OVER-SMOOTHING")
     print("="*80)
     generate_table_3_1_part_a()
+    generate_table_3_2_part_a_random()
     generate_figure_3_1_part_a_barchart()
     generate_figure_3_2_part_a_vs_k()  # CRITICAL
     generate_table_3_3_crossover_analysis()

@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\caption{Spectral Properties: Condition Numbers and Variance Analysis (k=10)}
+\label{tab:spectral_properties}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Dataset} & \textbf{κ(U)} & \textbf{κ(X)} & \textbf{Var Ratio U} & \textbf{Var Ratio X} & \textbf{Reduction} \\
+\midrule
+cora                 &     4.46 &  1523.25 & 7640053.30 & 68255289926.70 &  8933.88× \\
+citeseer             &     3.07 &   277.02 & 2067098618.71 & 99278296353.95 &    48.03× \\
+pubmed               &    27.94 &   250.58 &   170.52 &  2695.30 &    15.81× \\
+wikics               &  2738.33 & 3501759.13 &  7525.21 & 18090.26 &     2.40× \\
+amazon-computers     &    38.56 & 2142084.87 &   111.31 &     7.62 &     0.07× \\
+amazon-photo         &    63.85 & 24644500.95 &    42.32 &    11.04 &     0.26× \\
+coauthor-cs          &   440.92 &      inf &    32.37 & 89011.88 &  2749.92× \\
+coauthor-physics     &   809.48 &      inf &   104.04 & 62955541026.81 & 605080031.97× \\
+\bottomrule
+\end{tabular}
+\end{table}
