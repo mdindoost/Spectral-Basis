@@ -1,24 +1,42 @@
 #!/usr/bin/env python3
 """
-COMPLETE PAPER ARTIFACTS GENERATOR (STANDARD CONVENTION)
-=========================================================
+PAPER ARTIFACTS GENERATOR
+==========================
 
-Generates ALL tables and figures for the revised paper with standard convention.
+Generates all tables and figures for the paper. Results are read from
+PAPER_RESULTS/ (produced by master_training.py and master_analytics.py)
+and written to PAPER_OUTPUT/tables/ and PAPER_OUTPUT/figures/.
 
-New Paper Structure:
-  Section 3: Basis Sensitivity + Over-smoothing (NEW 3.3)
-  Section 4: Whitening Mechanism (enhanced)
-  Section 5: Recovery Limitations (REWRITTEN)
+Paper Structure:
+  Section 3: Basis Sensitivity + Over-smoothing
+    - Table 3.1: Part A (Fixed Splits, k=10)
+    - Table 3.2: Part A (Random Splits, k=10)
+    - Table 3.3: Crossover Point Analysis (fixed + random)
+    - Table Exp8: k-Sensitivity summary (fixed + random)
+    - Figure 3.1: Part A Bar Chart (fixed + random)
+    - Figure 3.2: Part A vs k (Over-smoothing Transition)
+
+  Section 4: Whitening Mechanism
+    - Figure 4.1: Singular Value Spectra (all datasets, 3x3)
+    - Table 4.1: Spectral Properties
+
+  Section 5: Recovery Limitations
+    - Table 5.1: Magnitude Recovery Cascade
+    - Table 5.2: Spectral Normalization Analysis
+    - Figure 5.1: Recovery Cascade (all datasets, 3x3)
+
   Section 6: Optimization Dynamics
+    - Figure 6.1: Training Curves (per dataset + combined)
+    - Table 6.1: Convergence Speed (fixed + random)
 
 Usage:
-    python generate_paper_artifacts_complete.py --verify    # Check data exists
-    python generate_paper_artifacts_complete.py --all       # Generate everything
-    python generate_paper_artifacts_complete.py --section3  # Generate Section 3 only
-    python generate_paper_artifacts_complete.py --section5  # Generate Section 5 only
+    python generate_paper_artifacts_v2.py --all        # Generate everything
+    python generate_paper_artifacts_v2.py --section3   # Section 3 only
+    python generate_paper_artifacts_v2.py --section4   # Section 4 only
+    python generate_paper_artifacts_v2.py --section5   # Section 5 only
+    python generate_paper_artifacts_v2.py --section6   # Section 6 only
 
-Author: Mohammad (with Claude assistance)
-Date: 2026-02-22
+
 """
 
 import os
@@ -121,62 +139,6 @@ def latex_table_footer():
 # ============================================================================
 # VERIFICATION: Check All Required Data Exists
 # ============================================================================
-
-def verify_data_completeness():
-    """Verify all required experimental data exists"""
-    print("="*80)
-    print("DATA COMPLETENESS VERIFICATION")
-    print("="*80)
-    
-    missing = []
-    datasets_found = set()
-    
-    for ds in DATASETS:
-        print(f"\n{ds}:")
-        
-        # Check k=10 results (minimum requirement)
-        results_k10 = load_results(ds, 'fixed', 'lcc', 10)
-        if results_k10 is None:
-            print(f"  ❌ Missing k=10 results")
-            missing.append(f"{ds}: k=10 results")
-        else:
-            print(f"  ✓ k=10 results found")
-            datasets_found.add(ds)
-        
-        # Check k-sensitivity data
-        k_sens = load_k_sensitivity(ds, 'fixed', 'lcc')
-        if k_sens is None:
-            print(f"  ⚠ Missing k-sensitivity analysis")
-        else:
-            k_found = len(k_sens['k_sensitivity'])
-            print(f"  ✓ k-sensitivity: {k_found} k values")
-        
-        # Check spectral analysis
-        spec = load_spectral_analysis(ds, 'fixed', 'lcc', 10)
-        if spec is None:
-            print(f"  ⚠ Missing spectral analysis")
-        else:
-            print(f"  ✓ Spectral analysis found")
-        
-        # Check dynamics
-        dyn = load_dynamics(ds, 'fixed', 'lcc', 10)
-        if dyn is None:
-            print(f"  ⚠ Missing dynamics data")
-        else:
-            print(f"  ✓ Dynamics: {len(dyn)} splits")
-    
-    print("\n" + "="*80)
-    print(f"SUMMARY: {len(datasets_found)}/{len(DATASETS)} datasets have minimum required data")
-    
-    if missing:
-        print(f"\nMISSING DATA:")
-        for m in missing:
-            print(f"  - {m}")
-        print(f"\n⚠ Run master_training.py and master_analytics.py for missing datasets")
-        return False
-    else:
-        print(f"\n✓ ALL REQUIRED DATA PRESENT - Ready to generate artifacts!")
-        return True
 
 # ============================================================================
 # SECTION 3: BASIS SENSITIVITY + OVER-SMOOTHING
@@ -1089,7 +1051,6 @@ def generate_section_6():
 
 def main():
     parser = argparse.ArgumentParser(description='Generate all paper artifacts')
-    parser.add_argument('--verify', action='store_true', help='Verify data completeness')
     parser.add_argument('--all', action='store_true', help='Generate all artifacts')
     parser.add_argument('--section3', action='store_true', help='Generate Section 3 only')
     parser.add_argument('--section4', action='store_true', help='Generate Section 4 only')
@@ -1105,14 +1066,6 @@ def main():
     # Create output directories
     TABLES_DIR.mkdir(parents=True, exist_ok=True)
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
-    
-    if args.verify:
-        complete = verify_data_completeness()
-        if not complete:
-            print("\n⚠ WARNING: Some data is missing. Artifacts may be incomplete.")
-            response = input("Continue anyway? (y/n): ")
-            if response.lower() != 'y':
-                return
     
     if args.all or args.section3:
         generate_section_3()
