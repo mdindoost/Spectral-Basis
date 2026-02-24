@@ -80,7 +80,7 @@ try:
 except ImportError:
     pass
 
-from utils import (
+from graph_utils import (
     load_dataset,
     build_graph_matrices, get_largest_connected_component_nx, extract_subgraph,
     compute_sgc_normalized_adjacency, sgc_precompute, compute_restricted_eigenvectors,

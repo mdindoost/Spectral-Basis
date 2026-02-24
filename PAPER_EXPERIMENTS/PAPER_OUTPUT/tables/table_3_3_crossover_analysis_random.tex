@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering
+\caption{Over-Smoothing Transition Analysis (Random Splits)}
+\label{tab:crossover_analysis_random}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Dataset} & \textbf{Part A (k=1)} & \textbf{Part A (k=30)} & \textbf{Crossover Range} & \textbf{Pattern} \\
+\midrule
+cora                 &  +12.10pp &  +10.25pp & No crossover    & Monotonic \\
+citeseer             &  +10.36pp &  +12.85pp & No crossover    & Monotonic \\
+pubmed               &   +0.82pp &   -0.41pp & 20-30           & Crossover \\
+ogbn-arxiv           &   +0.79pp &   -3.09pp & 4-6             & Crossover \\
+wikics               &   +5.87pp &   -7.23pp & 10-12           & Crossover \\
+amazon-computers     &   +3.39pp &  -15.50pp & 4-6             & Crossover \\
+amazon-photo         &   +4.03pp &  -10.91pp & 8-10            & Crossover \\
+coauthor-cs          &  +11.93pp &   +5.97pp & No crossover    & Monotonic \\
+coauthor-physics     &   +7.30pp &   +3.49pp & No crossover    & Monotonic \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -24,6 +24,7 @@ Date: 2026-02-22
 import os
 import sys
 import json
+import math
 import argparse
 from glob import glob
 from pathlib import Path
@@ -437,44 +438,53 @@ def generate_table_3_3_crossover_analysis(split_type='fixed'):
 # ============================================================================
 
 def generate_figure_4_1_singular_values():
-    """Figure 4.1: Singular Value Comparison (U vs X_diffused)"""
+    """Figure 4.1: Singular Value Comparison (U vs X_diffused) — all datasets, 3×3 grid"""
     print('Generating Figure 4.1: Singular Value Spectra...')
-    
-    datasets_to_show = ['cora', 'citeseer', 'amazon-computers']
-    
-    fig, axes = plt.subplots(1, 3, figsize=(16, 5))
-    
-    for idx, ds in enumerate(datasets_to_show):
+
+    ncols = 3
+    nrows = math.ceil(len(DATASETS) / ncols)
+    fig, axes = plt.subplots(nrows, ncols, figsize=(16, 5 * nrows))
+    axes_flat = axes.flatten()
+
+    plotted = 0
+    for idx, ds in enumerate(DATASETS):
         spec = load_spectral_analysis(ds, 'fixed', 'lcc', 10)
+        ax = axes_flat[idx]
+
         if spec is None:
+            ax.set_visible(False)
             continue
-        
+
         sv_U = spec['analysis']['singular_values_U_top20']
         sv_X = spec['analysis']['singular_values_X_top20']
-        
-        ax = axes[idx]
-        ax.plot(range(1, len(sv_U)+1), sv_U, 'o-', label='U (Restricted Eigenvectors)', 
-               linewidth=2.5, markersize=7, color='#1f77b4')
-        ax.plot(range(1, len(sv_X)+1), sv_X, 's-', label='X (SGC Diffused)', 
-               linewidth=2.5, markersize=7, color='#ff7f0e')
-        
+
+        ax.plot(range(1, len(sv_U)+1), sv_U, 'o-', label='U (Restricted Eigenvectors)',
+                linewidth=2.5, markersize=7, color='#1f77b4')
+        ax.plot(range(1, len(sv_X)+1), sv_X, 's-', label='X (SGC Diffused)',
+                linewidth=2.5, markersize=7, color='#ff7f0e')
+
         ax.set_yscale('log')
-        ax.set_title(f'{ds.title()}', fontsize=14, fontweight='bold')
-        ax.set_xlabel('Singular Value Index', fontsize=12)
-        if idx == 0:
-            ax.set_ylabel('Singular Value (log scale)', fontsize=12)
-        ax.legend(fontsize=10, loc='best')
+        ax.set_title(ds, fontsize=13, fontweight='bold')
+        ax.set_xlabel('Singular Value Index', fontsize=11)
+        if idx % ncols == 0:
+            ax.set_ylabel('Singular Value (log scale)', fontsize=11)
+        ax.legend(fontsize=9, loc='best')
         ax.grid(True, alpha=0.4, linestyle='--')
-    
-    plt.suptitle('Singular Value Spectra: Eigenvectors vs Diffused Features', 
-                fontsize=16, fontweight='bold', y=1.02)
+        plotted += 1
+
+    # Hide unused subplots
+    for idx in range(len(DATASETS), len(axes_flat)):
+        axes_flat[idx].set_visible(False)
+
+    plt.suptitle('Singular Value Spectra: Eigenvectors vs Diffused Features',
+                 fontsize=15, fontweight='bold', y=1.01)
     plt.tight_layout()
-    
+
     output_path = FIGURES_DIR / 'figure_4_1_singular_values.pdf'
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     plt.close()
-    
-    print(f'  ✓ Saved: {output_path}')
+
+    print(f'  ✓ Saved: {output_path} ({plotted}/{len(DATASETS)} datasets)')
 
 def generate_table_4_1_spectral_properties():
     """Table 4.1: Spectral Properties (Condition numbers, variance ratios)"""
@@ -594,30 +604,34 @@ def generate_table_5_1_magnitude_cascade():
     print(f'  ✓ Saved: {output_path}')
 
 def generate_figure_5_1_recovery_cascade():
-    """Figure 5.1: Recovery Cascade Visualization"""
+    """Figure 5.1: Recovery Cascade Visualization — all datasets, 3×3 grid"""
     print('Generating Figure 5.1: Recovery Cascade Visualization...')
-    
-    datasets_to_show = ['cora', 'citeseer', 'amazon-computers']
-    
-    fig, axes = plt.subplots(1, 3, figsize=(16, 6))
-    
-    for idx, ds in enumerate(datasets_to_show):
+
+    ncols = 3
+    nrows = math.ceil(len(DATASETS) / ncols)
+    fig, axes = plt.subplots(nrows, ncols, figsize=(16, 5 * nrows))
+    axes_flat = axes.flatten()
+
+    plotted = 0
+    for idx, ds in enumerate(DATASETS):
         data = load_results(ds, 'fixed', 'lcc', 10)
+        ax = axes_flat[idx]
+
         if data is None:
+            ax.set_visible(False)
             continue
-        
+
         exps = data['experiments']
-        
-        std_acc = exps['restricted_standard_mlp']['test_acc_mean'] * 100
-        rn_acc  = exps['restricted_rownorm_mlp']['test_acc_mean'] * 100
+
+        std_acc    = exps['restricted_standard_mlp']['test_acc_mean'] * 100
+        rn_acc     = exps['restricted_rownorm_mlp']['test_acc_mean'] * 100
         logmag_acc = (exps['log_magnitude']['test_acc_mean'] * 100
                       if 'log_magnitude' in exps else None)
         dual_acc   = (exps['dual_stream']['test_acc_mean'] * 100
                       if 'dual_stream' in exps else None)
 
-        # Only include methods that were actually run
-        method_names = ['Std', 'RowNorm']
-        accs = [std_acc, rn_acc]
+        method_names  = ['Std', 'RowNorm']
+        accs          = [std_acc, rn_acc]
         method_colors = ['gray', '#d62728' if rn_acc < std_acc else '#2ca02c']
         if logmag_acc is not None:
             method_names.append('Log-Mag')
@@ -628,40 +642,41 @@ def generate_figure_5_1_recovery_cascade():
             accs.append(dual_acc)
             method_colors.append('#2ca02c' if dual_acc > rn_acc else 'orange')
 
-        ax = axes[idx]
+        ax.bar(method_names, accs, color=method_colors, alpha=0.8,
+               edgecolor='black', linewidth=1.5)
 
-        bars = ax.bar(method_names, accs, color=method_colors, alpha=0.8,
-                      edgecolor='black', linewidth=1.5)
-
-        # Annotate deltas (only for methods present)
         ax.annotate(f'{rn_acc - std_acc:+.1f}pp',
-                    xy=(0.5, (std_acc + rn_acc) / 2), fontsize=11, ha='center',
+                    xy=(0.5, (std_acc + rn_acc) / 2), fontsize=10, ha='center',
                     fontweight='bold')
         if logmag_acc is not None:
             lm_idx = method_names.index('Log-Mag')
             ax.annotate(f'{logmag_acc - rn_acc:+.1f}pp',
-                        xy=(lm_idx - 0.5, (rn_acc + logmag_acc) / 2), fontsize=11,
+                        xy=(lm_idx - 0.5, (rn_acc + logmag_acc) / 2), fontsize=10,
                         ha='center', fontweight='bold')
 
-        ax.set_title(f'{ds.title()}', fontsize=14, fontweight='bold')
-        if idx == 0:
-            ax.set_ylabel('Test Accuracy (%)', fontsize=13, fontweight='bold')
-        # Use only present (non-None) acc values for ylim so a missing method (acc=0)
-        # doesn't force y-axis to start at 0.
+        ax.set_title(ds, fontsize=13, fontweight='bold')
+        col = idx % ncols
+        if col == 0:
+            ax.set_ylabel('Test Accuracy (%)', fontsize=12, fontweight='bold')
         if accs:
             ax.set_ylim(min(accs) * 0.95, max(accs) * 1.05)
         ax.grid(True, alpha=0.3, axis='y', linestyle='--')
-        plt.setp(ax.xaxis.get_majorticklabels(), rotation=0, fontsize=11)
-    
-    plt.suptitle('Magnitude Recovery Cascade: StandardMLP → RowNorm → Magnitude-Aware', 
-                fontsize=16, fontweight='bold', y=1.02)
+        plt.setp(ax.xaxis.get_majorticklabels(), rotation=0, fontsize=10)
+        plotted += 1
+
+    # Hide any unused subplots in the last row
+    for idx in range(len(DATASETS), len(axes_flat)):
+        axes_flat[idx].set_visible(False)
+
+    plt.suptitle('Magnitude Recovery Cascade: StandardMLP → RowNorm → Magnitude-Aware',
+                 fontsize=15, fontweight='bold', y=1.01)
     plt.tight_layout()
-    
+
     output_path = FIGURES_DIR / 'figure_5_1_recovery_cascade.pdf'
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     plt.close()
-    
-    print(f'  ✓ Saved: {output_path}')
+
+    print(f'  ✓ Saved: {output_path} ({plotted}/{len(DATASETS)} datasets)')
 
 def generate_table_5_2_spectral_normalization():
     """Table 5.2: Spectral Normalization α Sweep"""

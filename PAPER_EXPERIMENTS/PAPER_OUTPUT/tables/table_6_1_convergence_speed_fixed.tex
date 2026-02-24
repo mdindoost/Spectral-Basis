@@ -1,0 +1,46 @@
+\begin{table}[t]
+\centering
+\caption{Convergence Speed Metrics (Fixed Splits, k=10, \% of own peak accuracy)}
+\label{tab:convergence_speed_fixed}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Dataset} & \textbf{Method} & \textbf{Speed to 90\%} & \textbf{Speed to 95\%} & \textbf{Speed to 99\%} & \textbf{AUC} \\
+\midrule
+Cora                 & SGC+MLP                   & 1$\pm$0 & 1$\pm$1 & 9$\pm$18 & 0.963$\pm$0.017 \\
+                     & Restricted+Std            & 82$\pm$4 & 86$\pm$5 & 91$\pm$7 & 0.754$\pm$0.037 \\
+                     & Restricted+RowNorm        & 12$\pm$13 & 26$\pm$14 & 45$\pm$16 & 0.774$\pm$0.063 \\
+\midrule
+Citeseer             & SGC+MLP                   & 1$\pm$0 & 2$\pm$2 & 2$\pm$2 & 0.897$\pm$0.030 \\
+                     & Restricted+Std            & 60$\pm$42 & 70$\pm$42 & 77$\pm$47 & 0.824$\pm$0.055 \\
+                     & Restricted+RowNorm        & 6$\pm$7 & 14$\pm$7 & 20$\pm$7 & 0.781$\pm$0.019 \\
+\midrule
+Pubmed               & SGC+MLP                   & 3$\pm$1 & 6$\pm$3 & 15$\pm$22 & 0.963$\pm$0.012 \\
+                     & Restricted+Std            & 2$\pm$0 & 27$\pm$34 & 76$\pm$64 & 0.945$\pm$0.014 \\
+                     & Restricted+RowNorm        & 2$\pm$1 & 25$\pm$38 & 47$\pm$47 & 0.922$\pm$0.022 \\
+\midrule
+Ogbn-Arxiv           & SGC+MLP                   & 25$\pm$2 & 43$\pm$3 & 176$\pm$18 & 0.967$\pm$0.002 \\
+                     & Restricted+Std            & 9$\pm$1 & 19$\pm$2 & 60$\pm$7 & 0.979$\pm$0.002 \\
+                     & Restricted+RowNorm        & 28$\pm$2 & 41$\pm$1 & 68$\pm$5 & 0.946$\pm$0.006 \\
+\midrule
+Wikics               & SGC+MLP                   & 21$\pm$2 & 29$\pm$2 & 46$\pm$7 & 0.943$\pm$0.005 \\
+                     & Restricted+Std            & 7$\pm$0 & 8$\pm$1 & 10$\pm$1 & 0.900$\pm$0.007 \\
+                     & Restricted+RowNorm        & 10$\pm$1 & 13$\pm$2 & 38$\pm$38 & 0.948$\pm$0.008 \\
+\midrule
+Amazon-Computers     & SGC+MLP                   & 40$\pm$5 & 78$\pm$14 & 210$\pm$62 & 0.908$\pm$0.017 \\
+                     & Restricted+Std            & 8$\pm$1 & 10$\pm$1 & 13$\pm$1 & 0.964$\pm$0.003 \\
+                     & Restricted+RowNorm        & 25$\pm$3 & 33$\pm$3 & 46$\pm$3 & 0.945$\pm$0.005 \\
+\midrule
+Amazon-Photo         & SGC+MLP                   & 30$\pm$3 & 58$\pm$7 & 172$\pm$65 & 0.941$\pm$0.004 \\
+                     & Restricted+Std            & 8$\pm$0 & 10$\pm$1 & 30$\pm$12 & 0.967$\pm$0.003 \\
+                     & Restricted+RowNorm        & 10$\pm$1 & 15$\pm$2 & 23$\pm$2 & 0.956$\pm$0.004 \\
+\midrule
+Coauthor-Cs          & SGC+MLP                   & 11$\pm$2 & 19$\pm$2 & 85$\pm$27 & 0.971$\pm$0.004 \\
+                     & Restricted+Std            & 31$\pm$2 & 34$\pm$2 & 36$\pm$2 & 0.771$\pm$0.019 \\
+                     & Restricted+RowNorm        & 22$\pm$6 & 100$\pm$46 & 123$\pm$53 & 0.893$\pm$0.017 \\
+\midrule
+Coauthor-Physics     & SGC+MLP                   & 3$\pm$1 & 5$\pm$1 & 48$\pm$13 & 0.984$\pm$0.002 \\
+                     & Restricted+Std            & 12$\pm$1 & 21$\pm$4 & 48$\pm$37 & 0.915$\pm$0.009 \\
+                     & Restricted+RowNorm        & 21$\pm$2 & 25$\pm$1 & 104$\pm$47 & 0.916$\pm$0.008 \\
+\bottomrule
+\end{tabular}
+\end{table}

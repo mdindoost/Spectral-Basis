@@ -99,16 +99,14 @@ def _patched_torch_load(*args, **kwargs):
     return _original_torch_load(*args, **kwargs)
 torch.load = _patched_torch_load
 
-# Import all utilities from src/utils.py
 _SRC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src')
 sys.path.insert(0, _SRC_DIR)
-from utils import (
-    # Dataset
+from graph_utils import (
     load_dataset,
-    # Graph construction and preprocessing
     build_graph_matrices, get_largest_connected_component_nx, extract_subgraph,
     compute_sgc_normalized_adjacency, sgc_precompute, compute_restricted_eigenvectors,
-    # Models
+)
+from models import (
     SGC, StandardMLP, RowNormMLP, LogMagnitudeMLP,
     DualStreamMLP, SpectralRowNormMLP, NestedSpheresClassifier,
 )
