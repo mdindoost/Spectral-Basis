@@ -23,6 +23,9 @@ dataset/
 .ipynb_checkpoints/
 *.ipynb
 
+# Claude
+.claude/
+
 # IDEs
 .vscode/
 .idea/
