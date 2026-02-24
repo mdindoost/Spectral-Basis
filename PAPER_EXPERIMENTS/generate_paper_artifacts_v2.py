@@ -266,42 +266,40 @@ def generate_table_3_2_part_a_random():
     print(f'  ✓ Saved: {output_path}')
 
 
-def generate_figure_3_1_part_a_barchart():
-    """Figure 3.1: Part A Bar Chart"""
-    print('Generating Figure 3.1: Part A Bar Chart...')
-    
+def generate_figure_3_1_part_a_barchart(split_type='fixed'):
+    """Figure 3.1: Part A Bar Chart for a given split type"""
+    print(f'Generating Figure 3.1: Part A Bar Chart ({split_type})...')
+
     part_a_values = []
     dataset_names = []
-    
+
     for ds in DATASETS:
-        data = load_results(ds, 'fixed', 'lcc', 10)
+        data = load_results(ds, split_type, 'lcc', 10)
         if data is None:
             continue
-        
         part_a_values.append(data['framework_analysis']['part_a_pp'])
         dataset_names.append(ds)
-    
-    # Create figure
+
     fig, ax = plt.subplots(figsize=(12, 6))
-    
+
     colors = ['#d62728' if v < 0 else '#2ca02c' for v in part_a_values]
-    bars = ax.bar(dataset_names, part_a_values, color=colors, alpha=0.8, edgecolor='black', linewidth=1.5)
-    
+    ax.bar(dataset_names, part_a_values, color=colors, alpha=0.8, edgecolor='black', linewidth=1.5)
+
     ax.axhline(y=0, color='black', linestyle='-', linewidth=2)
     ax.set_ylabel('Part A (pp)', fontsize=16, fontweight='bold')
     ax.set_xlabel('Dataset', fontsize=16, fontweight='bold')
-    ax.set_title('Basis Sensitivity Across Datasets (k=10, Fixed Splits)', 
-                fontsize=18, fontweight='bold', pad=20)
+    ax.set_title(f'Basis Sensitivity Across Datasets (k=10, {split_type.title()} Splits)',
+                 fontsize=18, fontweight='bold', pad=20)
     ax.grid(True, alpha=0.3, axis='y', linestyle='--')
-    
+
     plt.xticks(rotation=45, ha='right', fontsize=12)
     plt.yticks(fontsize=12)
     plt.tight_layout()
-    
-    output_path = FIGURES_DIR / 'figure_3_1_part_a_barchart.pdf'
+
+    output_path = FIGURES_DIR / f'figure_3_1_part_a_barchart_{split_type}.pdf'
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     plt.close()
-    
+
     print(f'  ✓ Saved: {output_path}')
 
 def generate_figure_3_2_part_a_vs_k():
@@ -961,7 +959,8 @@ def generate_section_3():
     print("="*80)
     generate_table_3_1_part_a()
     generate_table_3_2_part_a_random()
-    generate_figure_3_1_part_a_barchart()
+    generate_figure_3_1_part_a_barchart('fixed')
+    generate_figure_3_1_part_a_barchart('random')
     generate_figure_3_2_part_a_vs_k()  # CRITICAL
     generate_table_3_3_crossover_analysis('fixed')
     generate_table_3_3_crossover_analysis('random')
