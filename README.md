@@ -34,7 +34,7 @@ venv/bin/python -m pytest src/test_utils.py -v
 If you use this code in your research, please cite:
 
 ```bibtex
-@misc{spectral-basis-mlp-2024,
+@misc{spectral-basis-mlp-2025,
   author = {Dindoost, Mohammad},
   title = {MLP Sensitivity to Spectral Basis Representations},
   year = {2025},

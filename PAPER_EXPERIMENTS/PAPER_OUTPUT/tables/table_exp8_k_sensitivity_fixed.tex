@@ -1,0 +1,22 @@
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\caption{Exp 8: Part A (pp) vs diffusion depth $k$ (Fixed Splits). Part A $= \text{Acc(SGC+MLP)} - \text{Acc(Restricted+Std)}$. Negative values indicate restricted eigenvectors outperform SGC. Crossover $k$ is the depth where the sign flips. Fisher score measured at $k=10$.}}
+\label{tab:exp8_k_sensitivity_fixed}
+\begin{tabular}{lrrrrrrr}
+\toprule
+Dataset & $k=1$ & $k=4$ & $k=10$ & $k=20$ & $k=30$ & Crossover $k$ & Fisher@10 \\
+\midrule
+cora & +23.15 & +25.76 & +29.89 & +30.16 & +26.02 & \textemdash & 0.0400 \\
+citeseer & +31.92 & +33.79 & +36.57 & +34.56 & +33.14 & \textemdash & 0.0719 \\
+pubmed & +26.39 & +29.65 & +27.57 & +27.33 & +25.49 & \textemdash & 0.0293 \\
+ogbn\mbox{-}arxiv & +1.10 & +0.21 & -0.68 & -2.05 & -2.54 & 7 & 0.1887 \\
+wikics & +25.34 & +17.80 & +8.63 & +4.39 & +0.40 & \textemdash & 0.0597 \\
+amazon\mbox{-}computers & +3.33 & +1.69 & -5.55 & -9.95 & -14.82 & 5 & 0.0444 \\
+amazon\mbox{-}photo & +4.65 & +3.07 & -0.62 & -4.91 & -9.45 & 9 & 0.0854 \\
+coauthor\mbox{-}cs & +10.79 & +12.14 & +13.06 & +10.97 & +5.71 & \textemdash & 0.2150 \\
+coauthor\mbox{-}physics & +6.86 & +9.42 & +8.02 & +6.26 & +2.89 & \textemdash & 0.2890 \\
+\bottomrule
+\end{tabular}
+\end{table}

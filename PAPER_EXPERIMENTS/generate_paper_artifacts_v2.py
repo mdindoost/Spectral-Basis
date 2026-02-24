@@ -952,6 +952,100 @@ def generate_table_6_1_convergence_speed(split_type='fixed'):
 # Main Execution
 # ============================================================================
 
+def generate_table_exp8_k_sensitivity(split_type='fixed'):
+    """Exp 8 summary table: Part A vs k for all datasets (fixed or random splits).
+
+    Columns: Dataset | Part A at k=1,4,10,20,30 | Crossover k | Fisher@k=10
+    One row per dataset. Saved as table_exp8_k_sensitivity_{split_type}.tex
+    """
+    split_label = 'Fixed Splits' if split_type == 'fixed' else 'Random Splits'
+    print(f'Generating Exp 8 Summary Table: k-Sensitivity ({split_label})...')
+
+    K_SHOW = [1, 4, 10, 20, 30]
+
+    rows = []
+    for ds in DATASETS:
+        k_sens = load_k_sensitivity(ds, split_type, 'lcc')
+        if k_sens is None:
+            continue
+
+        # Index rows by k
+        by_k = {r['k']: r for r in k_sens['k_sensitivity']}
+
+        # Part A at each display k
+        part_a_at_k = {}
+        for k in K_SHOW:
+            r = by_k.get(k)
+            part_a_at_k[k] = r['part_a'] if r and r.get('part_a') is not None else None
+
+        # Fisher score at k=10
+        r10 = by_k.get(10, {})
+        fisher = r10.get('fisher_score')
+
+        # Crossover: first sign change in part_a across sorted k values
+        sorted_rows = sorted(k_sens['k_sensitivity'], key=lambda r: r['k'])
+        crossover_k = None
+        for i in range(len(sorted_rows) - 1):
+            a0 = sorted_rows[i].get('part_a')
+            a1 = sorted_rows[i+1].get('part_a')
+            if a0 is not None and a1 is not None and a0 * a1 < 0:
+                crossover_k = (sorted_rows[i]['k'] + sorted_rows[i+1]['k']) / 2
+                break
+
+        rows.append({
+            'dataset':     ds,
+            'part_a_at_k': part_a_at_k,
+            'fisher':      fisher,
+            'crossover_k': crossover_k,
+        })
+
+    if not rows:
+        print(f'  ! No data found for split_type={split_type}')
+        return
+
+    # ── Build LaTeX ──────────────────────────────────────────────────────────
+    col_spec = 'l' + 'r' * len(K_SHOW) + 'r' + 'r'
+    k_headers = ' & '.join([f'$k={k}$' for k in K_SHOW])
+
+    lines = []
+    lines.append(r'\begin{table}[t]')
+    lines.append(r'\centering')
+    lines.append(r'\small')
+    lines.append(r'\setlength{\tabcolsep}{5pt}')
+    lines.append(rf'\caption{{Exp 8: Part A (pp) vs diffusion depth $k$ ({split_label}). '
+                 r'Part A $= \text{Acc(SGC+MLP)} - \text{Acc(Restricted+Std)}$. '
+                 r'Negative values indicate restricted eigenvectors outperform SGC. '
+                 r'Crossover $k$ is the depth where the sign flips. '
+                 r'Fisher score measured at $k=10$.}}')
+    lines.append(rf'\label{{tab:exp8_k_sensitivity_{split_type}}}')
+    lines.append(rf'\begin{{tabular}}{{{col_spec}}}')
+    lines.append(r'\toprule')
+    lines.append(rf'Dataset & {k_headers} & Crossover $k$ & Fisher@10 \\')
+    lines.append(r'\midrule')
+
+    for row in rows:
+        ds_label = row['dataset'].replace('-', r'\mbox{-}')
+        cells = []
+        for k in K_SHOW:
+            v = row['part_a_at_k'].get(k)
+            cells.append(f'{v:+.2f}' if v is not None else r'\textemdash')
+        ck = row['crossover_k']
+        crossover_str = f'{ck:.0f}' if ck is not None else r'\textemdash'
+        fisher = row['fisher']
+        fisher_str = f'{fisher:.4f}' if fisher is not None else r'\textemdash'
+        lines.append(rf'{ds_label} & {" & ".join(cells)} & {crossover_str} & {fisher_str} \\')
+
+    lines.append(r'\bottomrule')
+    lines.append(r'\end{tabular}')
+    lines.append(r'\end{table}')
+
+    tex = '\n'.join(lines)
+    output_path = TABLES_DIR / f'table_exp8_k_sensitivity_{split_type}.tex'
+    with open(output_path, 'w') as f:
+        f.write(tex)
+    print(f'  ✓ Saved: {output_path}')
+
+
 def generate_section_3():
     """Generate all Section 3 artifacts"""
     print("\n" + "="*80)
@@ -964,6 +1058,8 @@ def generate_section_3():
     generate_figure_3_2_part_a_vs_k()  # CRITICAL
     generate_table_3_3_crossover_analysis('fixed')
     generate_table_3_3_crossover_analysis('random')
+    generate_table_exp8_k_sensitivity('fixed')
+    generate_table_exp8_k_sensitivity('random')
 
 def generate_section_4():
     """Generate all Section 4 artifacts"""
