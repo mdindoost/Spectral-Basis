@@ -1,20 +1,20 @@
 \begin{table}[t]
 \centering
-\caption{Magnitude Recovery Cascade: Std → RowNorm → Log-Magnitude (k=10)}
+\caption{Magnitude Recovery Cascade: Std → RowNorm → Log-Magnitude / Dual-Stream (k=10)}
 \label{tab:magnitude_cascade}
-\begin{tabular}{lcccccc}
+\begin{tabular}{lccccccc}
 \toprule
-\textbf{Dataset} & \textbf{Std} & \textbf{RowNorm} & \textbf{Part B} & \textbf{Log-Mag} & \textbf{ΔLog-Mag} & \textbf{Recovery} \\
+\textbf{Dataset} & \textbf{Std} & \textbf{RowNorm} & \textbf{Part B} & \textbf{Log-Mag} & \textbf{ΔLog-Mag} & \textbf{Dual} & \textbf{ΔDual} \\
 \midrule
-cora                 &  46.30\% &  33.03\% &  -13.28pp &  35.83\% &  +2.81pp &     21\% \\
-citeseer             &  30.15\% &  26.93\% &   -3.22pp &  24.44\% &  -2.48pp &    -77\% \\
-pubmed               &  47.59\% &  47.72\% &   +0.13pp &  48.79\% &  +1.07pp &      N/A \\
-ogbn-arxiv           &  71.02\% &  70.53\% &   -0.49pp &  70.54\% &  +0.01pp &      3\% \\
-wikics               &  66.89\% &  63.36\% &   -3.52pp &  62.91\% &  -0.46pp &    -13\% \\
-amazon-computers     &  89.50\% &  89.39\% &   -0.11pp &  90.44\% &  +1.05pp &    933\% \\
-amazon-photo         &  91.31\% &  91.62\% &   +0.32pp &  92.21\% &  +0.59pp &      N/A \\
-coauthor-cs          &  77.77\% &  72.68\% &   -5.09pp &  70.31\% &  -2.37pp &    -46\% \\
-coauthor-physics     &  86.86\% &  88.69\% &   +1.84pp &  89.19\% &  +0.50pp &      N/A \\
+cora                 &  46.30\% &  33.03\% &  -13.28pp &  35.83\% &  +2.81pp &  35.52\% &  +2.49pp \\
+citeseer             &  30.15\% &  26.93\% &   -3.22pp &  24.44\% &  -2.48pp &  24.01\% &  -2.92pp \\
+pubmed               &  47.59\% &  47.72\% &   +0.13pp &  48.79\% &  +1.07pp &  47.96\% &  +0.24pp \\
+ogbn-arxiv           &  71.02\% &  70.53\% &   -0.49pp &  70.54\% &  +0.01pp &  70.57\% &  +0.04pp \\
+wikics               &  66.89\% &  63.36\% &   -3.52pp &  62.91\% &  -0.46pp &  63.17\% &  -0.20pp \\
+amazon-computers     &  89.50\% &  89.39\% &   -0.11pp &  90.44\% &  +1.05pp &  90.28\% &  +0.89pp \\
+amazon-photo         &  91.31\% &  91.62\% &   +0.32pp &  92.21\% &  +0.59pp &  92.05\% &  +0.43pp \\
+coauthor-cs          &  77.77\% &  72.68\% &   -5.09pp &  70.31\% &  -2.37pp &  69.79\% &  -2.88pp \\
+coauthor-physics     &  86.86\% &  88.69\% &   +1.84pp &  89.19\% &  +0.50pp &  89.46\% &  +0.77pp \\
 \bottomrule
 \end{tabular}
 \end{table}

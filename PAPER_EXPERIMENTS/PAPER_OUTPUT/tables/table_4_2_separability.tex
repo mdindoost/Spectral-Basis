@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{6pt}
+\caption{Class separability in the row-normalised eigenvector space $U$ at $k=10$ (fixed splits, training nodes only). Separability $=$ inter-class centroid distance / intra-class mean pairwise distance. Values $<1$ indicate class overlap; higher is better.}
+\label{tab:separability}
+\begin{tabular}{lrrr}
+\toprule
+Dataset & Separability & Inter-class dist & Intra-class dist \\
+\midrule
+cora & 0.2476 & 0.3499 & 1.4134 \\
+citeseer & 0.2779 & 0.3930 & 1.4139 \\
+pubmed & 0.2434 & 0.3428 & 1.4082 \\
+ogbn\mbox{-}arxiv & 0.3495 & 0.4602 & 1.3168 \\
+wikics & 0.2596 & 0.3619 & 1.3942 \\
+amazon\mbox{-}computers & 0.2036 & 0.2804 & 1.3772 \\
+amazon\mbox{-}photo & 0.1574 & 0.2191 & 1.3922 \\
+coauthor\mbox{-}cs & 0.0660 & 0.0932 & 1.4125 \\
+coauthor\mbox{-}physics & 0.0303 & 0.0429 & 1.4135 \\
+\bottomrule\end{tabular}\end{table}

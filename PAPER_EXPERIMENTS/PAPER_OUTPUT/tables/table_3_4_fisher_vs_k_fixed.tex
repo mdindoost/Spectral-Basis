@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{Fisher score of $\|U_i\|$ vs diffusion depth (Fixed Splits). Fisher $=$ between-class / within-class variance of row norms, computed on training nodes only. Higher values indicate row norms carry more class-discriminative information. $\text{Fisher}_X$ is the same metric on raw diffused features at $k=10$.}}
+\label{tab:fisher_vs_k_fixed}
+\begin{tabular}{lrrrrrr}
+\toprule
+Dataset & $k=1$ & $k=4$ & $k=10$ & $k=20$ & $k=30$ & Fisher$_X$@10 \\
+\midrule
+cora & 0.0518 & 0.0414 & 0.0400 & 0.0428 & 0.0653 & 0.0642 \\
+citeseer & 0.0733 & 0.0794 & 0.0719 & 0.0544 & 0.0458 & 0.1875 \\
+pubmed & 0.0067 & 0.0165 & 0.0293 & 0.0377 & 0.0401 & 0.0843 \\
+ogbn\mbox{-}arxiv & 0.1407 & 0.1949 & 0.1887 & 0.1673 & 0.1504 & 0.0372 \\
+wikics & 0.1560 & 0.0908 & 0.0597 & 0.0561 & 0.0568 & 0.1315 \\
+amazon\mbox{-}computers & 0.0879 & 0.0543 & 0.0444 & 0.0411 & 0.0402 & 0.0753 \\
+amazon\mbox{-}photo & 0.1452 & 0.0929 & 0.0854 & 0.0846 & 0.0656 & 0.0608 \\
+coauthor\mbox{-}cs & 0.2582 & 0.2157 & 0.2150 & 0.2257 & 0.2396 & 0.3008 \\
+coauthor\mbox{-}physics & 0.5366 & 0.3748 & 0.2890 & 0.2613 & 0.2535 & 0.0929 \\
+\bottomrule\end{tabular}\end{table}

@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{4pt}
+\caption{Full spectral $\alpha$ sweep: test accuracy (\%) for each $\alpha \in \{-1.0, -0.5, 0.0, 0.5, 1.0\}$ at $k=10$ (Fixed Splits). Bold = best $\alpha$ selected on validation set. RowNorm baseline shown for reference.}}
+\label{tab:alpha_sweep_full_fixed}
+\begin{tabular}{lrrrrrr}
+\toprule
+Dataset & RowNorm & $\alpha=-1.0$ & $\alpha=-0.5$ & $\alpha=+0.0$ & $\alpha=+0.5$ & $\alpha=+1.0$ \\
+\midrule
+cora & 33.03 & \textbf{80.12} & 76.59 & 37.17 & 29.01 & 31.53 \\
+citeseer & 26.93 & 68.08 & \textbf{68.46} & 26.25 & 21.19 & 23.90 \\
+pubmed & 47.72 & \textbf{51.83} & 50.06 & 48.36 & 46.19 & 44.63 \\
+ogbn\mbox{-}arxiv & 70.53 & 69.99 & 70.48 & 70.66 & 70.62 & \textbf{70.56} \\
+wikics & 63.36 & \textbf{65.74} & 64.74 & 63.35 & 61.61 & 60.47 \\
+amazon\mbox{-}computers & 89.39 & \textbf{90.84} & 90.75 & 90.40 & 90.18 & 89.95 \\
+amazon\mbox{-}photo & 91.62 & \textbf{92.65} & 92.21 & 91.96 & 92.00 & 91.78 \\
+coauthor\mbox{-}cs & 72.68 & \textbf{87.59} & 84.00 & 70.44 & 58.09 & 61.57 \\
+coauthor\mbox{-}physics & 88.69 & \textbf{94.32} & 92.67 & 89.13 & 85.95 & 84.81 \\
+\bottomrule\end{tabular}\end{table}

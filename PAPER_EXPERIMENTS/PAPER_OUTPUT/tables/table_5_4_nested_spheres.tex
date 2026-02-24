@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{NestedSpheres (Exp 6) vs SpectralRowNorm (Exp 5) at $k=10$ (fixed splits). Best $(\alpha,\beta)$ pair selected on validation set from a $5\times5$ grid. $\Delta$ is vs RowNorm baseline.}
+\label{tab:nested_spheres}
+\begin{tabular}{lrrrrrr}
+\toprule
+Dataset & RowNorm & Best Spectral & Best $\alpha$ & Best Nested & Best $(\alpha,\beta)$ & $\Delta$Nested \\
+\midrule
+cora & 33.03\% & 80.12\% & -1.0 & 79.84\% & (-1.0, +0.0) & +46.81pp \\
+citeseer & 26.93\% & 68.46\% & -0.5 & 68.02\% & (-0.5, +0.0) & +41.10pp \\
+pubmed & 47.72\% & 51.83\% & -1.0 & 52.52\% & (-1.0, -1.0) & +4.80pp \\
+ogbn\mbox{-}arxiv & 70.53\% & 70.56\% & +1.0 & 70.66\% & (+0.5, +0.5) & +0.13pp \\
+wikics & 63.36\% & 65.74\% & -1.0 & 65.68\% & (-1.0, +1.0) & +2.31pp \\
+amazon\mbox{-}computers & 89.39\% & 90.84\% & -1.0 & 91.12\% & (-1.0, +1.0) & +1.73pp \\
+amazon\mbox{-}photo & 91.62\% & 92.65\% & -1.0 & 92.67\% & (-1.0, -0.5) & +1.05pp \\
+coauthor\mbox{-}cs & 72.68\% & 87.59\% & -1.0 & 87.76\% & (-1.0, +0.0) & +15.09pp \\
+coauthor\mbox{-}physics & 88.69\% & 94.32\% & -1.0 & 94.41\% & (-1.0, -1.0) & +5.71pp \\
+\bottomrule\end{tabular}\end{table}

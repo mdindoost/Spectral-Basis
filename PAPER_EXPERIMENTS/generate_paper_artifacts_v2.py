@@ -394,6 +394,138 @@ def generate_table_3_3_crossover_analysis(split_type='fixed'):
     print(f'  ✓ Saved: {output_path}')
 
 # ============================================================================
+# SECTION 3 ADDITIONS: Part B vs k  +  Fisher
+# ============================================================================
+
+def generate_figure_3_3_part_b_vs_k():
+    """Figure 3.3: Part B vs k — recovery by RowNorm across diffusion depths."""
+    print('Generating Figure 3.3: Part B vs k...')
+
+    fig, ax = plt.subplots(figsize=(14, 8))
+    colors = plt.cm.tab10(np.linspace(0, 1, len(DATASETS)))
+
+    for idx, ds in enumerate(DATASETS):
+        k_sens = load_k_sensitivity(ds, 'fixed', 'lcc')
+        if k_sens is None:
+            continue
+        k_vals     = [r['k']      for r in k_sens['k_sensitivity'] if r.get('part_b') is not None]
+        part_b_vals= [r['part_b'] for r in k_sens['k_sensitivity'] if r.get('part_b') is not None]
+        if not k_vals:
+            continue
+        ax.plot(k_vals, part_b_vals, 'o-', linewidth=2, markersize=6,
+                label=ds, color=colors[idx])
+
+    ax.axhline(y=0, color='black', linestyle='-', linewidth=2.5, alpha=0.7)
+    ax.set_xlabel('Diffusion Steps (k)', fontsize=16, fontweight='bold')
+    ax.set_ylabel('Part B (pp)', fontsize=16, fontweight='bold')
+    ax.set_title('RowNorm Recovery vs Diffusion Depth (Part B)',
+                 fontsize=18, fontweight='bold', pad=15)
+    ax.legend(fontsize=10, ncol=2, loc='best', framealpha=0.9)
+    ax.grid(True, alpha=0.3, linestyle=':', linewidth=1)
+    plt.xticks(fontsize=13)
+    plt.yticks(fontsize=13)
+    plt.tight_layout()
+
+    output_path = FIGURES_DIR / 'figure_3_3_part_b_vs_k.pdf'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f'  ✓ Saved: {output_path}')
+
+
+def generate_table_3_4_fisher_vs_k(split_type='fixed'):
+    """Table 3.4: Fisher score of ||U_i|| at key k values (fixed or random splits)."""
+    split_label = 'Fixed Splits' if split_type == 'fixed' else 'Random Splits'
+    print(f'Generating Table 3.4: Fisher vs k ({split_label})...')
+
+    K_SHOW = [1, 4, 10, 20, 30]
+    rows = []
+
+    for ds in DATASETS:
+        k_sens = load_k_sensitivity(ds, split_type, 'lcc')
+        if k_sens is None:
+            continue
+        by_k = {r['k']: r for r in k_sens['k_sensitivity']}
+        fisher_at_k = {}
+        for k in K_SHOW:
+            r = by_k.get(k)
+            fisher_at_k[k] = r.get('fisher_score') if r else None
+        # Fisher on X_diffused at k=10 for comparison
+        r10 = by_k.get(10, {})
+        fisher_x = r10.get('fisher_score_X_diffused')
+        rows.append({'dataset': ds, 'fisher_at_k': fisher_at_k, 'fisher_x': fisher_x})
+
+    if not rows:
+        print(f'  ! No data for split_type={split_type}')
+        return
+
+    k_headers = ' & '.join([f'$k={k}$' for k in K_SHOW])
+    lines = []
+    lines.append(r'\begin{table}[t]')
+    lines.append(r'\centering\small\setlength{\tabcolsep}{5pt}')
+    lines.append(rf'\caption{{Fisher score of $\|U_i\|$ vs diffusion depth ({split_label}). '
+                 r'Fisher $=$ between-class / within-class variance of row norms, '
+                 r'computed on training nodes only. '
+                 r'Higher values indicate row norms carry more class-discriminative information. '
+                 r'$\text{Fisher}_X$ is the same metric on raw diffused features at $k=10$.}}')
+    lines.append(rf'\label{{tab:fisher_vs_k_{split_type}}}')
+    lines.append(r'\begin{tabular}{lrrrrrr}')
+    lines.append(r'\toprule')
+    lines.append(rf'Dataset & {k_headers} & Fisher$_X$@10 \\')
+    lines.append(r'\midrule')
+    for row in rows:
+        ds_label = row['dataset'].replace('-', r'\mbox{-}')
+        cells = []
+        for k in K_SHOW:
+            v = row['fisher_at_k'].get(k)
+            cells.append(f'{v:.4f}' if v is not None else r'\textemdash')
+        fx = row['fisher_x']
+        fx_str = f'{fx:.4f}' if fx is not None else r'\textemdash'
+        lines.append(rf'{ds_label} & {" & ".join(cells)} & {fx_str} \\')
+    lines.append(r'\bottomrule\end{tabular}\end{table}')
+
+    output_path = TABLES_DIR / f'table_3_4_fisher_vs_k_{split_type}.tex'
+    with open(output_path, 'w') as f:
+        f.write('\n'.join(lines))
+    print(f'  ✓ Saved: {output_path}')
+
+
+def generate_figure_3_4_fisher_vs_k():
+    """Figure 3.4: Fisher score of ||U_i|| vs k — all datasets."""
+    print('Generating Figure 3.4: Fisher vs k...')
+
+    fig, ax = plt.subplots(figsize=(14, 8))
+    colors = plt.cm.tab10(np.linspace(0, 1, len(DATASETS)))
+
+    for idx, ds in enumerate(DATASETS):
+        k_sens = load_k_sensitivity(ds, 'fixed', 'lcc')
+        if k_sens is None:
+            continue
+        k_vals     = [r['k']            for r in k_sens['k_sensitivity']
+                      if r.get('fisher_score') is not None]
+        fisher_vals= [r['fisher_score'] for r in k_sens['k_sensitivity']
+                      if r.get('fisher_score') is not None]
+        if not k_vals:
+            continue
+        ax.plot(k_vals, fisher_vals, 'o-', linewidth=2, markersize=6,
+                label=ds, color=colors[idx])
+
+    ax.set_xlabel('Diffusion Steps (k)', fontsize=16, fontweight='bold')
+    ax.set_ylabel('Fisher Score', fontsize=16, fontweight='bold')
+    ax.set_title('Fisher Score of $\\|U_i\\|$ vs Diffusion Depth',
+                 fontsize=18, fontweight='bold', pad=15)
+    ax.legend(fontsize=10, ncol=2, loc='best', framealpha=0.9)
+    ax.grid(True, alpha=0.3, linestyle=':', linewidth=1)
+    plt.xticks(fontsize=13)
+    plt.yticks(fontsize=13)
+    plt.tight_layout()
+
+    output_path = FIGURES_DIR / 'figure_3_4_fisher_vs_k.pdf'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f'  ✓ Saved: {output_path}')
+
+
+# ============================================================================
 # SECTION 4: WHITENING MECHANISM
 # ============================================================================
 
@@ -490,6 +622,55 @@ def generate_table_4_1_spectral_properties():
     print(f'  ✓ Saved: {output_path}')
 
 # ============================================================================
+# SECTION 4 ADDITIONS: Separability
+# ============================================================================
+
+def generate_table_4_2_separability():
+    """Table 4.2: Class separability in the U (eigenvector) space at k=10."""
+    print('Generating Table 4.2: Spectral Separability...')
+
+    rows = []
+    for ds in DATASETS:
+        spec = load_spectral_analysis(ds, 'fixed', 'lcc', 10)
+        if spec is None:
+            continue
+        a = spec['analysis']
+        rows.append({
+            'dataset':       ds,
+            'separability':  a['spectral_separability'],
+            'inter_dist':    a['inter_class_centroid_dist'],
+            'intra_dist':    a['intra_class_mean_dist'],
+        })
+
+    if not rows:
+        print('  ! No spectral analysis data found.')
+        return
+
+    lines = []
+    lines.append(r'\begin{table}[t]')
+    lines.append(r'\centering\small\setlength{\tabcolsep}{6pt}')
+    lines.append(r'\caption{Class separability in the row-normalised eigenvector space $U$ '
+                 r'at $k=10$ (fixed splits, training nodes only). '
+                 r'Separability $=$ inter-class centroid distance / intra-class mean pairwise distance. '
+                 r'Values $<1$ indicate class overlap; higher is better.}')
+    lines.append(r'\label{tab:separability}')
+    lines.append(r'\begin{tabular}{lrrr}')
+    lines.append(r'\toprule')
+    lines.append(r'Dataset & Separability & Inter-class dist & Intra-class dist \\')
+    lines.append(r'\midrule')
+    for row in rows:
+        ds_label = row['dataset'].replace('-', r'\mbox{-}')
+        lines.append(rf"{ds_label} & {row['separability']:.4f} & "
+                     rf"{row['inter_dist']:.4f} & {row['intra_dist']:.4f} \\")
+    lines.append(r'\bottomrule\end{tabular}\end{table}')
+
+    output_path = TABLES_DIR / 'table_4_2_separability.tex'
+    with open(output_path, 'w') as f:
+        f.write('\n'.join(lines))
+    print(f'  ✓ Saved: {output_path}')
+
+
+# ============================================================================
 # SECTION 5: RECOVERY LIMITATIONS (NEW - REWRITTEN)
 # ============================================================================
 
@@ -541,20 +722,21 @@ def generate_table_5_1_magnitude_cascade():
     
     # Generate LaTeX
     latex = latex_table_header(
-        ['Dataset', 'Std', 'RowNorm', 'Part B', 'Log-Mag', 'ΔLog-Mag', 'Recovery'],
-        'Magnitude Recovery Cascade: Std → RowNorm → Log-Magnitude (k=10)',
+        ['Dataset', 'Std', 'RowNorm', 'Part B', 'Log-Mag', 'ΔLog-Mag', 'Dual', 'ΔDual'],
+        'Magnitude Recovery Cascade: Std → RowNorm → Log-Magnitude / Dual-Stream (k=10)',
         'tab:magnitude_cascade'
     )
-    
+
     for row in rows:
-        recovery_str = f"{row['recovery_rate']:.0f}\\%" if row['recovery_rate'] is not None else 'N/A'
         logmag_delta = f"{row['part_b5_logmag']:+.2f}pp" if row['part_b5_logmag'] is not None else 'N/A'
-        logmag_str   = f"{row['logmag']:.2f}\\%"         if row['logmag'] is not None else 'N/A'
+        logmag_str   = f"{row['logmag']:.2f}\\%"         if row['logmag']          is not None else 'N/A'
+        dual_str     = f"{row['dual']:.2f}\\%"           if row['dual']            is not None else 'N/A'
+        dual_delta   = f"{row['part_b5_dual']:+.2f}pp"   if row['part_b5_dual']    is not None else 'N/A'
         latex += (f"{row['dataset']:<20} & {row['std']:>6.2f}\\% & {row['rownorm']:>6.2f}\\% & "
-                 f"{row['part_b']:>+7.2f}pp & "
-                 f"{logmag_str:>8} & "
-                 f"{logmag_delta:>8} & {recovery_str:>8} \\\\\n")
-    
+                  f"{row['part_b']:>+7.2f}pp & "
+                  f"{logmag_str:>8} & {logmag_delta:>8} & "
+                  f"{dual_str:>8} & {dual_delta:>8} \\\\\n")
+
     latex += latex_table_footer()
     
     output_path = TABLES_DIR / 'table_5_1_magnitude_cascade.tex'
@@ -698,6 +880,204 @@ def generate_table_5_2_spectral_normalization():
         f.write(latex)
     
     print(f'  ✓ Saved: {output_path}')
+
+# ============================================================================
+# SECTION 5 ADDITIONS: Full α sweep  +  NestedSpheres
+# ============================================================================
+
+def generate_table_5_3_alpha_sweep_full(split_type='fixed'):
+    """Table 5.3: Full spectral α sweep — all 5 α values per dataset."""
+    split_label = 'Fixed Splits' if split_type == 'fixed' else 'Random Splits'
+    print(f'Generating Table 5.3: Full Alpha Sweep ({split_label})...')
+
+    alphas = [-1.0, -0.5, 0.0, 0.5, 1.0]
+    rows = []
+
+    for ds in DATASETS:
+        data = load_results(ds, split_type, 'lcc', 10)
+        if data is None:
+            continue
+        exps = data['experiments']
+        fa   = data.get('framework_analysis', {})
+        rn_baseline  = exps['restricted_rownorm_mlp']['test_acc_mean'] * 100
+        best_alpha   = fa.get('best_spectral_alpha')
+        alpha_accs   = {}
+        for alpha in alphas:
+            key = f'spectral_rownorm_alpha{alpha}'
+            if key in exps:
+                alpha_accs[alpha] = exps[key]['test_acc_mean'] * 100
+        rows.append({'dataset': ds, 'rn_baseline': rn_baseline,
+                     'alpha_accs': alpha_accs, 'best_alpha': best_alpha})
+
+    if not rows:
+        print(f'  ! No data for split_type={split_type}')
+        return
+
+    alpha_headers = ' & '.join([f'$\\alpha={a:+.1f}$' for a in alphas])
+    lines = []
+    lines.append(r'\begin{table}[t]')
+    lines.append(r'\centering\small\setlength{\tabcolsep}{4pt}')
+    lines.append(rf'\caption{{Full spectral $\alpha$ sweep: test accuracy (\%) for each '
+                 rf'$\alpha \in \{{-1.0, -0.5, 0.0, 0.5, 1.0\}}$ at $k=10$ ({split_label}). '
+                 r'Bold = best $\alpha$ selected on validation set. '
+                 r'RowNorm baseline shown for reference.}}')
+    lines.append(rf'\label{{tab:alpha_sweep_full_{split_type}}}')
+    lines.append(r'\begin{tabular}{lrrrrrr}')
+    lines.append(r'\toprule')
+    lines.append(rf'Dataset & RowNorm & {alpha_headers} \\')
+    lines.append(r'\midrule')
+    for row in rows:
+        cells = []
+        for alpha in alphas:
+            v = row['alpha_accs'].get(alpha)
+            if v is None:
+                cells.append(r'\textemdash')
+            elif alpha == row['best_alpha']:
+                cells.append(rf'\textbf{{{v:.2f}}}')
+            else:
+                cells.append(f'{v:.2f}')
+        ds_label = row['dataset'].replace('-', r'\mbox{-}')
+        lines.append(rf"{ds_label} & {row['rn_baseline']:.2f} & {' & '.join(cells)} \\")
+    lines.append(r'\bottomrule\end{tabular}\end{table}')
+
+    output_path = TABLES_DIR / f'table_5_3_alpha_sweep_full_{split_type}.tex'
+    with open(output_path, 'w') as f:
+        f.write('\n'.join(lines))
+    print(f'  ✓ Saved: {output_path}')
+
+
+def generate_figure_5_2_alpha_sweep():
+    """Figure 5.2: Spectral α sweep — accuracy vs α per dataset, 3×3 grid."""
+    print('Generating Figure 5.2: Alpha Sweep...')
+
+    alphas = [-1.0, -0.5, 0.0, 0.5, 1.0]
+    ncols  = 3
+    nrows  = math.ceil(len(DATASETS) / ncols)
+    fig, axes = plt.subplots(nrows, ncols, figsize=(16, 5 * nrows))
+    axes_flat  = axes.flatten()
+
+    plotted = 0
+    for idx, ds in enumerate(DATASETS):
+        data = load_results(ds, 'fixed', 'lcc', 10)
+        ax   = axes_flat[idx]
+        if data is None:
+            ax.set_visible(False)
+            continue
+
+        exps       = data['experiments']
+        fa         = data.get('framework_analysis', {})
+        rn_acc     = exps['restricted_rownorm_mlp']['test_acc_mean'] * 100
+        best_alpha = fa.get('best_spectral_alpha')
+
+        accs = []
+        for alpha in alphas:
+            key = f'spectral_rownorm_alpha{alpha}'
+            accs.append(exps[key]['test_acc_mean'] * 100 if key in exps else None)
+
+        valid_alphas = [a for a, v in zip(alphas, accs) if v is not None]
+        valid_accs   = [v for v in accs if v is not None]
+
+        colors = ['#d62728' if a == best_alpha else '#1f77b4' for a in valid_alphas]
+        ax.bar([str(a) for a in valid_alphas], valid_accs,
+               color=colors, alpha=0.8, edgecolor='black', linewidth=1.2)
+        ax.axhline(y=rn_acc, color='gray', linestyle='--', linewidth=1.5,
+                   label=f'RowNorm {rn_acc:.1f}%')
+        ax.set_title(ds, fontsize=13, fontweight='bold')
+        ax.set_xlabel('α', fontsize=11)
+        if idx % ncols == 0:
+            ax.set_ylabel('Test Accuracy (%)', fontsize=11)
+        if valid_accs:
+            all_vals = valid_accs + [rn_acc]
+            ax.set_ylim(min(all_vals) * 0.97, max(all_vals) * 1.03)
+        ax.legend(fontsize=8, loc='lower right')
+        ax.grid(True, alpha=0.3, axis='y', linestyle='--')
+        plotted += 1
+
+    for idx in range(len(DATASETS), len(axes_flat)):
+        axes_flat[idx].set_visible(False)
+
+    plt.suptitle('Spectral $\\alpha$ Sweep: SpectralRowNormMLP at $k=10$\n'
+                 '(red = best $\\alpha$ on val set; dashed = RowNorm baseline)',
+                 fontsize=14, fontweight='bold', y=1.01)
+    plt.tight_layout()
+
+    output_path = FIGURES_DIR / 'figure_5_2_alpha_sweep.pdf'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f'  ✓ Saved: {output_path} ({plotted}/{len(DATASETS)} datasets)')
+
+
+def generate_table_5_4_nested_spheres():
+    """Table 5.4: NestedSpheres best result vs RowNorm and best SpectralRowNorm."""
+    print('Generating Table 5.4: NestedSpheres Results...')
+
+    rows = []
+    for ds in DATASETS:
+        data = load_results(ds, 'fixed', 'lcc', 10)
+        if data is None:
+            continue
+        exps = data['experiments']
+        fa   = data.get('framework_analysis', {})
+
+        rn_acc          = exps['restricted_rownorm_mlp']['test_acc_mean'] * 100
+        best_spec_acc   = fa.get('best_spectral_acc_pct')
+        best_spec_alpha = fa.get('best_spectral_alpha')
+        best_ns_key     = fa.get('best_nested_spheres_key')
+        best_ns_acc     = fa.get('best_nested_spheres_acc_pct')
+        part_b6_nested  = fa.get('part_b6_nested_pp')
+
+        # Parse α and β from key like "nested_spheres_a-1.0_b0.0"
+        ab_str = r'\textemdash'
+        if best_ns_key:
+            try:
+                parts   = best_ns_key.replace('nested_spheres_', '').split('_b')
+                a_val   = parts[0].replace('a', '')
+                b_val   = parts[1]
+                ab_str  = f'({float(a_val):+.1f}, {float(b_val):+.1f})'
+            except Exception:
+                ab_str  = best_ns_key
+
+        rows.append({
+            'dataset':        ds,
+            'rn_acc':         rn_acc,
+            'best_spec_acc':  best_spec_acc,
+            'best_spec_alpha':best_spec_alpha,
+            'best_ns_acc':    best_ns_acc,
+            'part_b6_nested': part_b6_nested,
+            'ab_str':         ab_str,
+        })
+
+    if not rows:
+        print('  ! No data found.')
+        return
+
+    lines = []
+    lines.append(r'\begin{table}[t]')
+    lines.append(r'\centering\small\setlength{\tabcolsep}{5pt}')
+    lines.append(r'\caption{NestedSpheres (Exp 6) vs SpectralRowNorm (Exp 5) at $k=10$ '
+                 r'(fixed splits). Best $(\alpha,\beta)$ pair selected on validation set from '
+                 r'a $5\times5$ grid. $\Delta$ is vs RowNorm baseline.}')
+    lines.append(r'\label{tab:nested_spheres}')
+    lines.append(r'\begin{tabular}{lrrrrrr}')
+    lines.append(r'\toprule')
+    lines.append(r'Dataset & RowNorm & Best Spectral & Best $\alpha$ & '
+                 r'Best Nested & Best $(\alpha,\beta)$ & $\Delta$Nested \\')
+    lines.append(r'\midrule')
+    for row in rows:
+        ds_label  = row['dataset'].replace('-', r'\mbox{-}')
+        spec_str  = f"{row['best_spec_acc']:.2f}\\%" if row['best_spec_acc']  is not None else r'\textemdash'
+        alpha_str = f"{row['best_spec_alpha']:+.1f}"  if row['best_spec_alpha'] is not None else r'\textemdash'
+        ns_str    = f"{row['best_ns_acc']:.2f}\\%"   if row['best_ns_acc']    is not None else r'\textemdash'
+        delta_str = f"{row['part_b6_nested']:+.2f}pp" if row['part_b6_nested'] is not None else r'\textemdash'
+        lines.append(rf"{ds_label} & {row['rn_acc']:.2f}\% & {spec_str} & {alpha_str} & "
+                     rf"{ns_str} & {row['ab_str']} & {delta_str} \\")
+    lines.append(r'\bottomrule\end{tabular}\end{table}')
+
+    output_path = TABLES_DIR / 'table_5_4_nested_spheres.tex'
+    with open(output_path, 'w') as f:
+        f.write('\n'.join(lines))
+    print(f'  ✓ Saved: {output_path}')
+
 
 # ============================================================================
 # SECTION 6: OPTIMIZATION DYNAMICS
@@ -915,9 +1295,9 @@ def generate_table_6_1_convergence_speed(split_type='fixed'):
 # ============================================================================
 
 def generate_table_exp8_k_sensitivity(split_type='fixed'):
-    """Exp 8 summary table: Part A vs k for all datasets (fixed or random splits).
+    """Exp 8 summary table: Part A / Part B / Gap at key k values.
 
-    Columns: Dataset | Part A at k=1,4,10,20,30 | Crossover k | Fisher@k=10
+    Columns: Dataset | Part A at k=1,4,10,20,30 | Part B@10 | Gap@10 | Crossover k | Fisher@10
     One row per dataset. Saved as table_exp8_k_sensitivity_{split_type}.tex
     """
     split_label = 'Fixed Splits' if split_type == 'fixed' else 'Random Splits'
@@ -931,20 +1311,18 @@ def generate_table_exp8_k_sensitivity(split_type='fixed'):
         if k_sens is None:
             continue
 
-        # Index rows by k
         by_k = {r['k']: r for r in k_sens['k_sensitivity']}
 
-        # Part A at each display k
         part_a_at_k = {}
         for k in K_SHOW:
             r = by_k.get(k)
             part_a_at_k[k] = r['part_a'] if r and r.get('part_a') is not None else None
 
-        # Fisher score at k=10
-        r10 = by_k.get(10, {})
-        fisher = r10.get('fisher_score')
+        r10     = by_k.get(10, {})
+        fisher  = r10.get('fisher_score')
+        part_b  = r10.get('part_b')
+        rem_gap = r10.get('rem_gap')
 
-        # Crossover: first sign change in part_a across sorted k values
         sorted_rows = sorted(k_sens['k_sensitivity'], key=lambda r: r['k'])
         crossover_k = None
         for i in range(len(sorted_rows) - 1):
@@ -957,6 +1335,8 @@ def generate_table_exp8_k_sensitivity(split_type='fixed'):
         rows.append({
             'dataset':     ds,
             'part_a_at_k': part_a_at_k,
+            'part_b':      part_b,
+            'rem_gap':     rem_gap,
             'fisher':      fisher,
             'crossover_k': crossover_k,
         })
@@ -965,24 +1345,25 @@ def generate_table_exp8_k_sensitivity(split_type='fixed'):
         print(f'  ! No data found for split_type={split_type}')
         return
 
-    # ── Build LaTeX ──────────────────────────────────────────────────────────
-    col_spec = 'l' + 'r' * len(K_SHOW) + 'r' + 'r'
+    col_spec  = 'l' + 'r' * len(K_SHOW) + 'rrrr'
     k_headers = ' & '.join([f'$k={k}$' for k in K_SHOW])
 
     lines = []
     lines.append(r'\begin{table}[t]')
-    lines.append(r'\centering')
-    lines.append(r'\small')
-    lines.append(r'\setlength{\tabcolsep}{5pt}')
-    lines.append(rf'\caption{{Exp 8: Part A (pp) vs diffusion depth $k$ ({split_label}). '
-                 r'Part A $= \text{Acc(SGC+MLP)} - \text{Acc(Restricted+Std)}$. '
-                 r'Negative values indicate restricted eigenvectors outperform SGC. '
-                 r'Crossover $k$ is the depth where the sign flips. '
-                 r'Fisher score measured at $k=10$.}}')
+    lines.append(r'\centering\small\setlength{\tabcolsep}{4pt}')
+    lines.append(rf'\caption{{Exp 8 k-sensitivity ({split_label}). '
+                 r'Part A (pp) at key $k$ values; Part B, Remaining Gap, Fisher at $k=10$. '
+                 r'Negative Part A means restricted eigenvectors outperform SGC. '
+                 r'Crossover $k$ = depth where Part A changes sign.}}')
     lines.append(rf'\label{{tab:exp8_k_sensitivity_{split_type}}}')
     lines.append(rf'\begin{{tabular}}{{{col_spec}}}')
     lines.append(r'\toprule')
-    lines.append(rf'Dataset & {k_headers} & Crossover $k$ & Fisher@10 \\')
+    lines.append(rf'\multicolumn{{1}}{{l}}{{}} & '
+                 rf'\multicolumn{{{len(K_SHOW)}}}{{c}}{{Part A (pp)}} & '
+                 rf'\multicolumn{{4}}{{c}}{{At $k=10$}} \\')
+    lines.append(rf'\cmidrule(lr){{2-{1+len(K_SHOW)}}} '
+                 rf'\cmidrule(lr){{{2+len(K_SHOW)}-{5+len(K_SHOW)}}}')
+    lines.append(rf'Dataset & {k_headers} & Part B & Gap & Crossover $k$ & Fisher \\')
     lines.append(r'\midrule')
 
     for row in rows:
@@ -991,20 +1372,17 @@ def generate_table_exp8_k_sensitivity(split_type='fixed'):
         for k in K_SHOW:
             v = row['part_a_at_k'].get(k)
             cells.append(f'{v:+.2f}' if v is not None else r'\textemdash')
-        ck = row['crossover_k']
-        crossover_str = f'{ck:.0f}' if ck is not None else r'\textemdash'
-        fisher = row['fisher']
-        fisher_str = f'{fisher:.4f}' if fisher is not None else r'\textemdash'
-        lines.append(rf'{ds_label} & {" & ".join(cells)} & {crossover_str} & {fisher_str} \\')
+        pb_str  = f"{row['part_b']:+.2f}"  if row['part_b']  is not None else r'\textemdash'
+        gap_str = f"{row['rem_gap']:+.2f}" if row['rem_gap'] is not None else r'\textemdash'
+        ck_str  = f"{row['crossover_k']:.0f}" if row['crossover_k'] is not None else r'\textemdash'
+        fi_str  = f"{row['fisher']:.4f}"   if row['fisher']  is not None else r'\textemdash'
+        lines.append(rf'{ds_label} & {" & ".join(cells)} & {pb_str} & {gap_str} & {ck_str} & {fi_str} \\')
 
-    lines.append(r'\bottomrule')
-    lines.append(r'\end{tabular}')
-    lines.append(r'\end{table}')
+    lines.append(r'\bottomrule\end{tabular}\end{table}')
 
-    tex = '\n'.join(lines)
     output_path = TABLES_DIR / f'table_exp8_k_sensitivity_{split_type}.tex'
     with open(output_path, 'w') as f:
-        f.write(tex)
+        f.write('\n'.join(lines))
     print(f'  ✓ Saved: {output_path}')
 
 
@@ -1017,9 +1395,13 @@ def generate_section_3():
     generate_table_3_2_part_a_random()
     generate_figure_3_1_part_a_barchart('fixed')
     generate_figure_3_1_part_a_barchart('random')
-    generate_figure_3_2_part_a_vs_k()  # CRITICAL
+    generate_figure_3_2_part_a_vs_k()
+    generate_figure_3_3_part_b_vs_k()
     generate_table_3_3_crossover_analysis('fixed')
     generate_table_3_3_crossover_analysis('random')
+    generate_table_3_4_fisher_vs_k('fixed')
+    generate_table_3_4_fisher_vs_k('random')
+    generate_figure_3_4_fisher_vs_k()
     generate_table_exp8_k_sensitivity('fixed')
     generate_table_exp8_k_sensitivity('random')
 
@@ -1030,15 +1412,20 @@ def generate_section_4():
     print("="*80)
     generate_figure_4_1_singular_values()
     generate_table_4_1_spectral_properties()
+    generate_table_4_2_separability()
 
 def generate_section_5():
     """Generate all Section 5 artifacts"""
     print("\n" + "="*80)
     print("SECTION 5: RECOVERY LIMITATIONS")
     print("="*80)
-    generate_table_5_1_magnitude_cascade()  # CRITICAL
+    generate_table_5_1_magnitude_cascade()
     generate_figure_5_1_recovery_cascade()
     generate_table_5_2_spectral_normalization()
+    generate_table_5_3_alpha_sweep_full('fixed')
+    generate_table_5_3_alpha_sweep_full('random')
+    generate_figure_5_2_alpha_sweep()
+    generate_table_5_4_nested_spheres()
 
 def generate_section_6():
     """Generate all Section 6 artifacts"""
