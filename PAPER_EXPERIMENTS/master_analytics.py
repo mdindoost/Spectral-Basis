@@ -23,8 +23,8 @@ Prerequisites:
   before running this script.
 
 Usage:
-  cd /home/md724/Spectral-Basis
-  PYTHON=/home/md724/Spectral-Basis/venv/bin/python
+  cd /PATH/TO/Spectral-Basis
+  PYTHON=/PATH/TO/Spectral-Basis/venv/bin/python
 
   # Full analytics (all default k values)
   $PYTHON PAPER_EXPERIMENTS/master_analytics.py citeseer --splits fixed

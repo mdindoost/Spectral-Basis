@@ -46,8 +46,8 @@ Author: Mohammad
 ===================================================================================
 
 Usage:
-  cd /home/md724/Spectral-Basis
-  PYTHON=/home/md724/Spectral-Basis/venv/bin/python
+  cd /PATH/TO/Spectral-Basis
+  PYTHON=/PATH/TO/Spectral-Basis/venv/bin/python
 
   # Single dataset, full k sweep, fixed split (canonical paper run)
   $PYTHON PAPER_EXPERIMENTS/master_training.py cora
