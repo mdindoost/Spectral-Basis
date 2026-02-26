@@ -16,8 +16,10 @@ results/
 *.npz
 *.joblib
 
-# OGB dataset cache
-dataset/
+# Dataset folder — track the folder, ignore its contents
+dataset/*
+!dataset/.gitkeep
+PAPER_EXPERIMENTS/dataset/
 
 # Jupyter
 .ipynb_checkpoints/

@@ -99,7 +99,9 @@ def _patched_torch_load(*args, **kwargs):
     return _original_torch_load(*args, **kwargs)
 torch.load = _patched_torch_load
 
-_SRC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src')
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+_SRC_DIR   = os.path.join(_REPO_ROOT, 'src')
+_DATA_DIR  = os.path.join(_REPO_ROOT, 'dataset')
 sys.path.insert(0, _SRC_DIR)
 from graph_utils import (
     load_dataset,
@@ -449,7 +451,7 @@ print('=' * 80)
 
 print('\n[Step 1] Loading dataset...')
 (edge_index, X_raw, labels, num_nodes, num_classes,
- train_idx_orig, val_idx_orig, test_idx_orig) = load_dataset(DATASET_NAME, root='./dataset')
+ train_idx_orig, val_idx_orig, test_idx_orig) = load_dataset(DATASET_NAME, root=_DATA_DIR)
 print(f'Nodes: {num_nodes:,}, Features: {X_raw.shape[1]}, Classes: {num_classes}')
 
 # ============================================================================

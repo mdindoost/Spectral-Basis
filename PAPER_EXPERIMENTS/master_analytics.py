@@ -65,7 +65,9 @@ import scipy.sparse as sp
 import networkx as nx
 
 # Import all utilities from src/utils.py
-_SRC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src')
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+_SRC_DIR   = os.path.join(_REPO_ROOT, 'src')
+_DATA_DIR  = os.path.join(_REPO_ROOT, 'dataset')
 sys.path.insert(0, _SRC_DIR)
 
 # Patch for OGB compatibility (must come before utils import which triggers torch)
@@ -318,7 +320,7 @@ print('=' * 80)
 
 print('\n[Step 1] Loading dataset and graph...')
 (edge_index, X_raw, labels, num_nodes, num_classes,
- train_idx_orig, val_idx_orig, test_idx_orig) = load_dataset(DATASET_NAME, root='./dataset')
+ train_idx_orig, val_idx_orig, test_idx_orig) = load_dataset(DATASET_NAME, root=_DATA_DIR)
 print(f'Nodes: {num_nodes:,}, Features: {X_raw.shape[1]}, Classes: {num_classes}')
 
 # Build graph matrices: adj, L=Laplacian, D=degree (correct order from src/utils.py)
