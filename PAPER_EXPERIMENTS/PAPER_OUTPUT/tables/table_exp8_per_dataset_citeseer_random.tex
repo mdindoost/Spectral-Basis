@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{k-sensitivity for \textbf{CiteSeer} (Random Splits). Accuracies are mean test accuracy (\%). Part~A $=$ SGC+MLP $-$ R+Std; Part~B $=$ R+RN $-$ R+Std; Rem.~Gap $=$ Part~A $-$ Part~B. Fisher $=$ Fisher score of $\|U_i\|$ row norms on training nodes.}
+\label{tab:exp8_per_dataset_citeseer_random}
+\begin{tabular}{rrrrrrrrrr}
+\toprule
+$k$ & SGC+MLP & R+Std & R+RN & Part~A & Part~B & Rem.~Gap & Fisher & $n_{\mathrm{runs}}$ \\
+\midrule
+1 & 73.56\% & 63.20\% & 65.83\% & +10.362 & +2.632 & +7.730 & 0.02447 & 75 \\
+2 & 73.90\% & 61.16\% & 66.02\% & +12.745 & +4.862 & +7.884 & 0.02406 & 75 \\
+4 & 73.94\% & 61.44\% & 66.02\% & +12.494 & +4.572 & +7.921 & 0.02497 & 75 \\
+6 & 74.54\% & 60.53\% & 65.29\% & +14.009 & +4.755 & +9.255 & 0.02441 & 75 \\
+8 & 74.44\% & 61.20\% & 63.00\% & +13.236 & +1.799 & +11.437 & 0.02617 & 75 \\
+10 & 74.04\% & 60.04\% & 62.96\% & +14.000 & +2.915 & +11.085 & 0.02663 & 75 \\
+12 & 73.91\% & 60.74\% & 63.49\% & +13.170 & +2.755 & +10.415 & 0.02493 & 75 \\
+20 & 74.13\% & 60.47\% & 59.91\% & +13.651 & -0.563 & +14.214 & 0.02612 & 75 \\
+30 & 73.76\% & 60.91\% & 60.63\% & +12.852 & -0.280 & +13.132 & 0.02698 & 75 \\
+\bottomrule
+\end{tabular}
+\end{table}

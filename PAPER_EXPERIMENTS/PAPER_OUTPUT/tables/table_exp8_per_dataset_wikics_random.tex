@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{k-sensitivity for \textbf{WikiCS} (Random Splits). Accuracies are mean test accuracy (\%). Part~A $=$ SGC+MLP $-$ R+Std; Part~B $=$ R+RN $-$ R+Std; Rem.~Gap $=$ Part~A $-$ Part~B. Fisher $=$ Fisher score of $\|U_i\|$ row norms on training nodes.}
+\label{tab:exp8_per_dataset_wikics_random}
+\begin{tabular}{rrrrrrrrrr}
+\toprule
+$k$ & SGC+MLP & R+Std & R+RN & Part~A & Part~B & Rem.~Gap & Fisher & $n_{\mathrm{runs}}$ \\
+\midrule
+1 & 83.49\% & 77.62\% & 79.61\% & +5.869 & +1.993 & +3.876 & 0.11086 & 75 \\
+2 & 84.23\% & 80.01\% & 80.97\% & +4.215 & +0.961 & +3.253 & 0.11150 & 75 \\
+4 & 83.19\% & 79.82\% & 79.84\% & +3.376 & +0.025 & +3.351 & 0.09738 & 75 \\
+6 & 82.28\% & 80.07\% & 79.95\% & +2.207 & -0.124 & +2.331 & 0.09168 & 75 \\
+8 & 81.30\% & 80.31\% & 79.94\% & +0.983 & -0.377 & +1.359 & 0.08976 & 75 \\
+10 & 80.74\% & 80.41\% & 80.01\% & +0.330 & -0.401 & +0.731 & 0.08898 & 75 \\
+12 & 80.34\% & 80.63\% & 80.24\% & -0.281 & -0.381 & +0.100 & 0.08845 & 75 \\
+20 & 78.53\% & 81.12\% & 80.84\% & -2.591 & -0.275 & -2.317 & 0.08715 & 75 \\
+30 & 74.26\% & 81.49\% & 81.07\% & -7.227 & -0.424 & -6.803 & 0.08711 & 75 \\
+\bottomrule
+\end{tabular}
+\end{table}

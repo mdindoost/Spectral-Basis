@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{k-sensitivity for \textbf{Coauthor-Physics} (Fixed Splits). Accuracies are mean test accuracy (\%). Part~A $=$ SGC+MLP $-$ R+Std; Part~B $=$ R+RN $-$ R+Std; Rem.~Gap $=$ Part~A $-$ Part~B. Fisher $=$ Fisher score of $\|U_i\|$ row norms on training nodes.}
+\label{tab:exp8_per_dataset_coauthor-physics_fixed}
+\begin{tabular}{rrrrrrrrrr}
+\toprule
+$k$ & SGC+MLP & R+Std & R+RN & Part~A & Part~B & Rem.~Gap & Fisher & $n_{\mathrm{runs}}$ \\
+\midrule
+1 & 95.55\% & 88.69\% & 92.10\% & +6.856 & +3.413 & +3.443 & 0.53662 & 15 \\
+2 & 95.50\% & 89.34\% & 91.85\% & +6.152 & +2.502 & +3.649 & 0.47120 & 15 \\
+4 & 95.30\% & 85.89\% & 89.90\% & +9.415 & +4.013 & +5.402 & 0.37483 & 15 \\
+6 & 95.06\% & 86.10\% & 89.28\% & +8.969 & +3.182 & +5.787 & 0.32806 & 15 \\
+8 & 95.00\% & 86.64\% & 87.96\% & +8.359 & +1.320 & +7.040 & 0.30307 & 15 \\
+10 & 94.88\% & 86.86\% & 88.69\% & +8.021 & +1.838 & +6.184 & 0.28897 & 15 \\
+12 & 94.80\% & 86.32\% & 88.65\% & +8.480 & +2.324 & +6.157 & 0.28057 & 15 \\
+20 & 94.56\% & 88.31\% & 88.41\% & +6.256 & +0.100 & +6.157 & 0.26131 & 15 \\
+30 & 94.05\% & 91.16\% & 91.40\% & +2.891 & +0.236 & +2.655 & 0.25349 & 15 \\
+\bottomrule
+\end{tabular}
+\end{table}

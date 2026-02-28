@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{k-sensitivity for \textbf{Coauthor-CS} (Fixed Splits). Accuracies are mean test accuracy (\%). Part~A $=$ SGC+MLP $-$ R+Std; Part~B $=$ R+RN $-$ R+Std; Rem.~Gap $=$ Part~A $-$ Part~B. Fisher $=$ Fisher score of $\|U_i\|$ row norms on training nodes.}
+\label{tab:exp8_per_dataset_coauthor-cs_fixed}
+\begin{tabular}{rrrrrrrrrr}
+\toprule
+$k$ & SGC+MLP & R+Std & R+RN & Part~A & Part~B & Rem.~Gap & Fisher & $n_{\mathrm{runs}}$ \\
+\midrule
+1 & 93.27\% & 82.48\% & 80.93\% & +10.792 & -1.543 & +12.335 & 0.25822 & 15 \\
+2 & 92.85\% & 78.82\% & 78.91\% & +14.031 & +0.091 & +13.940 & 0.24541 & 15 \\
+4 & 91.84\% & 79.70\% & 74.99\% & +12.143 & -4.713 & +16.856 & 0.21566 & 15 \\
+6 & 91.27\% & 78.28\% & 72.78\% & +12.999 & -5.494 & +18.493 & 0.21326 & 15 \\
+8 & 91.05\% & 77.32\% & 71.74\% & +13.720 & -5.582 & +19.302 & 0.21402 & 15 \\
+10 & 90.83\% & 77.77\% & 72.68\% & +13.062 & -5.095 & +18.157 & 0.21498 & 15 \\
+12 & 90.59\% & 77.14\% & 71.17\% & +13.448 & -5.967 & +19.415 & 0.21580 & 15 \\
+20 & 89.85\% & 78.88\% & 72.17\% & +10.972 & -6.708 & +17.681 & 0.22570 & 15 \\
+30 & 88.73\% & 83.02\% & 80.67\% & +5.713 & -2.354 & +8.066 & 0.23961 & 15 \\
+\bottomrule
+\end{tabular}
+\end{table}

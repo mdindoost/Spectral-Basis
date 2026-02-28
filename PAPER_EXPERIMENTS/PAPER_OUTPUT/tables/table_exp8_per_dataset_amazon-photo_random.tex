@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{k-sensitivity for \textbf{Amazon-Photo} (Random Splits). Accuracies are mean test accuracy (\%). Part~A $=$ SGC+MLP $-$ R+Std; Part~B $=$ R+RN $-$ R+Std; Rem.~Gap $=$ Part~A $-$ Part~B. Fisher $=$ Fisher score of $\|U_i\|$ row norms on training nodes.}
+\label{tab:exp8_per_dataset_amazon-photo_random}
+\begin{tabular}{rrrrrrrrrr}
+\toprule
+$k$ & SGC+MLP & R+Std & R+RN & Part~A & Part~B & Rem.~Gap & Fisher & $n_{\mathrm{runs}}$ \\
+\midrule
+1 & 94.57\% & 90.54\% & 91.02\% & +4.026 & +0.476 & +3.550 & 0.13679 & 75 \\
+2 & 94.65\% & 90.76\% & 91.90\% & +3.898 & +1.148 & +2.750 & 0.10323 & 75 \\
+4 & 93.33\% & 90.08\% & 91.36\% & +3.251 & +1.276 & +1.976 & 0.08498 & 75 \\
+6 & 92.37\% & 90.54\% & 91.35\% & +1.832 & +0.810 & +1.022 & 0.08014 & 75 \\
+8 & 91.26\% & 90.65\% & 91.40\% & +0.618 & +0.757 & -0.139 & 0.07895 & 75 \\
+10 & 90.44\% & 90.57\% & 91.40\% & -0.129 & +0.832 & -0.961 & 0.07862 & 75 \\
+12 & 89.74\% & 90.56\% & 91.55\% & -0.814 & +0.997 & -1.810 & 0.07849 & 75 \\
+20 & 85.73\% & 90.81\% & 91.65\% & -5.083 & +0.831 & -5.915 & 0.07827 & 75 \\
+30 & 81.08\% & 92.00\% & 92.38\% & -10.912 & +0.386 & -11.299 & 0.05828 & 75 \\
+\bottomrule
+\end{tabular}
+\end{table}

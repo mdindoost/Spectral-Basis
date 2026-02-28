@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{k-sensitivity for \textbf{PubMed} (Random Splits). Accuracies are mean test accuracy (\%). Part~A $=$ SGC+MLP $-$ R+Std; Part~B $=$ R+RN $-$ R+Std; Rem.~Gap $=$ Part~A $-$ Part~B. Fisher $=$ Fisher score of $\|U_i\|$ row norms on training nodes.}
+\label{tab:exp8_per_dataset_pubmed_random}
+\begin{tabular}{rrrrrrrrrr}
+\toprule
+$k$ & SGC+MLP & R+Std & R+RN & Part~A & Part~B & Rem.~Gap & Fisher & $n_{\mathrm{runs}}$ \\
+\midrule
+1 & 87.47\% & 86.65\% & 86.14\% & +0.821 & -0.503 & +1.323 & 0.02632 & 75 \\
+2 & 87.41\% & 86.42\% & 86.72\% & +0.987 & +0.293 & +0.693 & 0.02479 & 75 \\
+4 & 85.39\% & 83.99\% & 84.36\% & +1.406 & +0.374 & +1.033 & 0.02232 & 75 \\
+6 & 84.44\% & 83.10\% & 83.49\% & +1.342 & +0.391 & +0.951 & 0.02314 & 75 \\
+8 & 84.07\% & 82.91\% & 83.21\% & +1.167 & +0.305 & +0.862 & 0.02376 & 75 \\
+10 & 83.78\% & 82.77\% & 83.11\% & +1.009 & +0.336 & +0.673 & 0.02407 & 75 \\
+12 & 83.56\% & 82.82\% & 83.07\% & +0.740 & +0.252 & +0.488 & 0.02420 & 75 \\
+20 & 83.09\% & 82.97\% & 83.04\% & +0.123 & +0.072 & +0.051 & 0.02436 & 75 \\
+30 & 82.70\% & 83.11\% & 83.06\% & -0.413 & -0.057 & -0.356 & 0.02460 & 75 \\
+\bottomrule
+\end{tabular}
+\end{table}

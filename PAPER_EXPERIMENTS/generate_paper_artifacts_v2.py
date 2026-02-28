@@ -882,44 +882,95 @@ def generate_table_4_0_dataset_statistics():
 def generate_table_4_1_spectral_properties():
     """Table 4.1: Spectral Properties (Condition numbers, variance ratios)"""
     print('Generating Table 4.1: Spectral Properties...')
-    
+
+    DS_DISPLAY = {
+        'cora': 'Cora', 'citeseer': 'CiteSeer', 'pubmed': 'PubMed',
+        'wikics': 'WikiCS', 'amazon-computers': 'Amazon-Computers',
+        'amazon-photo': 'Amazon-Photo', 'coauthor-cs': 'Coauthor-CS',
+        'coauthor-physics': 'Coauthor-Physics', 'ogbn-arxiv': 'ogbn-arxiv',
+    }
+
+    def fmt_val(v, times=False):
+        """Format a float: $\infty$ if inf/nan, scientific notation if >= 1e6, else 2 d.p."""
+        suffix = r'$\times$' if times else ''
+        if math.isinf(v) or math.isnan(v):
+            return r'$\infty$' + suffix
+        if abs(v) >= 1e6:
+            exp = int(math.floor(math.log10(abs(v))))
+            mantissa = v / 10 ** exp
+            return rf'${mantissa:.2f}\times10^{{{exp}}}${suffix}'
+        return f'{v:.2f}{suffix}'
+
     rows = []
-    
+    has_inf_X = False
+
     for ds in DATASETS:
         spec = load_spectral_analysis(ds, 'fixed', 'lcc', 10)
         if spec is None:
             continue
-        
         analysis = spec['analysis']
         var_analysis = analysis['variance_analysis']
-        
+        cond_X = analysis['condition_number_X']
+        if math.isinf(cond_X) or math.isnan(cond_X):
+            has_inf_X = True
         rows.append({
-            'dataset': ds,
-            'cond_U': analysis['condition_number_U'],
-            'cond_X': analysis['condition_number_X'],
+            'dataset':     DS_DISPLAY.get(ds, ds),
+            'cond_U':      analysis['condition_number_U'],
+            'cond_X':      cond_X,
             'var_ratio_U': var_analysis['U_variance_ratio'],
             'var_ratio_X': var_analysis['X_variance_ratio'],
-            'var_reduction': var_analysis['variance_ratio_reduction']
+            'var_reduction': var_analysis['variance_ratio_reduction'],
         })
-    
-    # Generate LaTeX
-    latex = latex_table_header(
-        ['Dataset', 'κ(U)', 'κ(X)', 'Var Ratio U', 'Var Ratio X', 'Reduction'],
-        'Spectral Properties: Condition Numbers and Variance Analysis (k=10)',
-        'tab:spectral_properties'
+
+    caption = (
+        r'Spectral properties: condition numbers and variance analysis ($k=10$). '
+        r'$\kappa(\cdot)=\sigma_{\max}/\sigma_{\min}$ is the condition number; '
+        r'$\infty$ indicates a rank-deficient matrix ($\sigma_{\min}=0$). '
+        r'Var Ratio $=$ ratio of largest to smallest per-dimension variance. '
+        r'Reduction $=$ Var Ratio$_X$ / Var Ratio$_U$.'
     )
-    
+
+    lines = []
+    lines.append(r'\begin{table}[t]')
+    lines.append(r'\centering')
+    lines.append(rf'\caption{{{caption}}}')
+    lines.append(r'\label{tab:spectral_properties}')
+    lines.append(r'\begin{tabular}{lccccc}')
+    lines.append(r'\toprule')
+    lines.append(r'\textbf{Dataset} & $\kappa(U)$ & $\kappa(X)$ & \textbf{Var Ratio U} & \textbf{Var Ratio X} & \textbf{Reduction} \\')
+    lines.append(r'\midrule')
+
     for row in rows:
-        latex += (f"{row['dataset']:<20} & {row['cond_U']:>8.2f} & {row['cond_X']:>8.2f} & "
-                 f"{row['var_ratio_U']:>8.2f} & {row['var_ratio_X']:>8.2f} & "
-                 f"{row['var_reduction']:>8.2f}× \\\\\n")
-    
-    latex += latex_table_footer()
-    
+        cond_X_val = row['cond_X']
+        inf_row = math.isinf(cond_X_val) or math.isnan(cond_X_val)
+        dagger = r'\rlap{$^\dagger$}' if inf_row else ''
+        lines.append(
+            f"{row['dataset']:<20} & {fmt_val(row['cond_U'])} & {fmt_val(cond_X_val)} & "
+            f"{fmt_val(row['var_ratio_U'])} & {fmt_val(row['var_ratio_X'])} & "
+            f"{fmt_val(row['var_reduction'], times=True)}{dagger} \\\\"
+        )
+
+    lines.append(r'\bottomrule')
+    lines.append(r'\end{tabular}')
+
+    if has_inf_X:
+        lines.append(r'\begin{tablenotes}\small')
+        lines.append(
+            r'\item[$\dagger$] Datasets with $\kappa(X)=\infty$ have rank-deficient feature matrices '
+            r'($\sigma_{\min}=0$), making variance-based quantities involving $X$ unreliable. '
+            r'The corresponding $\kappa(U)$ values remain finite, confirming that the Rayleigh-Ritz '
+            r'projection regularises the degenerate directions.'
+        )
+        lines.append(r'\end{tablenotes}')
+
+    lines.append(r'\end{table}')
+
+    latex = '\n'.join(lines) + '\n'
+
     output_path = TABLES_DIR / 'table_4_1_spectral_properties.tex'
     with open(output_path, 'w') as f:
         f.write(latex)
-    
+
     print(f'  ✓ Saved: {output_path}')
 
 # ============================================================================
@@ -1913,6 +1964,83 @@ def generate_table_exp8_k_sensitivity(split_type='fixed'):
     print(f'  ✓ Saved: {output_path}')
 
 
+def generate_table_exp8_per_dataset(split_type='fixed'):
+    """Per-dataset k-sensitivity tables: one table per dataset, all k rows,
+    showing raw accuracies (SGC+MLP, R+Std, R+RN), Part A, Part B, Rem. Gap, Fisher, n_runs.
+    Saved as table_exp8_per_dataset_{ds}_{split_type}.tex
+    """
+    split_label = 'Fixed Splits' if split_type == 'fixed' else 'Random Splits'
+    print(f'Generating Exp 8 Per-Dataset Tables ({split_label})...')
+
+    DS_DISPLAY = {
+        'cora': 'Cora', 'citeseer': 'CiteSeer', 'pubmed': 'PubMed',
+        'wikics': 'WikiCS', 'amazon-computers': 'Amazon-Computers',
+        'amazon-photo': 'Amazon-Photo', 'coauthor-cs': 'Coauthor-CS',
+        'coauthor-physics': 'Coauthor-Physics', 'ogbn-arxiv': 'ogbn-arxiv',
+    }
+
+    for ds in DATASETS:
+        k_sens = load_k_sensitivity(ds, split_type, 'lcc')
+        if k_sens is None:
+            print(f'  ! No exp8 data for {ds} ({split_type}), skipping.')
+            continue
+
+        ds_label = DS_DISPLAY.get(ds, ds)
+        sorted_rows = sorted(k_sens['k_sensitivity'], key=lambda r: r['k'])
+
+        lines = []
+        lines.append(r'\begin{table}[t]')
+        lines.append(r'\centering\small\setlength{\tabcolsep}{5pt}')
+        lines.append(
+            rf'\caption{{k-sensitivity for \textbf{{{ds_label}}} ({split_label}). '
+            r'Accuracies are mean test accuracy (\%). '
+            r'Part~A $=$ SGC+MLP $-$ R+Std; Part~B $=$ R+RN $-$ R+Std; '
+            r'Rem.~Gap $=$ Part~A $-$ Part~B. '
+            r'Fisher $=$ Fisher score of $\|U_i\|$ row norms on training nodes.}'
+        )
+        lines.append(rf'\label{{tab:exp8_per_dataset_{ds}_{split_type}}}')
+        lines.append(r'\begin{tabular}{rrrrrrrrrr}')
+        lines.append(r'\toprule')
+        lines.append(
+            r'$k$ & SGC+MLP & R+Std & R+RN & Part~A & Part~B & Rem.~Gap & Fisher & $n_{\mathrm{runs}}$ \\'
+        )
+        lines.append(r'\midrule')
+
+        for r in sorted_rows:
+            k        = r.get('k', '')
+            sgc      = r.get('sgc_mlp')
+            r_std    = r.get('restr_std')
+            r_rn     = r.get('restr_rn')
+            part_a   = r.get('part_a')
+            part_b   = r.get('part_b')
+            rem_gap  = r.get('rem_gap')
+            fisher   = r.get('fisher_score')
+            n_runs   = r.get('n_runs', r'\textemdash')
+
+            def pct(v):
+                return f'{v:.2f}\\%' if v is not None else r'\textemdash'
+            def signed(v):
+                return f'{v:+.3f}' if v is not None else r'\textemdash'
+            def flt4(v):
+                return f'{v:.5f}' if v is not None else r'\textemdash'
+
+            lines.append(
+                f'{k} & {pct(sgc)} & {pct(r_std)} & {pct(r_rn)} & '
+                f'{signed(part_a)} & {signed(part_b)} & {signed(rem_gap)} & '
+                f'{flt4(fisher)} & {n_runs} \\\\'
+            )
+
+        lines.append(r'\bottomrule')
+        lines.append(r'\end{tabular}')
+        lines.append(r'\end{table}')
+
+        fname = f'table_exp8_per_dataset_{ds}_{split_type}.tex'
+        output_path = TABLES_DIR / fname
+        with open(output_path, 'w') as f:
+            f.write('\n'.join(lines) + '\n')
+        print(f'  ✓ Saved: {output_path}')
+
+
 def generate_table_3_8_part_a_k_sweep(split_type='fixed'):
     """Table 3.8 / 3.9: Part A across all k values, all 9 datasets.
 
@@ -2020,6 +2148,8 @@ def generate_section_3():
     generate_table_3_5_fisher_partb_data()
     generate_table_exp8_k_sensitivity('fixed')
     generate_table_exp8_k_sensitivity('random')
+    generate_table_exp8_per_dataset('fixed')
+    generate_table_exp8_per_dataset('random')
 
 def generate_section_4():
     """Generate all Section 4 artifacts"""

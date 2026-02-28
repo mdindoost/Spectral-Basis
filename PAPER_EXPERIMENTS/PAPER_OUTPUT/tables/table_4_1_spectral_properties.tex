@@ -1,19 +1,22 @@
 \begin{table}[t]
 \centering
-\caption{Spectral Properties: Condition Numbers and Variance Analysis (k=10)}
+\caption{Spectral properties: condition numbers and variance analysis ($k=10$). $\kappa(\cdot)=\sigma_{\max}/\sigma_{\min}$ is the condition number; $\infty$ indicates a rank-deficient matrix ($\sigma_{\min}=0$). Var Ratio $=$ ratio of largest to smallest per-dimension variance. Reduction $=$ Var Ratio$_X$ / Var Ratio$_U$.}
 \label{tab:spectral_properties}
 \begin{tabular}{lccccc}
 \toprule
-\textbf{Dataset} & \textbf{κ(U)} & \textbf{κ(X)} & \textbf{Var Ratio U} & \textbf{Var Ratio X} & \textbf{Reduction} \\
+\textbf{Dataset} & $\kappa(U)$ & $\kappa(X)$ & \textbf{Var Ratio U} & \textbf{Var Ratio X} & \textbf{Reduction} \\
 \midrule
-cora                 &     4.46 &  1523.25 & 7640053.30 & 68255289926.70 &  8933.88× \\
-citeseer             &     3.07 &   277.02 & 2067098618.71 & 99278296353.95 &    48.03× \\
-pubmed               &    27.94 &   250.58 &   170.52 &  2695.30 &    15.81× \\
-wikics               &  2738.33 & 3501759.13 &  7525.21 & 18090.26 &     2.40× \\
-amazon-computers     &    38.56 & 2142084.87 &   111.31 &     7.62 &     0.07× \\
-amazon-photo         &    63.85 & 24644500.95 &    42.32 &    11.04 &     0.26× \\
-coauthor-cs          &   440.92 &      inf &    32.37 & 89011.88 &  2749.92× \\
-coauthor-physics     &   809.48 &      inf &   104.04 & 62955541026.81 & 605080031.97× \\
+Cora                 & 4.46 & 1523.25 & $7.64\times10^{6}$ & $6.83\times10^{10}$ & 8933.88$\times$ \\
+CiteSeer             & 3.07 & 277.02 & $2.07\times10^{9}$ & $9.93\times10^{10}$ & 48.03$\times$ \\
+PubMed               & 27.94 & 250.58 & 170.52 & 2695.30 & 15.81$\times$ \\
+WikiCS               & 2738.33 & $3.50\times10^{6}$ & 7525.21 & 18090.26 & 2.40$\times$ \\
+Amazon-Computers     & 38.56 & $2.14\times10^{6}$ & 111.31 & 7.62 & 0.07$\times$ \\
+Amazon-Photo         & 63.85 & $2.46\times10^{7}$ & 42.32 & 11.04 & 0.26$\times$ \\
+Coauthor-CS          & 440.92 & $\infty$ & 32.37 & 89011.88 & 2749.92$\times$\rlap{$^\dagger$} \\
+Coauthor-Physics     & 809.48 & $\infty$ & 104.04 & $6.30\times10^{10}$ & $6.05\times10^{8}$$\times$\rlap{$^\dagger$} \\
 \bottomrule
 \end{tabular}
+\begin{tablenotes}\small
+\item[$\dagger$] Datasets with $\kappa(X)=\infty$ have rank-deficient feature matrices ($\sigma_{\min}=0$), making variance-based quantities involving $X$ unreliable. The corresponding $\kappa(U)$ values remain finite, confirming that the Rayleigh-Ritz projection regularises the degenerate directions.
+\end{tablenotes}
 \end{table}

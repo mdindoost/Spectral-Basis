@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{k-sensitivity for \textbf{Cora} (Fixed Splits). Accuracies are mean test accuracy (\%). Part~A $=$ SGC+MLP $-$ R+Std; Part~B $=$ R+RN $-$ R+Std; Rem.~Gap $=$ Part~A $-$ Part~B. Fisher $=$ Fisher score of $\|U_i\|$ row norms on training nodes.}
+\label{tab:exp8_per_dataset_cora_fixed}
+\begin{tabular}{rrrrrrrrrr}
+\toprule
+$k$ & SGC+MLP & R+Std & R+RN & Part~A & Part~B & Rem.~Gap & Fisher & $n_{\mathrm{runs}}$ \\
+\midrule
+1 & 69.57\% & 46.42\% & 31.40\% & +23.148 & -15.024 & +38.171 & 0.05175 & 15 \\
+2 & 69.52\% & 47.12\% & 32.02\% & +22.397 & -15.097 & +37.494 & 0.04167 & 15 \\
+4 & 74.17\% & 48.42\% & 31.92\% & +25.756 & -16.495 & +42.251 & 0.04140 & 15 \\
+6 & 75.56\% & 48.31\% & 31.87\% & +27.250 & -16.437 & +43.687 & 0.04042 & 15 \\
+8 & 76.20\% & 46.62\% & 33.12\% & +29.574 & -13.501 & +43.075 & 0.04130 & 15 \\
+10 & 76.19\% & 46.30\% & 33.03\% & +29.887 & -13.275 & +43.162 & 0.03999 & 15 \\
+12 & 77.09\% & 47.11\% & 33.63\% & +29.974 & -13.479 & +43.454 & 0.03928 & 15 \\
+20 & 76.93\% & 46.78\% & 35.05\% & +30.157 & -11.723 & +41.880 & 0.04279 & 15 \\
+30 & 75.97\% & 49.95\% & 37.52\% & +26.018 & -12.430 & +38.448 & 0.06532 & 15 \\
+\bottomrule
+\end{tabular}
+\end{table}

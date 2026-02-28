@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{k-sensitivity for \textbf{PubMed} (Fixed Splits). Accuracies are mean test accuracy (\%). Part~A $=$ SGC+MLP $-$ R+Std; Part~B $=$ R+RN $-$ R+Std; Rem.~Gap $=$ Part~A $-$ Part~B. Fisher $=$ Fisher score of $\|U_i\|$ row norms on training nodes.}
+\label{tab:exp8_per_dataset_pubmed_fixed}
+\begin{tabular}{rrrrrrrrrr}
+\toprule
+$k$ & SGC+MLP & R+Std & R+RN & Part~A & Part~B & Rem.~Gap & Fisher & $n_{\mathrm{runs}}$ \\
+\midrule
+1 & 68.69\% & 42.31\% & 42.35\% & +26.387 & +0.040 & +26.347 & 0.00668 & 15 \\
+2 & 73.52\% & 46.55\% & 45.73\% & +26.967 & -0.820 & +27.787 & 0.00979 & 15 \\
+4 & 74.93\% & 45.27\% & 44.39\% & +29.653 & -0.880 & +30.533 & 0.01649 & 15 \\
+6 & 74.46\% & 47.05\% & 46.42\% & +27.413 & -0.627 & +28.040 & 0.02259 & 15 \\
+8 & 74.94\% & 46.90\% & 46.26\% & +28.040 & -0.640 & +28.680 & 0.02642 & 15 \\
+10 & 75.16\% & 47.59\% & 47.72\% & +27.567 & +0.127 & +27.440 & 0.02931 & 15 \\
+12 & 75.95\% & 47.85\% & 47.69\% & +28.100 & -0.160 & +28.260 & 0.03170 & 15 \\
+20 & 75.57\% & 48.23\% & 50.93\% & +27.333 & +2.693 & +24.640 & 0.03766 & 15 \\
+30 & 75.53\% & 50.04\% & 52.18\% & +25.493 & +2.140 & +23.353 & 0.04011 & 15 \\
+\bottomrule
+\end{tabular}
+\end{table}

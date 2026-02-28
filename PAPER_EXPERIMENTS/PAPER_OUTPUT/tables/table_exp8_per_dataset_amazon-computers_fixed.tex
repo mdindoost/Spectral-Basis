@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{k-sensitivity for \textbf{Amazon-Computers} (Fixed Splits). Accuracies are mean test accuracy (\%). Part~A $=$ SGC+MLP $-$ R+Std; Part~B $=$ R+RN $-$ R+Std; Rem.~Gap $=$ Part~A $-$ Part~B. Fisher $=$ Fisher score of $\|U_i\|$ row norms on training nodes.}
+\label{tab:exp8_per_dataset_amazon-computers_fixed}
+\begin{tabular}{rrrrrrrrrr}
+\toprule
+$k$ & SGC+MLP & R+Std & R+RN & Part~A & Part~B & Rem.~Gap & Fisher & $n_{\mathrm{runs}}$ \\
+\midrule
+1 & 92.64\% & 89.31\% & 89.18\% & +3.331 & -0.125 & +3.455 & 0.08787 & 15 \\
+2 & 92.63\% & 89.14\% & 89.90\% & +3.483 & +0.757 & +2.725 & 0.06840 & 15 \\
+4 & 90.48\% & 88.78\% & 89.46\% & +1.692 & +0.673 & +1.019 & 0.05433 & 15 \\
+6 & 87.68\% & 89.14\% & 89.13\% & -1.452 & -0.005 & -1.447 & 0.04914 & 15 \\
+8 & 85.26\% & 89.33\% & 89.13\% & -4.071 & -0.209 & -3.861 & 0.04625 & 15 \\
+10 & 83.95\% & 89.50\% & 89.39\% & -5.548 & -0.112 & -5.436 & 0.04445 & 15 \\
+12 & 82.75\% & 89.58\% & 89.52\% & -6.836 & -0.060 & -6.776 & 0.04327 & 15 \\
+20 & 79.82\% & 89.77\% & 89.86\% & -9.948 & +0.085 & -10.032 & 0.04108 & 15 \\
+30 & 75.11\% & 89.92\% & 90.04\% & -14.816 & +0.120 & -14.935 & 0.04020 & 15 \\
+\bottomrule
+\end{tabular}
+\end{table}
