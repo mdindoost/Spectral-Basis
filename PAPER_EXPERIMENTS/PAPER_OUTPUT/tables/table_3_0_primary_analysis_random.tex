@@ -1,0 +1,21 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{Primary basis-sensitivity analysis at the optimal SGC diffusion depth (Random Splits). For each dataset, $k^*$ is the diffusion depth where SGC+MLP achieves its highest test accuracy. Part~A $=$ SGC+MLP $-$ R+Std measures the eigenvector-basis penalty at SGC\'s strongest operating point. Part~B $=$ R+RN $-$ R+Std measures RowNorm recovery. Gap $=$ Part~A $-$ Part~B is the unrecovered loss. Negative Part~B means RowNorm hurts rather than helps.}
+\label{tab:primary_analysis_random}
+\begin{tabular}{lrrrrrrr}
+\toprule
+Dataset & $k^*$ & SGC+MLP & R+Std & R+RN & Part~A & Part~B & Gap \\
+\midrule
+Cora                 &   2 & 86.34\% & 75.31\% & 71.84\% & \textbf{+11.03} & \textit{-3.47}$^-$ & +14.50 \\
+CiteSeer             &   6 & 74.54\% & 60.53\% & 65.29\% & \textbf{+14.01} & +4.75 & +9.25 \\
+PubMed               &   1 & 87.47\% & 86.65\% & 86.14\% & +0.82 & \textit{-0.50}$^-$ & +1.32 \\
+WikiCS               &   2 & 84.23\% & 80.01\% & 80.97\% & +4.21 & +0.96 & +3.25 \\
+Amazon-Computers     &   2 & 92.30\% & 89.17\% & 89.85\% & +3.12 & +0.67 & +2.45 \\
+Amazon-Photo         &   2 & 94.65\% & 90.76\% & 91.90\% & +3.90 & +1.15 & +2.75 \\
+Coauthor-CS          &   1 & 93.16\% & 81.23\% & 80.86\% & \textbf{+11.93} & \textit{-0.37}$^-$ & +12.30 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}\small
+\item Bold Part~A $\geq 5$\,pp. Italic $^-$ = RowNorm hurts (Part~B $< 0$). $k^*$ determined per dataset independently for fixed and random splits.
+\end{tablenotes}
+\end{table}

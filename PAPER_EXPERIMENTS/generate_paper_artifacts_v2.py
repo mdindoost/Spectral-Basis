@@ -92,6 +92,20 @@ def load_k_sensitivity(dataset, split_type='fixed', component='lcc'):
     with open(path) as f:
         return json.load(f)
 
+def get_best_k_per_dataset(split_type='fixed', component='lcc'):
+    """Return dict {dataset: best_k} where best_k maximises SGC+MLP accuracy."""
+    best = {}
+    for ds in DATASETS:
+        k_sens = load_k_sensitivity(ds, split_type, component)
+        if k_sens is None:
+            continue
+        rows = [r for r in k_sens['k_sensitivity'] if r.get('sgc_mlp') is not None]
+        if not rows:
+            continue
+        best[ds] = max(rows, key=lambda r: r['sgc_mlp'])['k']
+    return best
+
+
 def load_spectral_analysis(dataset, split_type='fixed', component='lcc', k=10):
     """Load exp2_spectral_analysis.json"""
     path = RESULTS_DIR / f'{dataset}_{split_type}_{component}' / 'analytics' / f'exp2_spectral_analysis_k{k}.json'
@@ -2125,11 +2139,123 @@ def generate_table_3_8_part_a_k_sweep(split_type='fixed'):
     print(f'  ✓ Saved: {output_path}')
 
 
+def generate_table_3_0_primary_analysis(split_type='fixed'):
+    """Table 3.0: Primary analysis at best-k(SGC) per dataset.
+
+    For each dataset, identifies the k where SGC+MLP achieves peak accuracy,
+    then reports SGC, R+Std, R+RN, Part A, Part B, and Gap at that k.
+    This is the methodologically correct reference point: we measure the
+    eigenvector basis penalty at SGC's strongest operating point.
+    Saved as table_3_0_primary_analysis_{split_type}.tex
+    """
+    split_label = 'Fixed Splits' if split_type == 'fixed' else 'Random Splits'
+    print(f'Generating Table 3.0: Primary Analysis at Best-k ({split_label})...')
+
+    DS_DISPLAY = {
+        'cora': 'Cora', 'citeseer': 'CiteSeer', 'pubmed': 'PubMed',
+        'wikics': 'WikiCS', 'amazon-computers': 'Amazon-Computers',
+        'amazon-photo': 'Amazon-Photo', 'coauthor-cs': 'Coauthor-CS',
+        'coauthor-physics': 'Coauthor-Physics', 'ogbn-arxiv': 'ogbn-arxiv',
+    }
+
+    best_k_map = get_best_k_per_dataset(split_type)
+    rows = []
+
+    for ds in DATASETS:
+        k_sens = load_k_sensitivity(ds, split_type, 'lcc')
+        if k_sens is None:
+            continue
+        best_k = best_k_map.get(ds)
+        if best_k is None:
+            continue
+        by_k = {r['k']: r for r in k_sens['k_sensitivity']}
+        r = by_k.get(best_k)
+        if r is None:
+            continue
+        rows.append({
+            'dataset': DS_DISPLAY.get(ds, ds),
+            'best_k':  best_k,
+            'sgc':     r.get('sgc_mlp'),
+            'r_std':   r.get('restr_std'),
+            'r_rn':    r.get('restr_rn'),
+            'part_a':  r.get('part_a'),
+            'part_b':  r.get('part_b'),
+            'gap':     r.get('rem_gap'),
+        })
+
+    if not rows:
+        print(f'  ! No data for split_type={split_type}')
+        return
+
+    def pct(v):
+        return f'{v:.2f}\\%' if v is not None else r'\textemdash'
+    def signed(v):
+        return f'{v:+.2f}' if v is not None else r'\textemdash'
+
+    lines = []
+    lines.append(r'\begin{table}[t]')
+    lines.append(r'\centering\small\setlength{\tabcolsep}{5pt}')
+    lines.append(
+        rf'\caption{{Primary basis-sensitivity analysis at the optimal SGC diffusion depth ({split_label}). '
+        r'For each dataset, $k^*$ is the diffusion depth where SGC+MLP achieves its highest test accuracy. '
+        r'Part~A $=$ SGC+MLP $-$ R+Std measures the eigenvector-basis penalty at SGC\'s strongest operating point. '
+        r'Part~B $=$ R+RN $-$ R+Std measures RowNorm recovery. '
+        r'Gap $=$ Part~A $-$ Part~B is the unrecovered loss. '
+        r'Negative Part~B means RowNorm hurts rather than helps.}'
+    )
+    lines.append(rf'\label{{tab:primary_analysis_{split_type}}}')
+    lines.append(r'\begin{tabular}{lrrrrrrr}')
+    lines.append(r'\toprule')
+    lines.append(r'Dataset & $k^*$ & SGC+MLP & R+Std & R+RN & Part~A & Part~B & Gap \\')
+    lines.append(r'\midrule')
+
+    for row in rows:
+        pa = row['part_a']
+        pb = row['part_b']
+        # Bold Part A if large (>5pp), flag negative Part B with *
+        pa_str = signed(pa)
+        if pa is not None and abs(pa) >= 5:
+            pa_str = rf'\textbf{{{pa_str}}}'
+        pb_str = signed(pb)
+        if pb is not None and pb < 0:
+            pb_str = rf'\textit{{{pb_str}}}$^-$'
+        lines.append(
+            f"{row['dataset']:<20} & {row['best_k']:>3} & "
+            f"{pct(row['sgc'])} & {pct(row['r_std'])} & {pct(row['r_rn'])} & "
+            f"{pa_str} & {pb_str} & {signed(row['gap'])} \\\\"
+        )
+
+    lines.append(r'\bottomrule')
+    lines.append(r'\end{tabular}')
+    lines.append(
+        r'\begin{tablenotes}\small'
+        '\n'
+        r'\item Bold Part~A $\geq 5$\,pp. '
+        r'Italic $^-$ = RowNorm hurts (Part~B $< 0$). '
+        r'$k^*$ determined per dataset independently for fixed and random splits.'
+        '\n'
+        r'\end{tablenotes}'
+    )
+    lines.append(r'\end{table}')
+
+    fname = f'table_3_0_primary_analysis_{split_type}.tex'
+    output_path = TABLES_DIR / fname
+    with open(output_path, 'w') as f:
+        f.write('\n'.join(lines) + '\n')
+    print(f'  ✓ Saved: {output_path}')
+    # Print best-k map for reference
+    for row in rows:
+        print(f"    {row['dataset']:<22} best k={row['best_k']:>2}  "
+              f"Part A={row['part_a']:+.2f}  Part B={row['part_b']:+.2f}")
+
+
 def generate_section_3():
     """Generate all Section 3 artifacts"""
     print("\n" + "="*80)
     print("SECTION 3: BASIS SENSITIVITY + OVER-SMOOTHING")
     print("="*80)
+    generate_table_3_0_primary_analysis('fixed')
+    generate_table_3_0_primary_analysis('random')
     generate_table_3_1_part_a()
     generate_table_3_2_part_a_random()
     generate_table_3_6_part_b('fixed')
