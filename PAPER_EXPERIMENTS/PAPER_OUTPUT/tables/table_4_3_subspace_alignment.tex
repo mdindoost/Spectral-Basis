@@ -1,0 +1,17 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{Subspace alignment at $k=10$ (fixed splits): canonical correlations between $\operatorname{col}(U)$ and the top-$d_{\mathrm{eff}}$ left singular vectors of $X_{\mathrm{diff}}$. Values near 1 mean Rayleigh-Ritz preserves dominant directions; near 0 means the subspaces are orthogonal. High mean CC with large Part A gap (e.g.\ CiteSeer) shows that directional preservation does \emph{not} explain the accuracy drop --- magnitude distortion is the key factor.}
+\label{tab:subspace_alignment}
+\begin{tabular}{lrrrrrr}
+\toprule
+Dataset & Mean CC & Max CC & Min CC & Part A (pp) & Part B (pp) \\
+\midrule
+cora & 0.9960 & 1.0000 & 0.0017 & +29.89 & -13.28 \\
+citeseer & 0.9758 & 1.0000 & 0.0021 & +36.57 & -3.22 \\
+pubmed & 1.0000 & 1.0000 & 1.0000 & +27.57 & +0.13 \\
+wikics & 1.0000 & 1.0000 & 1.0000 & +8.63 & -3.52 \\
+amazon\mbox{-}computers & 1.0000 & 1.0000 & 1.0000 & -5.55 & -0.11 \\
+amazon\mbox{-}photo & 1.0000 & 1.0000 & 1.0000 & -0.62 & +0.32 \\
+coauthor\mbox{-}cs & 0.9997 & 1.0000 & 0.0032 & +13.06 & -5.09 \\
+coauthor\mbox{-}physics & 0.9353 & 1.0000 & 0.0000 & +8.02 & +1.84 \\
+\bottomrule\end{tabular}\end{table}

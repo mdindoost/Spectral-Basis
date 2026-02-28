@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{6pt}
+\caption{Fisher score of $\|U_i\|$ and RowNorm recovery (Part B) at $k=10$ (fixed splits). Classification uses median Fisher as threshold. Part B $> 0$: RowNorm helps; Part B $< 0$: RowNorm hurts. Pearson $r$ tests linear association between Fisher score and recovery.}
+\label{tab:fisher_partb_data}
+\begin{tabular}{lrrr}
+\toprule
+Dataset & Fisher Score & Part B (pp) & Fisher Class \\
+\midrule
+cora & 0.0400 & -13.28 & Low \\
+citeseer & 0.0719 & -3.22 & \textbf{High} \\
+pubmed & 0.0293 & +0.13 & Low \\
+wikics & 0.0597 & -3.52 & Low \\
+amazon\mbox{-}computers & 0.0444 & -0.11 & Low \\
+amazon\mbox{-}photo & 0.0854 & +0.32 & \textbf{High} \\
+coauthor\mbox{-}cs & 0.2150 & -5.09 & \textbf{High} \\
+coauthor\mbox{-}physics & 0.2890 & +1.84 & \textbf{High} \\
+\midrule
+\multicolumn{4}{l}{Median Fisher threshold = 0.0658; Pearson $r = +0.276$, $p = 0.509$ (n.s.), $n = 8$} \\
+\bottomrule\end{tabular}\end{table}

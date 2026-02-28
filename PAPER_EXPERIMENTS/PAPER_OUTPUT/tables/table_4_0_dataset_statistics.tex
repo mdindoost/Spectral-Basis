@@ -1,0 +1,17 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{Dataset statistics after LCC extraction ($k=10$). $d_{\mathrm{eff}}$ = rank of $\hat{A}^k X$ after QR decomposition. Homophily $h$ = fraction of edges connecting same-class nodes; $h{=}1$ is perfectly homophilous, $h{=}0$ is heterophilous.}
+\label{tab:dataset_statistics}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Dataset & Nodes & Edges & Avg Deg & Classes & Features & $d_{\mathrm{eff}}$ & Homophily \\
+\midrule
+cora & 2,485 & 5,069 & 4.08 & 7 & 1,433 & 1,427 & 0.804 \\
+citeseer & 2,120 & 3,679 & 3.47 & 6 & 3,703 & 1,782 & 0.735 \\
+pubmed & 19,717 & 44,324 & 4.50 & 3 & 500 & 500 & 0.802 \\
+wikics & 11,311 & 215,554 & 38.11 & 10 & 300 & 300 & 0.654 \\
+amazon\mbox{-}computers & 13,381 & 245,778 & 36.74 & 10 & 767 & 767 & 0.777 \\
+amazon\mbox{-}photo & 7,487 & 119,043 & 31.80 & 8 & 745 & 745 & 0.827 \\
+coauthor\mbox{-}cs & 18,333 & 81,894 & 8.93 & 15 & 6,805 & 6,803 & 0.808 \\
+coauthor\mbox{-}physics & 34,493 & 247,962 & 14.38 & 5 & 8,415 & 7,697 & 0.931 \\
+\bottomrule\end{tabular}\end{table}

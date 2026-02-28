@@ -1,0 +1,17 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{6pt}
+\caption{Part B: RowNorm recovery at $k=10$ (Fixed Splits). Part B $=$ Acc(Restricted+RowNorm) $-$ Acc(Restricted+Std). Negative values mean RowNorm \emph{hurts} --- this is a finding, not a failure. Std is propagated from individual method standard deviations across seeds.}}
+\label{tab:part_b_fixed}
+\begin{tabular}{lrrrr}
+\toprule
+Dataset & R+Std (\%) & R+RowNorm (\%) & Part B (pp) & Std (pp) \\
+\midrule
+cora & 46.30 & 33.03 & \textbf{-13.28} & 2.02 \\
+citeseer & 30.15 & 26.93 & \textbf{-3.22} & 4.04 \\
+pubmed & 47.59 & 47.72 & +0.13 & 2.37 \\
+wikics & 66.89 & 63.36 & \textbf{-3.52} & 0.67 \\
+amazon\mbox{-}computers & 89.50 & 89.39 & -0.11 & 0.37 \\
+amazon\mbox{-}photo & 91.31 & 91.62 & +0.32 & 0.58 \\
+coauthor\mbox{-}cs & 77.77 & 72.68 & \textbf{-5.09} & 2.89 \\
+coauthor\mbox{-}physics & 86.86 & 88.69 & \textbf{+1.84} & 1.56 \\
+\bottomrule\end{tabular}\end{table}
