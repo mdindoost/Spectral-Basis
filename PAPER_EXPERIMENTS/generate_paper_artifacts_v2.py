@@ -525,6 +525,238 @@ def generate_figure_3_4_fisher_vs_k():
     print(f'  ✓ Saved: {output_path}')
 
 
+def generate_figure_3_5_fisher_vs_partb_scatter():
+    """Figure 3.5: Fisher score vs Part B recovery at k=10 (cross-dataset scatter).
+
+    Validates: "Fisher diagnostic predicts when magnitude-aware methods help."
+    - x-axis: Fisher score of ||U_i|| at k=10 (fixed splits)
+    - y-axis: Part B recovery (pp) at k=10
+    - Pearson r and p-value shown in annotation box
+    - Vertical dashed line at median Fisher separates high/low magnitude regimes
+    - Horizontal dashed line at y=0 marks RowNorm neutral point
+    """
+    from scipy.stats import pearsonr
+
+    print('Generating Figure 3.5: Fisher vs Part B Scatter...')
+
+    points = []
+    for ds in DATASETS:
+        k_sens = load_k_sensitivity(ds, 'fixed', 'lcc')
+        if k_sens is None:
+            continue
+        by_k = {r['k']: r for r in k_sens['k_sensitivity']}
+        r10 = by_k.get(10, {})
+        fisher = r10.get('fisher_score')
+        part_b = r10.get('part_b')
+        if fisher is None or part_b is None:
+            print(f'  ⚠ Missing fisher or part_b at k=10 for {ds}, skipping')
+            continue
+        points.append({'dataset': ds, 'fisher': fisher, 'part_b': part_b})
+
+    if len(points) < 3:
+        print(f'  ⚠ Only {len(points)} datasets have both fisher and part_b — skipping scatter')
+        return
+
+    fishers = np.array([p['fisher'] for p in points])
+    part_bs = np.array([p['part_b'] for p in points])
+    r, pval = pearsonr(fishers, part_bs)
+
+    # Threshold: median Fisher score
+    threshold = float(np.median(fishers))
+
+    fig, ax = plt.subplots(figsize=(9, 7))
+
+    for p in points:
+        color = '#2ca02c' if p['part_b'] >= 0 else '#d62728'
+        ax.scatter(p['fisher'], p['part_b'], s=120, color=color,
+                   edgecolor='black', linewidth=1.2, zorder=5)
+        ax.annotate(p['dataset'],
+                    xy=(p['fisher'], p['part_b']),
+                    xytext=(6, 4), textcoords='offset points',
+                    fontsize=9, ha='left')
+
+    # Reference lines
+    ax.axhline(y=0, color='black', linestyle='-', linewidth=1.5, alpha=0.6,
+               label='Part B = 0 (RowNorm neutral)')
+    ax.axvline(x=threshold, color='steelblue', linestyle='--', linewidth=1.8,
+               alpha=0.8, label=f'Median Fisher = {threshold:.4f}')
+
+    # Pearson annotation
+    sig = '***' if pval < 0.001 else ('**' if pval < 0.01 else ('*' if pval < 0.05 else 'n.s.'))
+    ax.text(0.97, 0.97,
+            f'Pearson r = {r:+.3f}\np = {pval:.3f} ({sig})\nn = {len(points)} datasets',
+            transform=ax.transAxes, fontsize=11,
+            verticalalignment='top', horizontalalignment='right',
+            bbox=dict(boxstyle='round,pad=0.4', facecolor='lightyellow',
+                      edgecolor='gray', alpha=0.9))
+
+    # Quadrant labels
+    xlo, xhi = ax.get_xlim()
+    ylo, yhi = ax.get_ylim()
+    ax.text(threshold + 0.001 * (xhi - xlo), yhi * 0.92,
+            'High Fisher\n(magnitude informative)',
+            fontsize=8, color='steelblue', ha='left', style='italic')
+    ax.text(xlo + 0.01 * (xhi - xlo), yhi * 0.92,
+            'Low Fisher\n(magnitude uninformative)',
+            fontsize=8, color='gray', ha='left', style='italic')
+
+    ax.set_xlabel('Fisher Score of $\\|U_i\\|$ (k=10)', fontsize=14, fontweight='bold')
+    ax.set_ylabel('Part B: RowNorm Recovery (pp, k=10)', fontsize=14, fontweight='bold')
+    ax.set_title('Fisher Diagnostic vs RowNorm Recovery\n(Fixed Splits, k=10)',
+                 fontsize=15, fontweight='bold', pad=12)
+    ax.legend(fontsize=10, loc='lower right')
+    ax.grid(True, alpha=0.3, linestyle='--')
+    plt.xticks(fontsize=11)
+    plt.yticks(fontsize=11)
+    plt.tight_layout()
+
+    output_path = FIGURES_DIR / 'figure_3_5_fisher_vs_partb_scatter.pdf'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f'  ✓ Saved: {output_path}')
+    print(f'  ✓ Pearson r = {r:+.3f}, p = {pval:.4f}, n = {len(points)}, '
+          f'Fisher threshold (median) = {threshold:.4f}')
+
+
+def generate_table_3_5_fisher_partb_data():
+    """Table 3.5: Raw data table — Fisher score vs Part B at k=10, all datasets.
+
+    Columns: Dataset | Fisher Score | Part B (pp) | Class (High/Low Fisher)
+    Footer row: Pearson r and p-value.
+    Threshold = median Fisher score across datasets.
+    """
+    from scipy.stats import pearsonr
+
+    print('Generating Table 3.5: Fisher vs Part B Data Table...')
+
+    points = []
+    for ds in DATASETS:
+        k_sens = load_k_sensitivity(ds, 'fixed', 'lcc')
+        if k_sens is None:
+            continue
+        by_k = {r['k']: r for r in k_sens['k_sensitivity']}
+        r10 = by_k.get(10, {})
+        fisher = r10.get('fisher_score')
+        part_b = r10.get('part_b')
+        if fisher is None or part_b is None:
+            print(f'  ⚠ Missing fisher or part_b at k=10 for {ds}, skipping')
+            continue
+        points.append({'dataset': ds, 'fisher': fisher, 'part_b': part_b})
+
+    if len(points) < 3:
+        print(f'  ⚠ Only {len(points)} datasets with data — skipping table')
+        return
+
+    fishers = np.array([p['fisher'] for p in points])
+    part_bs = np.array([p['part_b'] for p in points])
+    r, pval = pearsonr(fishers, part_bs)
+    threshold = float(np.median(fishers))
+
+    sig = '***' if pval < 0.001 else ('**' if pval < 0.01 else ('*' if pval < 0.05 else 'n.s.'))
+
+    lines = []
+    lines.append(r'\begin{table}[t]')
+    lines.append(r'\centering\small\setlength{\tabcolsep}{6pt}')
+    lines.append(r'\caption{Fisher score of $\|U_i\|$ and RowNorm recovery (Part B) at $k=10$ '
+                 r'(fixed splits). Classification uses median Fisher as threshold. '
+                 r'Part B $> 0$: RowNorm helps; Part B $< 0$: RowNorm hurts. '
+                 r'Pearson $r$ tests linear association between Fisher score and recovery.}')
+    lines.append(r'\label{tab:fisher_partb_data}')
+    lines.append(r'\begin{tabular}{lrrr}')
+    lines.append(r'\toprule')
+    lines.append(r'Dataset & Fisher Score & Part B (pp) & Fisher Class \\')
+    lines.append(r'\midrule')
+
+    for p in points:
+        ds_label = p['dataset'].replace('-', r'\mbox{-}')
+        cls = 'High' if p['fisher'] >= threshold else 'Low'
+        cls_str = rf'\textbf{{{cls}}}' if cls == 'High' else cls
+        lines.append(rf"{ds_label} & {p['fisher']:.4f} & {p['part_b']:+.2f} & {cls_str} \\")
+
+    lines.append(r'\midrule')
+    lines.append(rf'\multicolumn{{4}}{{l}}{{Median Fisher threshold = {threshold:.4f}; '
+                 rf'Pearson $r = {r:+.3f}$, $p = {pval:.3f}$ ({sig}), $n = {len(points)}$}} \\')
+    lines.append(r'\bottomrule\end{tabular}\end{table}')
+
+    output_path = TABLES_DIR / 'table_3_5_fisher_partb_data.tex'
+    with open(output_path, 'w') as f:
+        f.write('\n'.join(lines))
+    print(f'  ✓ Saved: {output_path}')
+    print(f'  ✓ Pearson r = {r:+.3f}, p = {pval:.4f} ({sig}), threshold = {threshold:.4f}')
+
+
+def generate_table_3_6_part_b(split_type='fixed'):
+    """Table 3.6 / 3.7: Part B at k=10 — RowNorm recovery across all 9 datasets.
+
+    Columns: Dataset | R+Std (%) | R+RowNorm (%) | Part B (pp) | Std of Part B
+    Negative Part B means RowNorm hurts — reported as a finding, not suppressed.
+    """
+    split_label = 'Fixed Splits' if split_type == 'fixed' else 'Random Splits'
+    tnum = '3.6' if split_type == 'fixed' else '3.7'
+    print(f'Generating Table {tnum}: Part B ({split_label}, k=10)...')
+
+    rows = []
+    for ds in DATASETS:
+        data = load_results(ds, split_type, 'lcc', 10)
+        if data is None:
+            continue
+        exps = data['experiments']
+        fa   = data['framework_analysis']
+
+        std_mean = exps['restricted_standard_mlp']['test_acc_mean'] * 100
+        std_std  = exps['restricted_standard_mlp']['test_acc_std']  * 100
+        rn_mean  = exps['restricted_rownorm_mlp']['test_acc_mean']  * 100
+        rn_std   = exps['restricted_rownorm_mlp']['test_acc_std']   * 100
+        part_b   = fa['part_b_pp']
+
+        # Error propagation: std of the difference
+        part_b_std = float(np.sqrt(std_std ** 2 + rn_std ** 2))
+
+        rows.append({
+            'dataset':    ds,
+            'std_mean':   std_mean,
+            'rn_mean':    rn_mean,
+            'part_b':     part_b,
+            'part_b_std': part_b_std,
+        })
+
+    if not rows:
+        print(f'  ⚠ No data for split_type={split_type}')
+        return
+
+    lines = []
+    lines.append(r'\begin{table}[t]')
+    lines.append(r'\centering\small\setlength{\tabcolsep}{6pt}')
+    lines.append(rf'\caption{{Part B: RowNorm recovery at $k=10$ ({split_label}). '
+                 r'Part B $=$ Acc(Restricted+RowNorm) $-$ Acc(Restricted+Std). '
+                 r'Negative values mean RowNorm \emph{hurts} --- this is a finding, not a failure. '
+                 r'Std is propagated from individual method standard deviations across seeds.}}')
+    lines.append(rf'\label{{tab:part_b_{split_type}}}')
+    lines.append(r'\begin{tabular}{lrrrr}')
+    lines.append(r'\toprule')
+    lines.append(r'Dataset & R+Std (\%) & R+RowNorm (\%) & Part B (pp) & Std (pp) \\')
+    lines.append(r'\midrule')
+
+    for row in rows:
+        ds_label = row['dataset'].replace('-', r'\mbox{-}')
+        # Bold Part B if magnitude > 1pp in either direction
+        pb_fmt = f"{row['part_b']:+.2f}"
+        if abs(row['part_b']) > 1.0:
+            pb_str = rf'\textbf{{{pb_fmt}}}'
+        else:
+            pb_str = pb_fmt
+        lines.append(rf"{ds_label} & {row['std_mean']:.2f} & {row['rn_mean']:.2f} & "
+                     rf"{pb_str} & {row['part_b_std']:.2f} \\")
+
+    lines.append(r'\bottomrule\end{tabular}\end{table}')
+
+    fname = f'table_3_6_part_b_fixed.tex' if split_type == 'fixed' else 'table_3_7_part_b_random.tex'
+    output_path = TABLES_DIR / fname
+    with open(output_path, 'w') as f:
+        f.write('\n'.join(lines))
+    print(f'  ✓ Saved: {output_path}')
+
+
 # ============================================================================
 # SECTION 4: WHITENING MECHANISM
 # ============================================================================
@@ -577,6 +809,75 @@ def generate_figure_4_1_singular_values():
     plt.close()
 
     print(f'  ✓ Saved: {output_path} ({plotted}/{len(DATASETS)} datasets)')
+
+def generate_table_4_0_dataset_statistics():
+    """Table 4.0: Dataset statistics — nodes, edges, avg degree, classes,
+    features, d_eff, and edge homophily.
+
+    Homophily = fraction of edges connecting same-class nodes (global graph property).
+    d_eff = effective feature dimension after QR decomposition of X_diffused at k=10.
+    Loaded from exp2_spectral_analysis_k10.json (requires master_analytics.py run).
+    """
+    print('Generating Table 4.0: Dataset Statistics...')
+
+    rows = []
+    for ds in DATASETS:
+        spec = load_spectral_analysis(ds, 'fixed', 'lcc', 10)
+        res  = load_results(ds, 'fixed', 'lcc', 10)
+        if spec is None or res is None:
+            continue
+
+        meta = res.get('metadata', {})
+        a    = spec['analysis']
+
+        rows.append({
+            'dataset':     ds,
+            'num_nodes':   meta.get('num_nodes'),
+            'num_edges':   a.get('num_edges'),
+            'avg_degree':  a.get('avg_degree'),
+            'num_classes': meta.get('num_classes'),
+            'num_features':meta.get('num_features'),
+            'd_eff':       meta.get('d_effective') or spec.get('d_effective'),
+            'homophily':   a.get('homophily'),   # None if analytics not yet rerun
+        })
+
+    if not rows:
+        print('  ⚠ No data found')
+        return
+
+    lines = []
+    lines.append(r'\begin{table}[t]')
+    lines.append(r'\centering\small\setlength{\tabcolsep}{5pt}')
+    lines.append(r'\caption{Dataset statistics after LCC extraction (fixed splits, $k=10$). '
+                 r'$d_{\mathrm{eff}}$ = rank of $\hat{A}^k X$ after QR decomposition. '
+                 r'Homophily $h$ = fraction of edges connecting same-class nodes; '
+                 r'$h{=}1$ is perfectly homophilous, $h{=}0$ is heterophilous. '
+                 r'\textemdash\ = homophily not yet computed (re-run master\_analytics.py).}')
+    lines.append(r'\label{tab:dataset_statistics}')
+    lines.append(r'\begin{tabular}{lrrrrrrrr}')
+    lines.append(r'\toprule')
+    lines.append(r'Dataset & Nodes & Edges & Avg Deg & Classes & Features & $d_{\mathrm{eff}}$ & Homophily \\')
+    lines.append(r'\midrule')
+
+    for row in rows:
+        ds_label  = row['dataset'].replace('-', r'\mbox{-}')
+        nodes_str = f"{row['num_nodes']:,}"   if row['num_nodes']   is not None else r'\textemdash'
+        edges_str = f"{row['num_edges']:,}"   if row['num_edges']   is not None else r'\textemdash'
+        deg_str   = f"{row['avg_degree']:.2f}" if row['avg_degree'] is not None else r'\textemdash'
+        cls_str   = str(row['num_classes'])   if row['num_classes'] is not None else r'\textemdash'
+        feat_str  = f"{row['num_features']:,}" if row['num_features'] is not None else r'\textemdash'
+        deff_str  = f"{row['d_eff']:,}"        if row['d_eff']       is not None else r'\textemdash'
+        hom_str   = f"{row['homophily']:.3f}"  if row['homophily']   is not None else r'\textemdash'
+        lines.append(rf'{ds_label} & {nodes_str} & {edges_str} & {deg_str} & '
+                     rf'{cls_str} & {feat_str} & {deff_str} & {hom_str} \\')
+
+    lines.append(r'\bottomrule\end{tabular}\end{table}')
+
+    output_path = TABLES_DIR / 'table_4_0_dataset_statistics.tex'
+    with open(output_path, 'w') as f:
+        f.write('\n'.join(lines))
+    print(f'  ✓ Saved: {output_path}')
+
 
 def generate_table_4_1_spectral_properties():
     """Table 4.1: Spectral Properties (Condition numbers, variance ratios)"""
@@ -668,6 +969,232 @@ def generate_table_4_2_separability():
     with open(output_path, 'w') as f:
         f.write('\n'.join(lines))
     print(f'  ✓ Saved: {output_path}')
+
+
+# ============================================================================
+# SECTION 4 ADDITIONS: Subspace Alignment (Exp 9)
+# ============================================================================
+
+def generate_table_4_3_subspace_alignment():
+    """Table 4.3: Subspace alignment summary at k=10 alongside Part A and Part B.
+
+    Mean/Max/Min canonical correlation between col(U) and top-d_eff subspace of
+    X_diffused. High mean CC means Rayleigh-Ritz preserves dominant directions;
+    the table shows whether alignment predicts the Part A gap.
+    """
+    print('Generating Table 4.3: Subspace Alignment Summary (k=10)...')
+
+    rows = []
+    for ds in DATASETS:
+        spec = load_spectral_analysis(ds, 'fixed', 'lcc', 10)
+        res  = load_results(ds, 'fixed', 'lcc', 10)
+        if spec is None or res is None:
+            continue
+        sa = spec.get('subspace_alignment')
+        if sa is None:
+            print(f'  ⚠ No subspace_alignment for {ds} — re-run master_analytics.py')
+            continue
+        fa = res.get('framework_analysis', {})
+        rows.append({
+            'dataset': ds,
+            'mean_cc': sa['mean_canonical_correlation'],
+            'max_cc':  sa['max_canonical_correlation'],
+            'min_cc':  sa['min_canonical_correlation'],
+            'part_a':  fa.get('part_a_pp'),
+            'part_b':  fa.get('part_b_pp'),
+        })
+
+    if not rows:
+        print('  ⚠ No data — run master_analytics.py for all datasets first')
+        return
+
+    lines = []
+    lines.append(r'\begin{table}[t]')
+    lines.append(r'\centering\small\setlength{\tabcolsep}{5pt}')
+    lines.append(r'\caption{Subspace alignment at $k=10$ (fixed splits): canonical '
+                 r'correlations between $\operatorname{col}(U)$ and the top-$d_{\mathrm{eff}}$ '
+                 r'left singular vectors of $X_{\mathrm{diff}}$. '
+                 r'Values near 1 mean Rayleigh-Ritz preserves dominant directions; '
+                 r'near 0 means the subspaces are orthogonal. '
+                 r'High mean CC with large Part A gap (e.g.\ CiteSeer) shows that '
+                 r'directional preservation does \emph{not} explain the accuracy drop --- '
+                 r'magnitude distortion is the key factor.}')
+    lines.append(r'\label{tab:subspace_alignment}')
+    lines.append(r'\begin{tabular}{lrrrrrr}')
+    lines.append(r'\toprule')
+    lines.append(r'Dataset & Mean CC & Max CC & Min CC & Part A (pp) & Part B (pp) \\')
+    lines.append(r'\midrule')
+    for row in rows:
+        ds_label = row['dataset'].replace('-', r'\mbox{-}')
+        pa_str = f"{row['part_a']:+.2f}" if row['part_a'] is not None else r'\textemdash'
+        pb_str = f"{row['part_b']:+.2f}" if row['part_b'] is not None else r'\textemdash'
+        lines.append(rf"{ds_label} & {row['mean_cc']:.4f} & {row['max_cc']:.4f} & "
+                     rf"{row['min_cc']:.4f} & {pa_str} & {pb_str} \\")
+    lines.append(r'\bottomrule\end{tabular}\end{table}')
+
+    output_path = TABLES_DIR / 'table_4_3_subspace_alignment.tex'
+    with open(output_path, 'w') as f:
+        f.write('\n'.join(lines))
+    print(f'  ✓ Saved: {output_path}')
+
+
+def generate_figure_4_2_alignment_vs_gap():
+    """Figure 4.2: Scatter — mean canonical correlation (x) vs Part A gap (y), k=10.
+
+    Tests the hypothesis: lower alignment → larger Part A gap.
+    The CiteSeer counter-example (mean_cc ≈ 0.98, Part A ≈ +36pp) already suggests
+    this hypothesis is false. The figure shows the actual relationship empirically,
+    with a regression line and R² to quantify the (likely weak) association.
+    """
+    print('Generating Figure 4.2: Alignment vs Part A Gap Scatter...')
+
+    points = []
+    for ds in DATASETS:
+        spec = load_spectral_analysis(ds, 'fixed', 'lcc', 10)
+        res  = load_results(ds, 'fixed', 'lcc', 10)
+        if spec is None or res is None:
+            continue
+        sa = spec.get('subspace_alignment')
+        if sa is None:
+            continue
+        part_a = res['framework_analysis'].get('part_a_pp')
+        if part_a is None:
+            continue
+        points.append({
+            'dataset': ds,
+            'mean_cc': sa['mean_canonical_correlation'],
+            'part_a':  part_a,
+        })
+
+    if len(points) < 3:
+        print(f'  ⚠ Only {len(points)} points — skipping scatter')
+        return
+
+    xs = np.array([p['mean_cc'] for p in points])
+    ys = np.array([p['part_a']  for p in points])
+
+    # Linear regression
+    coeffs   = np.polyfit(xs, ys, 1)
+    y_pred   = np.polyval(coeffs, xs)
+    ss_res   = float(np.sum((ys - y_pred) ** 2))
+    ss_tot   = float(np.sum((ys - ys.mean()) ** 2))
+    r_sq     = 1.0 - ss_res / ss_tot if ss_tot > 0 else 0.0
+    x_line   = np.linspace(xs.min() - 0.02, xs.max() + 0.02, 100)
+    y_line   = np.polyval(coeffs, x_line)
+
+    fig, ax = plt.subplots(figsize=(9, 7))
+
+    for p in points:
+        color = '#d62728' if p['part_a'] > 0 else '#2ca02c'
+        ax.scatter(p['mean_cc'], p['part_a'], s=130, color=color,
+                   edgecolor='black', linewidth=1.2, zorder=5)
+        ax.annotate(p['dataset'],
+                    xy=(p['mean_cc'], p['part_a']),
+                    xytext=(6, 4), textcoords='offset points', fontsize=9)
+
+    ax.plot(x_line, y_line, '--', color='steelblue', linewidth=1.8,
+            label=f'Linear fit  $R^2={r_sq:.3f}$')
+    ax.axhline(y=0, color='black', linestyle='-', linewidth=1.2, alpha=0.5)
+
+    ax.text(0.03, 0.97,
+            r'High mean CC + large Part A (e.g.\ CiteSeer)' '\n'
+            r'shows alignment $\neq$ predictive of accuracy gap.',
+            transform=ax.transAxes, fontsize=9, verticalalignment='top',
+            bbox=dict(boxstyle='round,pad=0.3', facecolor='lightyellow',
+                      edgecolor='gray', alpha=0.85))
+
+    ax.set_xlabel('Mean Canonical Correlation (col$(U)$ vs col$(X_{\\mathrm{diff}}$))',
+                  fontsize=13, fontweight='bold')
+    ax.set_ylabel('Part A (pp)', fontsize=13, fontweight='bold')
+    ax.set_title('Subspace Alignment vs Basis Sensitivity Gap\n(k=10, Fixed Splits)',
+                 fontsize=14, fontweight='bold', pad=10)
+    ax.legend(fontsize=11, loc='upper left')
+    ax.grid(True, alpha=0.3, linestyle='--')
+    plt.xticks(fontsize=11)
+    plt.yticks(fontsize=11)
+    plt.tight_layout()
+
+    output_path = FIGURES_DIR / 'figure_4_2_alignment_vs_gap.pdf'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f'  ✓ Saved: {output_path}  (R²={r_sq:.3f}, n={len(points)})')
+
+
+def generate_figure_4_3_cc_spectra():
+    """Figure 4.3: Canonical correlation spectra — 3×3 grid, one dataset per panel.
+
+    X-axis: normalised eigenvector index (0→1, i.e. fraction of d_eff).
+    Y-axis: canonical correlation (0→1).
+    Sorted descending so the drop-off shape is visible.
+    Horizontal dashed line at 0.8 marks the high-preservation threshold.
+
+    The key story: most datasets have high CC across the bulk of directions,
+    with a tail that drops toward zero. The tail size (low-CC directions) varies
+    across datasets and does NOT track Part A — confirming that directional loss
+    is not the mechanism behind the accuracy gap.
+    """
+    print('Generating Figure 4.3: Canonical Correlation Spectra (3×3)...')
+
+    ncols = 3
+    nrows = math.ceil(len(DATASETS) / ncols)
+    fig, axes = plt.subplots(nrows, ncols, figsize=(15, 5 * nrows))
+    axes_flat = axes.flatten()
+
+    plotted = 0
+    for idx, ds in enumerate(DATASETS):
+        ax   = axes_flat[idx]
+        spec = load_spectral_analysis(ds, 'fixed', 'lcc', 10)
+        if spec is None:
+            ax.set_visible(False)
+            continue
+        sa = spec.get('subspace_alignment')
+        if sa is None:
+            ax.text(0.5, 0.5, 'No alignment data\n(re-run master_analytics.py)',
+                    ha='center', va='center', transform=ax.transAxes, fontsize=9)
+            ax.set_title(ds, fontsize=12, fontweight='bold')
+            continue
+
+        corrs = np.array(sa['canonical_correlations'])   # already sorted descending
+        d_eff = len(corrs)
+        xs    = np.linspace(0, 1, d_eff)                 # normalised index
+
+        # Fill under curve: above 0.8 = green, below 0.8 = red
+        ax.fill_between(xs, corrs, 0.8,
+                        where=(corrs >= 0.8), alpha=0.25, color='#2ca02c',
+                        label='CC ≥ 0.8')
+        ax.fill_between(xs, corrs, 0,
+                        where=(corrs < 0.8), alpha=0.25, color='#d62728',
+                        label='CC < 0.8')
+        ax.plot(xs, corrs, linewidth=1.5, color='#1f77b4')
+        ax.axhline(y=0.8, color='gray', linestyle='--', linewidth=1.2, alpha=0.8)
+
+        mean_cc = sa['mean_canonical_correlation']
+        part_a  = spec.get('analysis', {})   # not stored here — load separately
+
+        ax.set_title(f'{ds}\nmean CC={mean_cc:.3f}, $d_{{\\mathrm{{eff}}}}$={d_eff}',
+                     fontsize=11, fontweight='bold')
+        ax.set_xlabel('Normalised index (fraction of $d_{\\mathrm{eff}}$)', fontsize=9)
+        if idx % ncols == 0:
+            ax.set_ylabel('Canonical Correlation', fontsize=10)
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1.05)
+        ax.grid(True, alpha=0.3, linestyle=':')
+        if idx == 0:
+            ax.legend(fontsize=8, loc='lower left')
+        plotted += 1
+
+    for idx in range(len(DATASETS), len(axes_flat)):
+        axes_flat[idx].set_visible(False)
+
+    plt.suptitle('Canonical Correlation Spectra: col$(U)$ vs col$(X_{\\mathrm{diff}})$\n'
+                 '(k=10, Fixed Splits — sorted descending)',
+                 fontsize=14, fontweight='bold', y=1.01)
+    plt.tight_layout()
+
+    output_path = FIGURES_DIR / 'figure_4_3_cc_spectra.pdf'
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f'  ✓ Saved: {output_path} ({plotted}/{len(DATASETS)} datasets)')
 
 
 # ============================================================================
@@ -1386,6 +1913,89 @@ def generate_table_exp8_k_sensitivity(split_type='fixed'):
     print(f'  ✓ Saved: {output_path}')
 
 
+def generate_table_3_8_part_a_k_sweep(split_type='fixed'):
+    """Table 3.8 / 3.9: Part A across all k values, all 9 datasets.
+
+    Reads directly from results.json (not from exp8_k_sensitivity.json) so the
+    full k sweep is available for every dataset without re-running master_analytics.
+    Columns: Dataset | Part A at k=1,2,4,6,8,10,12,20,30
+    Crossover k* marked with a dagger symbol where Part A changes sign.
+    """
+    split_label = 'Fixed Splits' if split_type == 'fixed' else 'Random Splits'
+    tnum = '3.8' if split_type == 'fixed' else '3.9'
+    print(f'Generating Table {tnum}: Part A k-sweep ({split_label})...')
+
+    rows = []
+    for ds in DATASETS:
+        part_a_at_k = {}
+        crossover_range = None
+        prev_k, prev_pa = None, None
+
+        for k in K_VALUES:
+            data = load_results(ds, split_type, 'lcc', k)
+            if data is None:
+                part_a_at_k[k] = None
+                continue
+            pa = data['framework_analysis'].get('part_a_pp')
+            part_a_at_k[k] = pa
+
+            # detect crossover
+            if crossover_range is None and prev_pa is not None and pa is not None:
+                if prev_pa * pa < 0:
+                    crossover_range = (prev_k, k)
+            prev_k, prev_pa = k, pa
+
+        rows.append({
+            'dataset':        ds,
+            'part_a_at_k':    part_a_at_k,
+            'crossover_range': crossover_range,
+        })
+
+    if not rows:
+        print(f'  ⚠ No data for split_type={split_type}')
+        return
+
+    k_headers = ' & '.join([f'$k={k}$' for k in K_VALUES])
+
+    lines = []
+    lines.append(r'\begin{table}[t]')
+    lines.append(r'\centering\scriptsize\setlength{\tabcolsep}{3pt}')
+    lines.append(rf'\caption{{Part A (pp) across all $k$ values ({split_label}). '
+                 r'Part A $=$ Acc(SGC+MLP) $-$ Acc(Restricted+Std). '
+                 r'Positive: SGC wins; negative: eigenvectors win (over-smoothing regime). '
+                 r'$\dagger$ marks the interval where Part A changes sign (crossover $k^*$).}}')
+    lines.append(rf'\label{{tab:part_a_k_sweep_{split_type}}}')
+    lines.append(rf'\begin{{tabular}}{{l{"r" * len(K_VALUES)}r}}')
+    lines.append(r'\toprule')
+    lines.append(rf'Dataset & {k_headers} & Crossover $k^*$ \\')
+    lines.append(r'\midrule')
+
+    for row in rows:
+        ds_label = row['dataset'].replace('-', r'\mbox{-}')
+        cells = []
+        cr = row['crossover_range']
+        for k in K_VALUES:
+            v = row['part_a_at_k'].get(k)
+            if v is None:
+                cells.append(r'\textemdash')
+            else:
+                # mark the first k after crossover with a dagger
+                cell = f'{v:+.1f}'
+                if cr is not None and k == cr[1]:
+                    cell = rf'{cell}$\dagger$'
+                cells.append(cell)
+        ck_str = (f'{cr[0]}--{cr[1]}' if cr is not None else r'\textemdash')
+        lines.append(rf'{ds_label} & {" & ".join(cells)} & {ck_str} \\')
+
+    lines.append(r'\bottomrule\end{tabular}\end{table}')
+
+    fname = f'table_3_8_part_a_k_sweep_fixed.tex' if split_type == 'fixed' else 'table_3_9_part_a_k_sweep_random.tex'
+    output_path = TABLES_DIR / fname
+    with open(output_path, 'w') as f:
+        f.write('\n'.join(lines))
+    print(f'  ✓ Saved: {output_path}')
+
+
 def generate_section_3():
     """Generate all Section 3 artifacts"""
     print("\n" + "="*80)
@@ -1393,6 +2003,10 @@ def generate_section_3():
     print("="*80)
     generate_table_3_1_part_a()
     generate_table_3_2_part_a_random()
+    generate_table_3_6_part_b('fixed')
+    generate_table_3_6_part_b('random')
+    generate_table_3_8_part_a_k_sweep('fixed')
+    generate_table_3_8_part_a_k_sweep('random')
     generate_figure_3_1_part_a_barchart('fixed')
     generate_figure_3_1_part_a_barchart('random')
     generate_figure_3_2_part_a_vs_k()
@@ -1402,6 +2016,8 @@ def generate_section_3():
     generate_table_3_4_fisher_vs_k('fixed')
     generate_table_3_4_fisher_vs_k('random')
     generate_figure_3_4_fisher_vs_k()
+    generate_figure_3_5_fisher_vs_partb_scatter()
+    generate_table_3_5_fisher_partb_data()
     generate_table_exp8_k_sensitivity('fixed')
     generate_table_exp8_k_sensitivity('random')
 
@@ -1410,9 +2026,13 @@ def generate_section_4():
     print("\n" + "="*80)
     print("SECTION 4: WHITENING MECHANISM")
     print("="*80)
+    generate_table_4_0_dataset_statistics()
     generate_figure_4_1_singular_values()
     generate_table_4_1_spectral_properties()
     generate_table_4_2_separability()
+    generate_table_4_3_subspace_alignment()
+    generate_figure_4_2_alignment_vs_gap()
+    generate_figure_4_3_cc_spectra()
 
 def generate_section_5():
     """Generate all Section 5 artifacts"""

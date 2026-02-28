@@ -13,6 +13,11 @@ CPU-only analytics over results produced by master_training.py.
             variance ratio reduction
           - Graph properties: num_edges, avg_degree
 
+  Exp 9:  Subspace alignment (directional preservation after Rayleigh-Ritz)
+          - Canonical correlations between top-d_eff singular vectors of X_diffused
+            and restricted eigenvectors U
+          - Saved under 'subspace_alignment' key in exp2_spectral_analysis_k{k}.json
+
   Exp 8:  k-sensitivity analysis
           - Part A / Part B / Fisher score vs k (loaded from master_training.py output)
           - Includes Fisher at all k values (not just k=10)
@@ -215,6 +220,17 @@ def compute_spectral_analysis(U, X_diffused, eigenvalues, labels, train_idx,
     num_edges  = int((adj.nnz - diag_nnz) // 2)
     avg_degree = float((adj.nnz - diag_nnz) / adj.shape[0])
 
+    # ── Edge homophily ─────────────────────────────────────────────────────
+    # h = (edges connecting same-class nodes) / (total edges, no self-loops)
+    # Uses ALL nodes (not just train) — homophily is a global graph property.
+    # For undirected graphs, each edge appears twice in adj (i→j and j→i);
+    # we count directed pairs then divide by 2 to get edge-level homophily.
+    adj_no_diag = adj - sp.diags(adj.diagonal())
+    cx          = adj_no_diag.tocoo()
+    same_class  = int((labels[cx.row] == labels[cx.col]).sum())
+    total_dir   = int(cx.nnz)   # directed edge count (each undirected edge × 2)
+    homophily   = float(same_class / total_dir) if total_dir > 0 else 0.0
+
     return {
         # U analysis
         'condition_number_U':             cond_U,
@@ -238,6 +254,80 @@ def compute_spectral_analysis(U, X_diffused, eigenvalues, labels, train_idx,
         # Graph properties
         'num_edges':                      num_edges,
         'avg_degree':                     avg_degree,
+        'homophily':                      homophily,
+    }
+
+
+# ============================================================================
+# Exp 9: Subspace Alignment (directional preservation after Rayleigh-Ritz)
+# ============================================================================
+
+def compute_subspace_alignment(U, X_diffused, train_idx):
+    """Measure how well Rayleigh-Ritz preserves the dominant directions of X_diffused.
+
+    Canonical correlations between the two subspaces quantify alignment:
+      1.0 = subspaces are identical (perfect directional preservation)
+      0.0 = subspaces are orthogonal (no shared structure)
+
+    Method (subspace principal angles):
+      - Left singular vectors of X_diffused form an orthonormal basis for its
+        dominant d_eff-dimensional subspace.
+      - QR-decomposing U gives an orthonormal basis for the eigenvector subspace.
+        (Direct use of U is wrong here: U is D-orthonormal, not standard-orthonormal,
+        so U^T @ V_k would give distorted values. QR fixes this.)
+      - The singular values of Q_U^T @ V_k are the cosines of the principal angles
+        between the two subspaces — these are the canonical correlations.
+
+    Train-only by default (avoids data leakage). Falls back to full dataset if
+    n_train < d_eff (would make the matrices rank-deficient on train rows only).
+    """
+    n, d_eff = U.shape
+    n_train  = len(train_idx)
+
+    if n_train >= d_eff:
+        U_use = U[train_idx]
+        X_use = X_diffused[train_idx]
+        used_subset = 'train_only'
+    else:
+        # train set too small relative to d_eff; use full dataset
+        U_use = U
+        X_use = X_diffused
+        used_subset = 'full_dataset'
+
+    # Orthonormal basis for col(U): QR decomposition
+    # Q_U has orthonormal columns spanning the same space as U
+    Q_U, _ = np.linalg.qr(U_use)           # shape: (n_use, d_eff) [economy QR]
+    Q_U = Q_U[:, :d_eff]                   # keep only d_eff columns (economy mode)
+
+    # Left singular vectors of X_diffused: orthonormal basis for its top-d_eff subspace
+    # np.linalg.svd returns (left_vecs, singular_vals, right_vecs_T)
+    V_left, _, _ = np.linalg.svd(X_use, full_matrices=False)
+    V_k = V_left[:, :d_eff]               # top d_eff left singular vectors
+
+    # Canonical correlations = singular values of Q_U^T @ V_k
+    # These are the cosines of the principal angles between the two subspaces
+    cross = Q_U.T @ V_k                    # shape: (d_eff, d_eff)
+    canon_corrs = np.linalg.svd(cross, compute_uv=False)
+    # Clip to [0, 1] to guard against tiny numerical violations
+    canon_corrs = np.clip(canon_corrs, 0.0, 1.0)
+
+    mean_cc = float(canon_corrs.mean())
+    if mean_cc > 0.8:
+        interpretation = 'high (>0.8): directional structure largely preserved'
+    elif mean_cc > 0.5:
+        interpretation = 'moderate (0.5–0.8): partial directional preservation'
+    else:
+        interpretation = 'low (<0.5): Rayleigh-Ritz substantially rotates dominant directions'
+
+    return {
+        'mean_canonical_correlation': mean_cc,
+        'max_canonical_correlation':  float(canon_corrs[0]),
+        'min_canonical_correlation':  float(canon_corrs[-1]),
+        'canonical_correlations':     [float(c) for c in canon_corrs],
+        'd_eff':                      int(d_eff),
+        'n_train':                    int(n_train),
+        'used_subset':                used_subset,
+        'interpretation':             interpretation,
     }
 
 
@@ -409,6 +499,9 @@ for k in K_VALUES:
         U, X_diffused, eigs, labels, train_idx, num_classes, adj
     )
 
+    # Exp 9: subspace alignment
+    subspace_align = compute_subspace_alignment(U, X_diffused, train_idx)
+
     sp_err = analysis['span_verification_error']
     print(f'    Condition U={analysis["condition_number_U"]:.4f}  '
           f'Condition X={analysis["condition_number_X"]:.4f}  '
@@ -421,15 +514,20 @@ for k in K_VALUES:
     print(f'    Var ratio U={va["U_variance_ratio"]:.2f}  '
           f'Var ratio X={va["X_variance_ratio"]:.2f}  '
           f'Reduction={va["variance_ratio_reduction"]:.2f}x')
+    print(f'    Subspace alignment: mean_cc={subspace_align["mean_canonical_correlation"]:.4f}  '
+          f'max={subspace_align["max_canonical_correlation"]:.4f}  '
+          f'min={subspace_align["min_canonical_correlation"]:.4f}  '
+          f'[{subspace_align["used_subset"]}]')
 
     exp2_output = {
-        'dataset':        DATASET_NAME,
-        'split_type':     SPLIT_TYPE,
-        'component_type': COMPONENT_TYPE,
-        'k':              k,
-        'd_effective':    int(d_eff),
-        'ortho_error':    float(ortho_err) if ortho_err is not None else None,
-        'analysis':       analysis
+        'dataset':          DATASET_NAME,
+        'split_type':       SPLIT_TYPE,
+        'component_type':   COMPONENT_TYPE,
+        'k':                k,
+        'd_effective':      int(d_eff),
+        'ortho_error':      float(ortho_err) if ortho_err is not None else None,
+        'analysis':         analysis,
+        'subspace_alignment': subspace_align,
     }
 
     exp2_path = os.path.join(ANALYTICS_DIR, f'exp2_spectral_analysis_k{k}.json')
