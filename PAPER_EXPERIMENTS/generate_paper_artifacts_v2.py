@@ -437,7 +437,7 @@ def generate_table_3_4_fisher_vs_k(split_type='fixed'):
     split_label = 'Fixed Splits' if split_type == 'fixed' else 'Random Splits'
     print(f'Generating Table 3.4: Fisher vs k ({split_label})...')
 
-    K_SHOW = [1, 4, 10, 20, 30]
+    K_SHOW = [1, 2, 4, 6, 8, 10, 12, 20, 30]
     rows = []
 
     for ds in DATASETS:
@@ -459,6 +459,7 @@ def generate_table_3_4_fisher_vs_k(split_type='fixed'):
         return
 
     k_headers = ' & '.join([f'$k={k}$' for k in K_SHOW])
+    col_spec = 'l' + 'r' * (len(K_SHOW) + 1)  # +1 for Fisher_X column
     lines = []
     lines.append(r'\begin{table}[t]')
     lines.append(r'\centering\small\setlength{\tabcolsep}{5pt}')
@@ -466,9 +467,9 @@ def generate_table_3_4_fisher_vs_k(split_type='fixed'):
                  r'Fisher $=$ between-class / within-class variance of row norms, '
                  r'computed on training nodes only. '
                  r'Higher values indicate row norms carry more class-discriminative information. '
-                 r'$\text{Fisher}_X$ is the same metric on raw diffused features at $k=10$.}}')
+                 r'$\text{Fisher}_X$ is the same metric on raw diffused features at $k=10$.}')
     lines.append(rf'\label{{tab:fisher_vs_k_{split_type}}}')
-    lines.append(r'\begin{tabular}{lrrrrrr}')
+    lines.append(rf'\begin{{tabular}}{{{col_spec}}}')
     lines.append(r'\toprule')
     lines.append(rf'Dataset & {k_headers} & Fisher$_X$@10 \\')
     lines.append(r'\midrule')
@@ -730,7 +731,7 @@ def generate_table_3_6_part_b(split_type='fixed'):
     lines.append(rf'\caption{{Part B: RowNorm recovery at $k=10$ ({split_label}). '
                  r'Part B $=$ Acc(Restricted+RowNorm) $-$ Acc(Restricted+Std). '
                  r'Negative values mean RowNorm \emph{hurts} --- this is a finding, not a failure. '
-                 r'Std is propagated from individual method standard deviations across seeds.}}')
+                 r'Std is propagated from individual method standard deviations across seeds.}')
     lines.append(rf'\label{{tab:part_b_{split_type}}}')
     lines.append(r'\begin{tabular}{lrrrr}')
     lines.append(r'\toprule')
@@ -1498,7 +1499,7 @@ def generate_table_5_3_alpha_sweep_full(split_type='fixed'):
     lines.append(rf'\caption{{Full spectral $\alpha$ sweep: test accuracy (\%) for each '
                  rf'$\alpha \in \{{-1.0, -0.5, 0.0, 0.5, 1.0\}}$ at $k=10$ ({split_label}). '
                  r'Bold = best $\alpha$ selected on validation set. '
-                 r'RowNorm baseline shown for reference.}}')
+                 r'RowNorm baseline shown for reference.}')
     lines.append(rf'\label{{tab:alpha_sweep_full_{split_type}}}')
     lines.append(r'\begin{tabular}{lrrrrrr}')
     lines.append(r'\toprule')
@@ -1932,7 +1933,7 @@ def generate_table_exp8_k_sensitivity(split_type='fixed'):
     lines.append(rf'\caption{{Exp 8 k-sensitivity ({split_label}). '
                  r'Part A (pp) at key $k$ values; Part B, Remaining Gap, Fisher at $k=10$. '
                  r'Negative Part A means restricted eigenvectors outperform SGC. '
-                 r'Crossover $k$ = depth where Part A changes sign.}}')
+                 r'Crossover $k$ = depth where Part A changes sign.}')
     lines.append(rf'\label{{tab:exp8_k_sensitivity_{split_type}}}')
     lines.append(rf'\begin{{tabular}}{{{col_spec}}}')
     lines.append(r'\toprule')
@@ -2091,7 +2092,7 @@ def generate_table_3_8_part_a_k_sweep(split_type='fixed'):
     lines.append(rf'\caption{{Part A (pp) across all $k$ values ({split_label}). '
                  r'Part A $=$ Acc(SGC+MLP) $-$ Acc(Restricted+Std). '
                  r'Positive: SGC wins; negative: eigenvectors win (over-smoothing regime). '
-                 r'$\dagger$ marks the interval where Part A changes sign (crossover $k^*$).}}')
+                 r'$\dagger$ marks the interval where Part A changes sign (crossover $k^*$).}')
     lines.append(rf'\label{{tab:part_a_k_sweep_{split_type}}}')
     lines.append(rf'\begin{{tabular}}{{l{"r" * len(K_VALUES)}r}}')
     lines.append(r'\toprule')

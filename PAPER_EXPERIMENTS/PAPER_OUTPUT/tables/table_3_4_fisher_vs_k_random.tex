@@ -1,16 +1,16 @@
 \begin{table}[t]
 \centering\small\setlength{\tabcolsep}{5pt}
-\caption{Fisher score of $\|U_i\|$ vs diffusion depth (Random Splits). Fisher $=$ between-class / within-class variance of row norms, computed on training nodes only. Higher values indicate row norms carry more class-discriminative information. $\text{Fisher}_X$ is the same metric on raw diffused features at $k=10$.}}
+\caption{Fisher score of $\|U_i\|$ vs diffusion depth (Random Splits). Fisher $=$ between-class / within-class variance of row norms, computed on training nodes only. Higher values indicate row norms carry more class-discriminative information. $\text{Fisher}_X$ is the same metric on raw diffused features at $k=10$.}
 \label{tab:fisher_vs_k_random}
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrrrrrrrrr}
 \toprule
-Dataset & $k=1$ & $k=4$ & $k=10$ & $k=20$ & $k=30$ & Fisher$_X$@10 \\
+Dataset & $k=1$ & $k=2$ & $k=4$ & $k=6$ & $k=8$ & $k=10$ & $k=12$ & $k=20$ & $k=30$ & Fisher$_X$@10 \\
 \midrule
-cora & 0.0125 & 0.0131 & 0.0127 & 0.0135 & 0.0171 & 0.0241 \\
-citeseer & 0.0245 & 0.0250 & 0.0266 & 0.0261 & 0.0270 & 0.0600 \\
-pubmed & 0.0263 & 0.0223 & 0.0241 & 0.0244 & 0.0246 & 0.0405 \\
-wikics & 0.1109 & 0.0974 & 0.0890 & 0.0871 & 0.0871 & 0.0887 \\
-amazon\mbox{-}computers & 0.0973 & 0.0583 & 0.0449 & 0.0400 & 0.0387 & 0.0803 \\
-amazon\mbox{-}photo & 0.1368 & 0.0850 & 0.0786 & 0.0783 & 0.0583 & 0.0664 \\
-coauthor\mbox{-}cs & 0.2555 & 0.2056 & 0.2033 & 0.2123 & 0.2277 & 0.3006 \\
+cora & 0.0125 & 0.0130 & 0.0131 & 0.0128 & 0.0129 & 0.0127 & 0.0127 & 0.0135 & 0.0171 & 0.0241 \\
+citeseer & 0.0245 & 0.0241 & 0.0250 & 0.0244 & 0.0262 & 0.0266 & 0.0249 & 0.0261 & 0.0270 & 0.0600 \\
+pubmed & 0.0263 & 0.0248 & 0.0223 & 0.0231 & 0.0238 & 0.0241 & 0.0242 & 0.0244 & 0.0246 & 0.0405 \\
+wikics & 0.1109 & 0.1115 & 0.0974 & 0.0917 & 0.0898 & 0.0890 & 0.0885 & 0.0871 & 0.0871 & 0.0887 \\
+amazon\mbox{-}computers & 0.0973 & 0.0751 & 0.0583 & 0.0514 & 0.0475 & 0.0449 & 0.0432 & 0.0400 & 0.0387 & 0.0803 \\
+amazon\mbox{-}photo & 0.1368 & 0.1032 & 0.0850 & 0.0801 & 0.0789 & 0.0786 & 0.0785 & 0.0783 & 0.0583 & 0.0664 \\
+coauthor\mbox{-}cs & 0.2555 & 0.2369 & 0.2056 & 0.2023 & 0.2026 & 0.2033 & 0.2040 & 0.2123 & 0.2277 & 0.3006 \\
 \bottomrule\end{tabular}\end{table}
