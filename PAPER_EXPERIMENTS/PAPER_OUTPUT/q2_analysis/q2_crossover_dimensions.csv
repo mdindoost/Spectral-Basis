@@ -1,0 +1,10 @@
+dataset,crossover_type,k_crossover,d_eff_at_crossover,retention_at_crossover,part_a_at_k1,part_a_at_k10,part_a_at_k30,part_a_min,part_a_min_at_k,d_eff_k1,d_eff_k30,d_eff_retention_k30,is_monotone_decreasing
+amazon-computers,Crossover,5.08,767.0,1.0,3.3308,-5.5481,-14.8156,-14.82,30,767,761,0.9922,True
+amazon-photo,Crossover,8.18,745.0,1.0,4.6524,-0.6239,-9.4474,-9.45,30,745,480,0.6443,True
+citeseer,Monotonic,N/A,N/A,N/A,31.9155,36.5711,33.1423,26.1,2,2035,900,0.4423,False
+coauthor-cs,Monotonic,N/A,N/A,N/A,10.7924,13.0625,5.7125,5.71,30,6803,4117,0.6052,False
+coauthor-physics,Monotonic,N/A,N/A,N/A,6.856,8.0213,2.8908,2.89,30,7697,4968,0.6454,False
+cora,Monotonic,N/A,N/A,N/A,23.1475,29.8871,26.0182,22.4,2,1427,862,0.6041,False
+ogbn-arxiv,Crossover,6.23,128.0,1.0,1.1047,-0.675,-2.5389,-2.54,30,128,128,1.0,True
+pubmed,Monotonic,N/A,N/A,N/A,26.3867,27.5667,25.4933,25.49,30,500,500,1.0,False
+wikics,Near-crossover,N/A,N/A,N/A,25.3385,8.6276,0.3955,0.4,30,300,300,1.0,True

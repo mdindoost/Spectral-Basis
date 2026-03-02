@@ -1,0 +1,16 @@
+Q3: GRAPH TOPOLOGY FEATURES
+============================================================
+
+Crossover datasets (3): ['amazon-computers', 'amazon-photo', 'ogbn-arxiv']
+Near-crossover (2):     ['coauthor-physics', 'wikics']
+Monotonic (4):          ['citeseer', 'coauthor-cs', 'cora', 'pubmed']
+
+avg_clustering           : Crossover=0.3292  Monotonic=0.2025  diff=+62.6%
+transitivity             : Crossover=0.1004  Monotonic=0.1129  diff=-11.0%
+avg_path_length          : Crossover=4.3950  Monotonic=6.8808  diff=-36.1%
+spectral_gap             : Crossover=0.0065  Monotonic=0.0061  diff=+5.6%
+lambda_2_fiedler         : Crossover=0.0065  Monotonic=0.0061  diff=+5.6%
+modularity               : Crossover=0.5340  Monotonic=0.5709  diff=-6.5%
+label_assortativity      : Crossover=0.6850  Monotonic=0.7241  diff=-5.4%
+homophily                : Crossover=0.7529  Monotonic=0.7873  diff=-4.4%
+avg_degree               : Crossover=27.4031  Monotonic=5.2452  diff=+422.4%

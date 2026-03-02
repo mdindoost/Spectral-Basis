@@ -1,0 +1,80 @@
+/home/md724/Spectral-Basis/venv/lib/python3.12/site-packages/outdated/__init__.py:36: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import parse_version
+============================================================
+Fisher(v₁) vs Part A — Crossover Datasets
+============================================================
+
+  Loading amazon-computers...
+Creating 60/20/20 split for amazon-computers...
+  n=13,381  train=8031  classes=10
+
+  k sweep for amazon-computers:
+     k    d_eff       ortho    Fisher(v1)     Part A
+  -------------------------------------------------------
+     1      767    1.75e-10      1.985149      +3.33pp  (2.3s)
+     2      767    3.61e-10      0.829392      +3.48pp  (1.5s)
+     4      767    6.05e-10      0.002168      +1.69pp  (1.9s)
+     6      767    6.62e-10      0.002135      -1.45pp  (2.8s)
+     8      767    6.51e-10      0.002148      -4.07pp  (3.6s)
+    10      767    6.43e-10      0.002160      -5.55pp  (7.6s)
+    12      767    6.38e-10      0.002166      -6.84pp  (5.7s)
+    20      767    6.30e-10      0.002176      -9.95pp  (7.3s)
+    30      761    7.11e-10      0.002188     -14.82pp  (6.7s)
+
+  Loading amazon-photo...
+Creating 60/20/20 split for amazon-photo...
+  n=7,487  train=4487  classes=8
+
+  k sweep for amazon-photo:
+     k    d_eff       ortho    Fisher(v1)     Part A
+  -------------------------------------------------------
+     1      745    2.21e-10      2.131614      +4.65pp  (0.8s)
+     2      745    5.02e-10      0.084335      +3.95pp  (1.0s)
+     4      745    6.58e-10      0.091540      +3.07pp  (1.1s)
+     6      745    6.72e-10      0.091384      +1.25pp  (3.6s)
+     8      745    6.91e-10      0.090203      +0.06pp  (3.8s)
+    10      745    7.67e-10      0.089526      -0.62pp  (3.2s)
+    12      745    8.03e-10      0.089279      -0.87pp  (2.5s)
+    20      745    8.03e-10      0.089789      -4.91pp  (4.3s)
+    30      480    7.39e-10      0.090786      -9.45pp  (2.7s)
+
+  Loading ogbn-arxiv...
+  n=169,343  train=90941  classes=40
+
+  k sweep for ogbn-arxiv:
+     k    d_eff       ortho    Fisher(v1)     Part A
+  -------------------------------------------------------
+     1      128    2.78e-10      0.819282      +1.10pp  (3.6s)
+     2      128    2.18e-10      0.927225      +0.54pp  (3.8s)
+     4      128    2.66e-10      0.606680      +0.21pp  (4.4s)
+     6      128    3.22e-10      0.308905      +0.06pp  (4.9s)
+     8      128    2.99e-10      0.221330      -0.44pp  (5.3s)
+    10      128    2.99e-10      0.123263      -0.67pp  (5.8s)
+    12      128    2.88e-10      0.030410      -0.93pp  (6.4s)
+    20      128    2.50e-10      0.011762      -2.05pp  (8.5s)
+    30      128    2.48e-10      0.015534      -2.54pp  (11.2s)
+
+============================================================
+THRESHOLD ANALYSIS  (Fisher(v₁) < 0.1)
+============================================================
+
+  amazon-computers:
+    Part A crosses 0 at    k ≈ 5.1
+    Fisher(v₁) < 0.1 at    k ≈ 3.8
+    Lag (Fisher - PartA):  Δk = -1.3  → Fisher drops BEFORE Part A crosses
+
+  amazon-photo:
+    Part A crosses 0 at    k ≈ 8.2
+    Fisher(v₁) < 0.1 at    k ≈ 2.0
+    Lag (Fisher - PartA):  Δk = -6.2  → Fisher drops BEFORE Part A crosses
+
+  ogbn-arxiv:
+    Part A crosses 0 at    k ≈ 6.2
+    Fisher(v₁) < 0.1 at    k ≈ 10.5
+    Lag (Fisher - PartA):  Δk = +4.3  → Fisher drops AFTER Part A crosses
+
+Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_OUTPUT/fisher_crossover/fisher_crossover_analysis.csv
+Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_OUTPUT/fisher_crossover/fisher_vs_part_a_crossover_datasets.png
+Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_OUTPUT/fisher_crossover/fisher_vs_part_a_crossover_datasets.pdf
+
+Done.

@@ -1,0 +1,31 @@
+Q2: DIMENSION LOSS vs CROSSOVER ANALYSIS
+============================================================
+Split type: fixed
+k values: [1, 2, 4, 6, 8, 10, 12, 20, 30]
+Note: k=15 and k=25 were never run (globally absent)
+
+--- Crossover datasets (3) ---
+  amazon-computers         : r=+0.663  p=0.0517  pattern=Harmful  d_eff_range=761–767  retention@k30=0.9922
+  amazon-photo             : r=+0.761  p=0.0172  pattern=Harmful  d_eff_range=480–745  retention@k30=0.6443
+  ogbn-arxiv               : r=NaN  p=NaN  pattern=Constant d_eff  d_eff_range=128–128  retention@k30=1.0
+
+--- Near-crossover datasets (1) ---
+  wikics                   : r=NaN  p=NaN  pattern=Constant d_eff  d_eff_range=300–300  retention@k30=1.0
+
+--- Monotonic datasets (5) ---
+  citeseer                 : r=-0.251  p=0.5151  pattern=Neutral  d_eff_range=900–2035  retention@k30=0.4423
+  coauthor-cs              : r=+0.928  p=0.0003  pattern=Harmful  d_eff_range=4117–6803  retention@k30=0.6052
+  coauthor-physics         : r=+0.852  p=0.0035  pattern=Harmful  d_eff_range=4968–7697  retention@k30=0.6454
+  cora                     : r=+0.028  p=0.9428  pattern=Neutral  d_eff_range=862–1427  retention@k30=0.6041
+  pubmed                   : r=NaN  p=NaN  pattern=Constant d_eff  d_eff_range=500–500  retention@k30=1.0
+
+--- Crossover detection details ---
+  amazon-computers         : Part A crosses 0 at k≈5.08  d_eff≈767.0  retention≈1.0
+  amazon-photo             : Part A crosses 0 at k≈8.18  d_eff≈745.0  retention≈1.0
+  ogbn-arxiv               : Part A crosses 0 at k≈6.23  d_eff≈128.0  retention≈1.0
+  wikics                   : Part A=0.3955pp at k=30  (no sign change observed up to k=30)
+
+--- Key finding ---
+  Mean d_eff retention at k=30:  Crossover=0.879  Monotonic=0.659
+  Mean Pearson r (retention vs Part A):  Crossover=+0.712  Monotonic=+0.389
+  Interpretation: Positive r for monotonic → both d_eff and Part A move together. Crossover r reflects the transition.

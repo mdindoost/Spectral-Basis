@@ -1,0 +1,156 @@
+REPORT ASSEMBLY LOG
+===================
+File: part_a_comprehensive_report_koutis.tex
+Date: 2026-03-01
+Purpose: Comprehensive advisor report (Prof. Koutis) - all data, both splits, all k
+
+===============================================================================
+SOURCE FILES USED
+===============================================================================
+
+BASE REPORT:
+  part_a_fisher_mechanism_report_v3_verified.tex (380 lines)
+  - Structure and narrative retained; tables expanded, figures added
+
+PRIMARY TABLE FILES (from PAPER_EXPERIMENTS/PAPER_OUTPUT/tables/):
+  table_3_0_primary_analysis_fixed.tex      -> Table: Primary analysis (fixed splits)
+  table_3_0_primary_analysis_random.tex     -> Table: Primary analysis (random splits)
+  table_3_8_part_a_k_sweep_fixed.tex        -> Table: Full k-sweep Part A (fixed)
+  table_3_9_part_a_k_sweep_random.tex       -> Table: Full k-sweep Part A (random)
+  table_4_0_dataset_statistics.tex          -> Table: Dataset characteristics
+  table_4_1_spectral_properties.tex         -> Table: Condition numbers, variance
+  table_4_2_separability.tex                -> Table: Class separability in U
+  table_4_3_subspace_alignment.tex          -> Table: Canonical correlation alignment
+  table_5_1_magnitude_cascade.tex           -> Table: Std -> RowNorm -> LogMag -> Dual
+  table_5_2_spectral_normalization.tex      -> Table: Alpha sweep best results
+  table_5_3_alpha_sweep_full_fixed.tex      -> Table: Full alpha sweep (fixed)
+  table_5_4_nested_spheres.tex              -> Table: NestedSpheres vs Spectral
+  table_6_1_convergence_speed_fixed.tex     -> Table: Convergence speed (fixed)
+
+INLINE DATA SOURCES (not from TEX table files):
+  Fisher collapse data (fisher_v1 at k=1,10,30) - from fisher_crossover_analysis.py output
+  Fisher timing data (k where Fisher < 0.1 vs Part A=0) - from fisher_crossover_analysis.py
+  Graph topology data (avg degree, clustering, path length etc) - from q3_graph_topology.py
+  Linear probe data (logistic regression on first p eigenvectors) - from q1_label_alignment.py
+
+FIGURES REFERENCED (from PAPER_EXPERIMENTS/PAPER_OUTPUT/figures/):
+  figure_3_1_part_a_barchart_fixed.pdf     -> Fig: Part A bar chart (fixed splits)
+  figure_3_1_part_a_barchart_random.pdf    -> Fig: Part A bar chart (random splits)
+  figure_3_2_part_a_vs_k.pdf              -> Fig: Part A vs k curves
+  figure_3_3_part_b_vs_k.pdf              -> Fig: Part B vs k curves
+  figure_3_4_fisher_vs_k.pdf              -> Fig: Fisher score vs k
+  figure_3_5_fisher_vs_partb_scatter.pdf  -> Fig: Fisher score vs Part A scatter
+  figure_4_1_singular_values.pdf          -> Fig: Singular value spectra
+  figure_4_2_alignment_vs_gap.pdf         -> Fig: Subspace alignment vs spectral gap
+  figure_6_1_all_training_curves.pdf      -> Fig: All training curves (composite)
+  figure_6_1_cora_training_curves.pdf     -> Fig: Cora training curves
+  figure_6_1_amazon-computers_training_curves.pdf -> Fig: Amazon-Computers training
+  figure_6_1_coauthor-cs_training_curves.pdf -> Fig: Coauthor-CS training
+  figure_6_1_ogbn-arxiv_training_curves.pdf  -> Fig: ogbn-arxiv training
+
+===============================================================================
+WHAT'S NEW VS. v3_verified
+===============================================================================
+
+1. BOTH SPLITS throughout
+   - Primary analysis: Table 3.1 (fixed) + Table 3.2 (random) side-by-side
+   - k-sweep: Table 4.1 (fixed) + Table 4.2 (random)
+   - Discussion of split-dependent behavior (WikiCS, PubMed, CiteSeer anomalies)
+
+2. FULL K-SWEEP TABLES
+   - All 9 k values for both splits
+   - Crossover intervals marked with dagger symbol
+   - Random-split crossovers for WikiCS and PubMed now documented
+
+3. NEW SECTIONS (not in v3):
+   §5 Spectral Properties — condition numbers, subspace alignment, separability
+   §6 Fisher Score Analysis — collapse table, timing table, figures
+   §7 Graph Topology — structural comparison table, dataset cluster semantics
+   §8 Linear Probe Analysis — signal concentration vs dispersion table
+   §9 Recovery Strategies — magnitude cascade + alpha sweep + NestedSpheres
+
+4. MISSING FROM v3, NOW INCLUDED:
+   - Magnitude cascade table (Std -> RowNorm -> LogMag -> Dual)
+   - Full alpha sweep table (all 5 alpha values per dataset)
+   - NestedSpheres table (alpha x beta grid comparison)
+   - Convergence speed table (epochs to 90%/95%/99% of peak)
+   - Subspace alignment table (canonical correlations)
+   - Separability table (inter/intra class distances)
+   - Training curve figures for individual datasets
+
+5. ANALYSIS ADDITIONS:
+   - "Why conditioning is not the mechanism" with quantitative decoupling
+   - "Why homophily is not the primary factor" with data
+   - "The alpha=-1 recovery insight" explaining the inverse scaling mechanism
+   - Split-dependent anomalies section
+   - ogbn-arxiv convergence anomaly explained (R+Std faster than SGC at k=10)
+
+===============================================================================
+DATA INTEGRITY NOTES
+===============================================================================
+
+- All data sourced from PAPER_EXPERIMENTS/PAPER_RESULTS/ only (trusted results)
+- D-orthonormality: verified error < 1e-9 for all 81 (dataset, k) combinations
+- Span preservation: mean CC > 0.935 for all datasets at k=10
+- Fisher scores: computed from Q1 analysis (q1_label_alignment.py) and
+  fisher_crossover_analysis.py output
+- Graph topology: computed from q3_graph_topology.py
+- Linear probe: computed from q1_label_alignment.py
+- Crossover k values: linear interpolation, NOT visual estimation:
+    amazon-computers: k* = 5.08 (between k=4: +1.7pp and k=6: -1.5pp)
+    amazon-photo:     k* = 8.18 (between k=8: +0.1pp and k=10: -0.6pp)
+    ogbn-arxiv:       k* = 6.23 (between k=6: +0.1pp and k=8: -0.4pp)
+- WikiCS random split crossover: k* = 10-12 (between k=10: +0.3pp and k=12: -0.3pp)
+- PubMed random split crossover: k* = 20-30 (between k=20: +0.1pp and k=30: -0.4pp)
+
+===============================================================================
+KNOWN LIMITATIONS
+===============================================================================
+
+1. Convergence speed: random splits table not included (only fixed).
+   Run table_6_1_convergence_speed_random.tex to add.
+
+2. Fisher scores at k=30: available only for crossover datasets and a few others
+   (computed by fisher_crossover_analysis.py for amazon-computers, amazon-photo,
+    ogbn-arxiv; and q1 for the rest). Values in the table are from these scripts.
+
+3. Alpha sweep: only fixed-split version (table_5_3_alpha_sweep_full_fixed.tex).
+   Random split alpha sweep exists (table_5_3_alpha_sweep_full_random.tex) but
+   was not included to avoid table bloat. Available if needed.
+
+4. ogbn-arxiv training curve figure: generated as
+   figure_6_1_ogbn-arxiv_training_curves.pdf - if this does not exist,
+   remove from §8.2 or replace with figure_6_1_all_training_curves.pdf only.
+
+5. Figures must be in the same directory as the .tex file, or paths must be
+   updated. Currently assumes \graphicspath{{figures/}} relative to .tex location.
+   For compilation: run from PAPER_EXPERIMENTS/PAPER_OUTPUT/ with figures/ subdir.
+
+===============================================================================
+COMPILATION INSTRUCTIONS
+===============================================================================
+
+  cd /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_OUTPUT/
+  pdflatex part_a_comprehensive_report_koutis.tex
+  pdflatex part_a_comprehensive_report_koutis.tex  # second pass for TOC
+
+Dependencies: booktabs, amsmath, amssymb, graphicx, xcolor, tabularx,
+              multirow, caption, subcaption, float, array, threeparttable,
+              hyperref, longtable
+
+===============================================================================
+ASSEMBLY SESSION INFO
+===============================================================================
+
+Assembled by: Claude (claude-sonnet-4-6)
+Session date: 2026-03-01
+Based on conversation context from previous session (context was compacted)
+
+Key scripts that generated the underlying data:
+  PAPER_EXPERIMENTS/master_training.py      -- Exp 1, 3-7 training results
+  PAPER_EXPERIMENTS/master_analytics.py     -- Exp 2, 8 spectral analytics
+  PAPER_EXPERIMENTS/q1_label_alignment.py  -- Fisher, linear probe, CCA
+  PAPER_EXPERIMENTS/q2_dimension_analysis.py -- d_eff retention analysis
+  PAPER_EXPERIMENTS/q3_graph_topology.py   -- Graph structural properties
+  PAPER_EXPERIMENTS/fisher_crossover_analysis.py -- Fisher timing vs Part A
+  PAPER_EXPERIMENTS/generate_paper_artifacts_v2.py -- Tables and figures

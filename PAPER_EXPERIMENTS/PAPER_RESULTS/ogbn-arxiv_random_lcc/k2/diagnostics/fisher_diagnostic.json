@@ -1,0 +1,187 @@
+{
+  "fisher_score": 0.23814599184408639,
+  "std_fisher_score": 0.004057998889977924,
+  "per_split": [
+    {
+      "split": 0,
+      "fisher_score": 0.23029694953721955,
+      "fisher_score_U": 0.23029694953721955,
+      "between_class_variance": 4.352262068858616e-06,
+      "within_class_variance": 1.889847901852136e-05,
+      "per_feature_U_stats": {
+        "mean": 0.08435583596061691,
+        "std": 0.11275408079244403,
+        "max": 0.9960408762754092,
+        "top5": [
+          0.9960408762754092,
+          0.7490029623105262,
+          0.4405897712604666,
+          0.2557360899010588,
+          0.23437327954212214
+        ]
+      },
+      "note": "Computed on training set only to prevent data leakage",
+      "fisher_score_X_diffused": 0.034836210723188786,
+      "between_class_variance_X": 0.013545899210594469,
+      "within_class_variance_X": 0.3888453689246293,
+      "per_feature_X_stats": {
+        "mean": 0.21005179929053075,
+        "std": 0.12844473447034818,
+        "max": 0.7906408320575494,
+        "top5": [
+          0.7906408320575494,
+          0.6271436936464725,
+          0.5818784431614081,
+          0.5512382392790254,
+          0.467325618377677
+        ],
+        "n_cols_sampled": 128
+      }
+    },
+    {
+      "split": 1,
+      "fisher_score": 0.23922193799809804,
+      "fisher_score_U": 0.23922193799809804,
+      "between_class_variance": 4.534690371901052e-06,
+      "within_class_variance": 1.895599713742435e-05,
+      "per_feature_U_stats": {
+        "mean": 0.08761571295549557,
+        "std": 0.11190965892862928,
+        "max": 0.9693423967507249,
+        "top5": [
+          0.9693423967507249,
+          0.7633274887579689,
+          0.44210484703528563,
+          0.27217815016816665,
+          0.2401936833736368
+        ]
+      },
+      "note": "Computed on training set only to prevent data leakage",
+      "fisher_score_X_diffused": 0.03191347983128043,
+      "between_class_variance_X": 0.01272149490724181,
+      "within_class_variance_X": 0.3986244989420635,
+      "per_feature_X_stats": {
+        "mean": 0.2102099936210325,
+        "std": 0.1304479802125453,
+        "max": 0.7981358253094342,
+        "top5": [
+          0.7981358253094342,
+          0.6511668306195003,
+          0.597915542676544,
+          0.5689970892778611,
+          0.46878898509754846
+        ],
+        "n_cols_sampled": 128
+      }
+    },
+    {
+      "split": 2,
+      "fisher_score": 0.24198810350441763,
+      "fisher_score_U": 0.24198810350441763,
+      "between_class_variance": 4.723119572693713e-06,
+      "within_class_variance": 1.9517982513580426e-05,
+      "per_feature_U_stats": {
+        "mean": 0.08717564360270758,
+        "std": 0.11200538391092615,
+        "max": 0.9717425425720636,
+        "top5": [
+          0.9717425425720636,
+          0.773837052567029,
+          0.4277698617060438,
+          0.2635776625627244,
+          0.2408403690817238
+        ]
+      },
+      "note": "Computed on training set only to prevent data leakage",
+      "fisher_score_X_diffused": 0.03255321615583616,
+      "between_class_variance_X": 0.012833085435446295,
+      "within_class_variance_X": 0.39421866564620744,
+      "per_feature_X_stats": {
+        "mean": 0.2089381287334871,
+        "std": 0.12826603560654404,
+        "max": 0.7822682297129774,
+        "top5": [
+          0.7822682297129774,
+          0.6295743225214202,
+          0.5779643494725419,
+          0.5474421861478093,
+          0.465826094303706
+        ],
+        "n_cols_sampled": 128
+      }
+    },
+    {
+      "split": 3,
+      "fisher_score": 0.23910428953407306,
+      "fisher_score_U": 0.23910428953407306,
+      "between_class_variance": 4.606093829343915e-06,
+      "within_class_variance": 1.9263953140780158e-05,
+      "per_feature_U_stats": {
+        "mean": 0.08609445968048143,
+        "std": 0.11490596066371735,
+        "max": 0.9661935843420713,
+        "top5": [
+          0.9661935843420713,
+          0.8438307155606958,
+          0.4365551048336695,
+          0.25314852288377115,
+          0.23528743775062677
+        ]
+      },
+      "note": "Computed on training set only to prevent data leakage",
+      "fisher_score_X_diffused": 0.03418130240116467,
+      "between_class_variance_X": 0.01358902557831384,
+      "within_class_variance_X": 0.39755727908866395,
+      "per_feature_X_stats": {
+        "mean": 0.20762655690412368,
+        "std": 0.1276178596083098,
+        "max": 0.7796356890406253,
+        "top5": [
+          0.7796356890406253,
+          0.6252050046981016,
+          0.586527882149723,
+          0.5377954860544039,
+          0.4725357540655038
+        ],
+        "n_cols_sampled": 128
+      }
+    },
+    {
+      "split": 4,
+      "fisher_score": 0.24011867864662378,
+      "fisher_score_U": 0.24011867864662378,
+      "between_class_variance": 4.629833631091377e-06,
+      "within_class_variance": 1.9281438900073986e-05,
+      "per_feature_U_stats": {
+        "mean": 0.0870308059722643,
+        "std": 0.11294019079679596,
+        "max": 0.9700665216003223,
+        "top5": [
+          0.9700665216003223,
+          0.7844622633917596,
+          0.43615315387371034,
+          0.2740451754449348,
+          0.24167027665803736
+        ]
+      },
+      "note": "Computed on training set only to prevent data leakage",
+      "fisher_score_X_diffused": 0.036291938211339095,
+      "between_class_variance_X": 0.014066328485009643,
+      "within_class_variance_X": 0.3875882407574127,
+      "per_feature_X_stats": {
+        "mean": 0.21256584644217313,
+        "std": 0.13223140260913668,
+        "max": 0.807438266028327,
+        "top5": [
+          0.807438266028327,
+          0.6522572426381966,
+          0.6048028116558986,
+          0.5819468679049417,
+          0.4746750829715009
+        ],
+        "n_cols_sampled": 128
+      }
+    }
+  ],
+  "note": "Fisher score computed on training set only (no leakage)"
+}

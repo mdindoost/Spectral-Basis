@@ -1,0 +1,173 @@
+/home/md724/Spectral-Basis/venv/lib/python3.12/site-packages/outdated/__init__.py:36: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import parse_version
+
+  Loading amazon-computers...
+Creating 60/20/20 split for amazon-computers...
+  amazon-computers: n=13,381  C=10  train=8031  val=2674  test=2676
+  k= 1  d_eff=  767  ortho=1.8e-10  probe@50= 84.34%  Fisher(v1)=1.9851  CCA_top5=0.898324  (45.0s)
+  k= 2  d_eff=  767  ortho=3.6e-10  probe@50= 80.12%  Fisher(v1)=0.8294  CCA_top5=0.925961  (34.9s)
+  k= 4  d_eff=  767  ortho=6.0e-10  probe@50= 75.45%  Fisher(v1)=0.0022  CCA_top5=0.926406  (38.3s)
+  k= 6  d_eff=  767  ortho=6.6e-10  probe@50= 75.15%  Fisher(v1)=0.0021  CCA_top5=0.925949  (43.0s)
+  k= 8  d_eff=  767  ortho=6.5e-10  probe@50= 75.04%  Fisher(v1)=0.0021  CCA_top5=0.925689  (43.8s)
+  k=10  d_eff=  767  ortho=6.4e-10  probe@50= 74.70%  Fisher(v1)=0.0022  CCA_top5=0.925564  (42.7s)
+  k=12  d_eff=  767  ortho=6.4e-10  probe@50= 74.78%  Fisher(v1)=0.0022  CCA_top5=0.925491  (48.3s)
+  k=20  d_eff=  767  ortho=6.3e-10  probe@50= 75.04%  Fisher(v1)=0.0022  CCA_top5=0.925377  (51.9s)
+  k=30  d_eff=  761  ortho=7.1e-10  probe@50= 75.15%  Fisher(v1)=0.0022  CCA_top5=0.925082  (51.9s)
+
+  Loading amazon-photo...
+Creating 60/20/20 split for amazon-photo...
+  amazon-photo: n=7,487  C=8  train=4487  val=1504  test=1496
+  k= 1  d_eff=  745  ortho=2.2e-10  probe@50= 87.23%  Fisher(v1)=2.1316  CCA_top5=0.925296  (17.0s)
+  k= 2  d_eff=  745  ortho=5.0e-10  probe@50= 87.83%  Fisher(v1)=0.0843  CCA_top5=0.944969  (18.2s)
+  k= 4  d_eff=  745  ortho=6.6e-10  probe@50= 84.76%  Fisher(v1)=0.0915  CCA_top5=0.943566  (20.4s)
+  k= 6  d_eff=  745  ortho=6.7e-10  probe@50= 83.76%  Fisher(v1)=0.0914  CCA_top5=0.943026  (24.1s)
+  k= 8  d_eff=  745  ortho=6.9e-10  probe@50= 83.69%  Fisher(v1)=0.0902  CCA_top5=0.942671  (22.6s)
+  k=10  d_eff=  745  ortho=7.7e-10  probe@50= 83.82%  Fisher(v1)=0.0895  CCA_top5=0.94241  (44.7s)
+  k=12  d_eff=  745  ortho=8.0e-10  probe@50= 84.16%  Fisher(v1)=0.0893  CCA_top5=0.942221  (61.2s)
+  k=20  d_eff=  745  ortho=8.0e-10  probe@50= 84.49%  Fisher(v1)=0.0898  CCA_top5=0.941779  (55.0s)
+  k=30  d_eff=  480  ortho=7.4e-10  probe@50= 82.29%  Fisher(v1)=0.0908  CCA_top5=0.92868  (23.2s)
+
+  Loading citeseer...
+  citeseer: n=2,120  C=6  train=80  val=328  test=663
+  k= 1  d_eff= 2035  ortho=2.2e-10  probe@50= 58.37%  Fisher(v1)=0.3058  CCA_top5=1.0  (24.6s)
+  k= 2  d_eff= 2035  ortho=2.2e-10  probe@50= 60.48%  Fisher(v1)=0.2114  CCA_top5=1.0  (22.0s)
+  k= 4  d_eff= 2033  ortho=2.2e-10  probe@50= 59.43%  Fisher(v1)=0.2552  CCA_top5=1.0  (4.3s)
+  k= 6  d_eff= 1989  ortho=2.2e-10  probe@50= 57.01%  Fisher(v1)=0.3243  CCA_top5=1.0  (4.0s)
+  k= 8  d_eff= 1897  ortho=2.2e-10  probe@50= 56.26%  Fisher(v1)=0.1889  CCA_top5=1.0  (6.1s)
+  k=10  d_eff= 1782  ortho=2.2e-10  probe@50= 56.71%  Fisher(v1)=0.0577  CCA_top5=1.0  (4.4s)
+  k=12  d_eff= 1653  ortho=2.1e-10  probe@50= 57.16%  Fisher(v1)=0.0624  CCA_top5=1.0  (4.6s)
+  k=20  d_eff= 1246  ortho=2.0e-10  probe@50= 58.97%  Fisher(v1)=0.2194  CCA_top5=1.0  (4.7s)
+  k=30  d_eff=  900  ortho=1.8e-10  probe@50= 53.70%  Fisher(v1)=0.3019  CCA_top5=1.0  (2.8s)
+
+  Loading coauthor-cs...
+Creating 60/20/20 split for coauthor-cs...
+  coauthor-cs: n=18,333  C=15  train=10999  val=3666  test=3668
+  k= 1  d_eff= 6803  ortho=2.2e-10  probe@50= 79.09%  Fisher(v1)=2.5372  CCA_top5=0.979342  (174.0s)
+  k= 2  d_eff= 6803  ortho=3.1e-10  probe@50= 69.98%  Fisher(v1)=1.4279  CCA_top5=0.982229  (165.5s)
+  k= 4  d_eff= 6803  ortho=3.1e-10  probe@50= 67.64%  Fisher(v1)=0.9506  CCA_top5=0.982685  (172.3s)
+  k= 6  d_eff= 6803  ortho=3.4e-10  probe@50= 66.74%  Fisher(v1)=0.9621  CCA_top5=0.982911  (178.4s)
+  k= 8  d_eff= 6803  ortho=3.8e-10  probe@50= 66.25%  Fisher(v1)=0.9795  CCA_top5=0.983054  (179.5s)
+  k=10  d_eff= 6803  ortho=3.9e-10  probe@50= 65.98%  Fisher(v1)=0.9909  CCA_top5=0.983146  (181.0s)
+  k=12  d_eff= 6803  ortho=3.9e-10  probe@50= 65.87%  Fisher(v1)=0.9975  CCA_top5=0.983203  (186.2s)
+  k=20  d_eff= 6210  ortho=3.7e-10  probe@50= 62.32%  Fisher(v1)=0.9355  CCA_top5=0.980102  (179.5s)
+  k=30  d_eff= 4117  ortho=3.4e-10  probe@50= 57.42%  Fisher(v1)=0.7476  CCA_top5=0.965279  (129.1s)
+
+  Loading coauthor-physics...
+Creating 60/20/20 split for coauthor-physics...
+  coauthor-physics: n=34,493  C=5  train=20695  val=6898  test=6900
+  k= 1  d_eff= 7697  ortho=5.8e-10  probe@50= 91.32%  Fisher(v1)=0.0020  CCA_top5=0.959826  (278.2s)
+  k= 2  d_eff= 7697  ortho=5.9e-10  probe@50= 88.38%  Fisher(v1)=0.0018  CCA_top5=0.964685  (293.1s)
+  k= 4  d_eff= 7697  ortho=5.4e-10  probe@50= 84.00%  Fisher(v1)=0.0019  CCA_top5=0.964718  (288.0s)
+  k= 6  d_eff= 7697  ortho=5.2e-10  probe@50= 83.87%  Fisher(v1)=0.0019  CCA_top5=0.964417  (295.2s)
+  k= 8  d_eff= 7697  ortho=5.2e-10  probe@50= 84.03%  Fisher(v1)=0.0019  CCA_top5=0.964353  (297.7s)
+  k=10  d_eff= 7697  ortho=5.2e-10  probe@50= 83.71%  Fisher(v1)=0.0018  CCA_top5=0.964364  (310.5s)
+  k=12  d_eff= 7697  ortho=5.2e-10  probe@50= 83.39%  Fisher(v1)=0.0019  CCA_top5=0.964336  (313.9s)
+  k=20  d_eff= 7264  ortho=5.1e-10  probe@50= 83.38%  Fisher(v1)=0.0018  CCA_top5=0.962321  (315.6s)
+  k=30  d_eff= 4968  ortho=4.9e-10  probe@50= 82.48%  Fisher(v1)=0.0018  CCA_top5=0.949104  (271.1s)
+
+  Loading cora...
+  cora: n=2,485  C=7  train=122  val=459  test=915
+  k= 1  d_eff= 1427  ortho=1.6e-10  probe@50= 69.62%  Fisher(v1)=0.2018  CCA_top5=1.0  (4.4s)
+  k= 2  d_eff= 1427  ortho=2.0e-10  probe@50= 68.31%  Fisher(v1)=0.3555  CCA_top5=1.0  (6.0s)
+  k= 4  d_eff= 1427  ortho=2.4e-10  probe@50= 70.71%  Fisher(v1)=0.3262  CCA_top5=1.0  (9.3s)
+  k= 6  d_eff= 1427  ortho=2.4e-10  probe@50= 70.05%  Fisher(v1)=0.3665  CCA_top5=1.0  (7.9s)
+  k= 8  d_eff= 1427  ortho=2.4e-10  probe@50= 68.20%  Fisher(v1)=0.4216  CCA_top5=1.0  (6.9s)
+  k=10  d_eff= 1427  ortho=2.4e-10  probe@50= 70.93%  Fisher(v1)=0.3960  CCA_top5=1.0  (2.1s)
+  k=12  d_eff= 1427  ortho=2.4e-10  probe@50= 68.31%  Fisher(v1)=0.4112  CCA_top5=1.0  (1.2s)
+  k=20  d_eff= 1262  ortho=2.4e-10  probe@50= 71.26%  Fisher(v1)=0.2708  CCA_top5=1.0  (4.4s)
+  k=30  d_eff=  862  ortho=2.2e-10  probe@50= 68.96%  Fisher(v1)=0.1500  CCA_top5=1.0  (3.6s)
+
+  Loading ogbn-arxiv...
+  ogbn-arxiv: n=169,343  C=40  train=90941  val=29799  test=48603
+  k= 1  d_eff=  128  ortho=2.8e-10  probe@50= 40.41%  Fisher(v1)=0.8193  CCA_top5=0.699493  (27.9s)
+  k= 2  d_eff=  128  ortho=2.2e-10  probe@50= 43.29%  Fisher(v1)=0.9272  CCA_top5=0.748437  (26.0s)
+  k= 4  d_eff=  128  ortho=2.7e-10  probe@50= 21.76%  Fisher(v1)=0.6067  CCA_top5=0.754933  (25.1s)
+  k= 6  d_eff=  128  ortho=3.2e-10  probe@50= 15.14%  Fisher(v1)=0.3089  CCA_top5=0.757808  (26.7s)
+  k= 8  d_eff=  128  ortho=3.0e-10  probe@50= 13.63%  Fisher(v1)=0.2213  CCA_top5=0.759045  (25.9s)
+  k=10  d_eff=  128  ortho=3.0e-10  probe@50= 12.07%  Fisher(v1)=0.1233  CCA_top5=0.759192  (25.7s)
+  k=12  d_eff=  128  ortho=2.9e-10  probe@50= 10.88%  Fisher(v1)=0.0304  CCA_top5=0.758645  (26.8s)
+  k=20  d_eff=  128  ortho=2.5e-10  probe@50=  8.68%  Fisher(v1)=0.0118  CCA_top5=0.753586  (30.6s)
+  k=30  d_eff=  128  ortho=2.5e-10  probe@50=  7.60%  Fisher(v1)=0.0155  CCA_top5=0.746177  (34.1s)
+
+  Loading pubmed...
+  pubmed: n=19,717  C=3  train=60  val=500  test=1000
+  k= 1  d_eff=  500  ortho=1.3e-10  probe@50= 54.20%  Fisher(v1)=0.0206  CCA_top5=1.0  (3.4s)
+  k= 2  d_eff=  500  ortho=1.2e-10  probe@50= 62.70%  Fisher(v1)=0.2480  CCA_top5=1.0  (1.3s)
+  k= 4  d_eff=  500  ortho=1.5e-10  probe@50= 58.90%  Fisher(v1)=0.0887  CCA_top5=1.0  (6.5s)
+  k= 6  d_eff=  500  ortho=1.8e-10  probe@50= 52.60%  Fisher(v1)=0.0525  CCA_top5=1.0  (1.4s)
+  k= 8  d_eff=  500  ortho=1.8e-10  probe@50= 48.80%  Fisher(v1)=0.0367  CCA_top5=1.0  (5.1s)
+  k=10  d_eff=  500  ortho=1.9e-10  probe@50= 47.30%  Fisher(v1)=0.0250  CCA_top5=1.0  (1.5s)
+  k=12  d_eff=  500  ortho=1.9e-10  probe@50= 41.20%  Fisher(v1)=0.0144  CCA_top5=1.0  (1.7s)
+  k=20  d_eff=  500  ortho=2.1e-10  probe@50= 43.00%  Fisher(v1)=0.0123  CCA_top5=1.0  (2.0s)
+  k=30  d_eff=  500  ortho=2.1e-10  probe@50= 40.50%  Fisher(v1)=0.0043  CCA_top5=1.0  (4.1s)
+
+  Loading wikics...
+/home/md724/Spectral-Basis/venv/lib/python3.12/site-packages/torch_geometric/datasets/wikics.py:45: UserWarning: The WikiCS dataset now returns an undirected graph by default. Please explicitly specify 'is_undirected=False' to restore the old behavior.
+  warnings.warn(
+WikiCS using split 0: Train=580, Val=1769, Test=5847
+  wikics: n=11,311  C=10  train=561  val=1709  test=5647
+  k= 1  d_eff=  300  ortho=2.9e-10  probe@50= 50.08%  Fisher(v1)=0.1196  CCA_top5=0.928724  (1.0s)
+  k= 2  d_eff=  300  ortho=3.5e-10  probe@50= 53.39%  Fisher(v1)=0.0818  CCA_top5=0.932662  (1.4s)
+  k= 4  d_eff=  300  ortho=7.0e-10  probe@50= 54.38%  Fisher(v1)=0.0467  CCA_top5=0.926625  (1.3s)
+  k= 6  d_eff=  300  ortho=8.6e-10  probe@50= 53.50%  Fisher(v1)=0.0304  CCA_top5=0.925434  (1.3s)
+  k= 8  d_eff=  300  ortho=9.2e-10  probe@50= 51.78%  Fisher(v1)=0.0275  CCA_top5=0.924106  (1.2s)
+  k=10  d_eff=  300  ortho=9.3e-10  probe@50= 54.26%  Fisher(v1)=0.0332  CCA_top5=0.92566  (1.4s)
+  k=12  d_eff=  300  ortho=9.3e-10  probe@50= 55.71%  Fisher(v1)=0.0402  CCA_top5=0.926634  (1.2s)
+  k=20  d_eff=  300  ortho=9.2e-10  probe@50= 56.95%  Fisher(v1)=0.0348  CCA_top5=0.925951  (2.0s)
+  k=30  d_eff=  300  ortho=9.2e-10  probe@50= 58.70%  Fisher(v1)=0.0329  CCA_top5=0.926717  (1.7s)
+
+Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_OUTPUT/q1_analysis/q1_linear_probe_accuracy.csv
+Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_OUTPUT/q1_analysis/q1_fisher_scores.csv
+Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_OUTPUT/q1_analysis/q1_canonical_correlations.csv
+
+======================================================================
+Q1 VERIFICATION SUMMARY
+  D-orthonormality checks passed: 81
+  Failures/flags: 0
+
+======================================================================
+Q1.1 LINEAR PROBE — accuracy at k=10 using first 50 eigenvectors
+  Dataset                         p=5      p=10      p=20      p=50     p=all
+  -----------------------------------------------------------------
+  amazon-computers              39.4%     52.3%     63.9%     74.7%     88.3%
+  amazon-photo                  40.4%     69.1%     74.1%     83.8%     89.1%
+  citeseer                      60.6%     65.6%     64.3%     56.7%     31.4%
+  coauthor-cs                   23.4%     24.1%     35.1%     66.0%     68.3%
+  coauthor-physics              52.4%     58.1%     73.4%     83.7%     86.6%
+  cora                          49.6%     60.7%     68.4%     70.9%     39.2%
+  ogbn-arxiv                     6.1%      7.3%      8.6%     12.1%     67.1%
+  pubmed                        38.5%     37.9%     38.0%     47.3%     47.9%
+  wikics                        28.2%     30.3%     44.5%     54.3%     64.9%
+
+======================================================================
+Q1.2 FISHER(v₁) at k=[1, 10, 30]
+  Dataset                           k=1        k=10        k=30
+  ----------------------------------------------------------
+  amazon-computers             1.985149     0.00216    0.002188
+  amazon-photo                 2.131614    0.089526    0.090786
+  citeseer                     0.305835    0.057681    0.301904
+  coauthor-cs                  2.537205    0.990905    0.747645
+  coauthor-physics             0.001986    0.001831    0.001833
+  cora                         0.201799    0.396014    0.150012
+  ogbn-arxiv                   0.819282    0.123263    0.015534
+  pubmed                       0.020621     0.02504    0.004317
+  wikics                       0.119577    0.033218    0.032864
+
+======================================================================
+Q1.3 CCA(U_train, Y_labels) — top-5 canonical corr at k=[1, 10, 30]
+  Dataset                           k=1        k=10        k=30
+  ----------------------------------------------------------
+  amazon-computers             0.898324    0.925564    0.925082
+  amazon-photo                 0.925296     0.94241     0.92868
+  citeseer                          1.0         1.0         1.0
+  coauthor-cs                  0.979342    0.983146    0.965279
+  coauthor-physics             0.959826    0.964364    0.949104
+  cora                              1.0         1.0         1.0
+  ogbn-arxiv                   0.699493    0.759192    0.746177
+  pubmed                            1.0         1.0         1.0
+  wikics                       0.928724     0.92566    0.926717
+
+Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_OUTPUT/q1_analysis/q1_summary.txt
+
+Total runtime: 88.6 min
+Done. All outputs in: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_OUTPUT/q1_analysis

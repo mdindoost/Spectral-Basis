@@ -1,0 +1,10 @@
+dataset,pearson_r,p_value,n_k_values,pattern,crossover_type,d_eff_range,d_eff_retention_k30,part_a_at_k30
+amazon-computers,0.66271,0.051741,9,Harmful,Crossover,761–767,0.9922,-14.8156
+amazon-photo,0.76117,0.017198,9,Harmful,Crossover,480–745,0.6443,-9.4474
+citeseer,-0.25078,0.515142,9,Neutral,Monotonic,900–2035,0.4423,33.1423
+coauthor-cs,0.92792,0.000308,9,Harmful,Monotonic,4117–6803,0.6052,5.7125
+coauthor-physics,0.85234,0.003515,9,Harmful,Monotonic,4968–7697,0.6454,2.8908
+cora,0.0281,0.942798,9,Neutral,Monotonic,862–1427,0.6041,26.0182
+ogbn-arxiv,NaN,NaN,9,Constant d_eff,Crossover,128–128,1.0,-2.5389
+pubmed,NaN,NaN,9,Constant d_eff,Monotonic,500–500,1.0,25.4933
+wikics,NaN,NaN,9,Constant d_eff,Near-crossover,300–300,1.0,0.3955

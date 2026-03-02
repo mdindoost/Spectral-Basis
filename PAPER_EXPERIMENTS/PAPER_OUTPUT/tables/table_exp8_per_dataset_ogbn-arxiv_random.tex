@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{k-sensitivity for \textbf{ogbn-arxiv} (Random Splits). Accuracies are mean test accuracy (\%). Part~A $=$ SGC+MLP $-$ R+Std; Part~B $=$ R+RN $-$ R+Std; Rem.~Gap $=$ Part~A $-$ Part~B. Fisher $=$ Fisher score of $\|U_i\|$ row norms on training nodes.}
+\label{tab:exp8_per_dataset_ogbn-arxiv_random}
+\begin{tabular}{rrrrrrrrrr}
+\toprule
+$k$ & SGC+MLP & R+Std & R+RN & Part~A & Part~B & Rem.~Gap & Fisher & $n_{\mathrm{runs}}$ \\
+\midrule
+1 & 69.38\% & 68.60\% & 67.26\% & +0.789 & -1.334 & +2.123 & 0.20302 & 75 \\
+2 & 72.94\% & 72.47\% & 71.42\% & +0.471 & -1.043 & +1.514 & 0.23815 & 75 \\
+4 & 73.32\% & 73.27\% & 72.48\% & +0.049 & -0.786 & +0.835 & 0.23714 & 75 \\
+6 & 72.87\% & 73.20\% & 72.63\% & -0.337 & -0.579 & +0.242 & 0.22888 & 75 \\
+8 & 72.36\% & 72.98\% & 72.57\% & -0.611 & -0.410 & -0.201 & 0.22083 & 75 \\
+10 & 71.90\% & 72.81\% & 72.46\% & -0.915 & -0.347 & -0.568 & 0.21303 & 75 \\
+12 & 71.43\% & 72.66\% & 72.38\% & -1.229 & -0.279 & -0.951 & 0.20561 & 75 \\
+20 & 69.69\% & 71.90\% & 72.02\% & -2.204 & +0.119 & -2.324 & 0.18096 & 75 \\
+30 & 67.85\% & 70.94\% & 71.64\% & -3.089 & +0.707 & -3.796 & 0.15940 & 75 \\
+\bottomrule
+\end{tabular}
+\end{table}
