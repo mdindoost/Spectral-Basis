@@ -24,7 +24,7 @@ A Diffusion-Dependent Phase Transition}\\[0.5em]
 \large Comprehensive Research Report for Prof.\ Ioannis Koutis\\
 All Splits $\cdot$ All $k$ Values $\cdot$ All Metrics}
 
-\author{Mohammad (PhD Research, NJIT)}
+\author{}
 \date{March 2026}
 
 \begin{document}
@@ -130,10 +130,13 @@ connected component (LCC).  See Table~\ref{tab:dataset_statistics}.
 %   Assembled by: generate_paper_artifacts_v2.py -> PAPER_OUTPUT/tables/table_4_0_dataset_statistics.tex
 \begin{table}[H]
 \centering\small\setlength{\tabcolsep}{5pt}
-\caption{Dataset statistics after LCC extraction ($k{=}10$). $d_{\mathrm{eff}}$ = rank
-of $\hat{A}^k X$ after QR decomposition (\texttt{src/graph\_utils.py:compute\_restricted\_eigenvectors()}).
-Homophily $h$ = fraction of edges connecting same-class nodes (computed on all nodes).
-\textit{\scriptsize Data: \texttt{exp2\_spectral\_analysis\_k10.json} per dataset; assembled by \texttt{generate\_paper\_artifacts\_v2.py}.}}
+\caption{Dataset statistics after LCC extraction. $d_{\mathrm{eff}}$ reported at $k{=}10$;
+see Table~\ref{tab:deff_vs_k} for $d_{\mathrm{eff}}$ at all $k$ --- it changes substantially
+at $k{=}20{-}30$ for CiteSeer, Cora, Coauthor-CS/Physics, Amazon-Photo.
+Homophily $h$ = fraction of edges connecting same-class nodes (all nodes, no leakage).
+\textit{\scriptsize Data: \texttt{exp2\_spectral\_analysis\_k10.json} per dataset;
+$d_{\mathrm{eff}}$ from \texttt{graph\_utils.py:compute\_restricted\_eigenvectors()};
+assembled by \texttt{generate\_paper\_artifacts\_v2.py}.}}
 \label{tab:dataset_statistics}
 \begin{tabular}{lrrrrrrrr}
 \toprule
@@ -148,6 +151,38 @@ amazon-computers & 13,381 & 245,778 & 36.74 & 10 & 767 & 767 & 0.777 \\
 amazon-photo & 7,487 & 119,043 & 31.80 & 8 & 745 & 745 & 0.827 \\
 coauthor-cs & 18,333 & 81,894 & 8.93 & 15 & 6,805 & 6,803 & 0.808 \\
 coauthor-physics & 34,493 & 247,962 & 14.38 & 5 & 8,415 & 7,697 & 0.931 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% DATA SOURCE: PAPER_EXPERIMENTS/PAPER_RESULTS/{dataset}_fixed_lcc/analytics/
+%              exp2_spectral_analysis_k{k}.json key 'd_effective'
+%              Computed by: src/graph_utils.py:compute_restricted_eigenvectors()
+%              via np.linalg.matrix_rank(X_diffused, tol=1e-10)
+\begin{table}[H]
+\centering\small\setlength{\tabcolsep}{3.5pt}
+\caption{$d_{\mathrm{eff}}(k) = \mathrm{rank}(\hat{A}^k X)$ (numerical rank, tol\,$=10^{-10}$)
+across the full $k$-sweep (fixed splits).
+\textbf{Bold} = value differs from $k{=}1$, indicating diffusion-induced rank loss.
+Three regimes: (1) always stable (PubMed, ogbn-arxiv, WikiCS, Amazon-Computers);
+(2) stable to $k{=}12$, collapse at $k{\geq}20$ (Cora, Coauthor-CS/Physics, Amazon-Photo);
+(3) early collapse from $k{=}4$ (CiteSeer: 2035$\to$900 by $k{=}30$, 56\% loss).
+\textit{\scriptsize Data: \texttt{analytics/exp2\_spectral\_analysis\_k\{k\}.json}
+key \texttt{`d\_effective'}; \texttt{graph\_utils.py:compute\_restricted\_eigenvectors()}.}}
+\label{tab:deff_vs_k}
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+Dataset & $k{=}1$ & $k{=}2$ & $k{=}4$ & $k{=}6$ & $k{=}8$ & $k{=}10$ & $k{=}12$ & $k{=}20$ & $k{=}30$ \\
+\midrule
+Cora             & 1427 & 1427 & 1427 & 1427 & 1427 & 1427 & 1427 & \textbf{1262} & \textbf{862}  \\
+CiteSeer         & 2035 & 2035 & \textbf{2033} & \textbf{1989} & \textbf{1897} & \textbf{1782} & \textbf{1653} & \textbf{1246} & \textbf{900}  \\
+PubMed           & 500  & 500  & 500  & 500  & 500  & 500  & 500  & 500  & 500  \\
+ogbn-arxiv       & 128  & 128  & 128  & 128  & 128  & 128  & 128  & 128  & 128  \\
+WikiCS           & 300  & 300  & 300  & 300  & 300  & 300  & 300  & 300  & 300  \\
+Amazon-Comp.     & 767  & 767  & 767  & 767  & 767  & 767  & 767  & 767  & \textbf{761}  \\
+Amazon-Photo     & 745  & 745  & 745  & 745  & 745  & 745  & 745  & 745  & \textbf{480}  \\
+Coauthor-CS      & 6803 & 6803 & 6803 & 6803 & 6803 & 6803 & 6803 & \textbf{6210} & \textbf{4117} \\
+Coauthor-Phys.   & 7697 & 7697 & 7697 & 7697 & 7697 & 7697 & 7697 & \textbf{7264} & \textbf{4968} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -255,11 +290,36 @@ Three qualitative regimes are observed in practice:
     d_{\mathrm{eff}}{=}1427$; Coauthor-CS $d{=}6805 \to d_{\mathrm{eff}}{=}6803$):
     Minimal rank loss; $d_{\mathrm{eff}}$ is stable across all $k$.
 \end{itemize}
-\textbf{Practical conclusion:} within our sweep $k \in \{1,\ldots,30\}$,
-$d_{\mathrm{eff}}$ is approximately \emph{constant} per dataset.
-The value reported in Table~\ref{tab:dataset_statistics} (measured at $k{=}10$)
-is representative for all $k$.  The large reductions (CiteSeer, Coauthor-Physics)
-reflect the intrinsic rank of the raw feature matrix, not a diffusion-induced collapse.
+\textbf{Measured $d_{\mathrm{eff}}$ across the full $k$-sweep.}
+Table~\ref{tab:deff_vs_k} (in \S\ref{sec:setup}) shows the actual $d_{\mathrm{eff}}$
+values for all nine datasets.  Three distinct behaviours emerge:
+
+\textbf{Practical conclusions from the measured data.}
+\begin{itemize}
+  \item \textbf{Always stable} (PubMed, ogbn-arxiv, WikiCS, Amazon-Computers):
+    $d_{\mathrm{eff}} = d$ at all $k \leq 30$.  Low feature dimension ($d \leq 767$)
+    and dense connectivity mean diffusion never causes numerical rank loss.
+  \item \textbf{Stable to $k{=}12$, collapse at $k \geq 20$}
+    (Cora, Coauthor-CS, Coauthor-Physics, Amazon-Photo):
+    $d_{\mathrm{eff}}$ is constant through the practical operating range but drops
+    sharply at high diffusion.  Cora loses 40\% of its effective dimension by $k{=}30$
+    ($1427 \to 862$); Coauthor-CS loses 40\% ($6803 \to 4117$).
+  \item \textbf{Early collapse from $k{=}4$} (CiteSeer only):
+    The most $k$-sensitive dataset.  $d_{\mathrm{eff}}$ decreases monotonically from
+    2035 at $k{=}1$ to 900 at $k{=}30$ (56\% loss).  CiteSeer has the highest feature
+    dimension ($d{=}3703$) and sparsest graph (avg.\ degree $3.47$), so slow diffusion
+    causes gradual but persistent alignment of feature directions.
+\end{itemize}
+
+\textbf{Implication for Part~A.}
+The $d_{\mathrm{eff}}$ collapse at high $k$ is a \emph{sparse-graph} phenomenon
+(monotonic datasets), not a crossover-dataset phenomenon.
+Dense graphs (Amazon-Computers, WikiCS, ogbn-arxiv) remain full-rank throughout.
+Therefore rank collapse does \emph{not} explain the Part~A crossover to negative
+on dense graphs---Fisher score collapse remains the primary mechanism.
+However, on sparse monotonic datasets at $k{=}30$, the MLP must classify with fewer
+eigenvectors than at $k{=}10$ (e.g.\ Cora: 862 vs 1427), which may contribute to
+the modest Part~A decay seen at extreme $k$ values.
 
 % ─── Fisher Score ─────────────────────────────────────────────────────────────
 \subsubsection*{Fisher Score: Row-Magnitude Discriminability of $U$}
