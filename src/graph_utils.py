@@ -51,7 +51,14 @@ def load_dataset(dataset_name, root='./dataset'):
     # OGB Datasets
     # ========================================================================
     if dataset_name == 'ogbn-arxiv':
-        dataset = NodePropPredDataset(name='ogbn-arxiv', root=root)
+        # PyTorch 2.6 changed torch.load default to weights_only=True, which breaks
+        # OGB's internal torch.load call. Temporarily patch to restore old behaviour.
+        _orig_torch_load = torch.load
+        torch.load = lambda *a, **kw: _orig_torch_load(*a, **{**kw, 'weights_only': False})
+        try:
+            dataset = NodePropPredDataset(name='ogbn-arxiv', root=root)
+        finally:
+            torch.load = _orig_torch_load
         graph, labels = dataset[0]
 
         edge_index = torch.from_numpy(graph['edge_index']).long()

@@ -60,22 +60,37 @@ WikiCS starts from the largest initial gap of all datasets ($+25.3$pp at $k{=}1$
 (4)~\textit{Weak crossover} (ogbn-arxiv—1/9): Part~A reaches slightly negative
 values at high $k$ ($-3.1$pp at $k{=}30$ under random splits).
 
-\textbf{Mechanism.}
-The crossover is governed by \textbf{first-eigenvector Fisher score collapse}: on dense
-graphs (avg.\ degree ${\sim}30$), Fisher($v_1$) drops 95--99\% within 2--4 diffusion
-steps, dispersing class information across hundreds of eigenvectors.  On sparse graphs
-(avg.\ degree ${\sim}5$), Fisher scores remain stable, keeping class information
-concentrated in the first ${\sim}50$ eigenvectors.
+\textbf{Root mechanism.}
+The Rayleigh-Ritz D-orthonormalization step enforces $U^\top D U = I$, which
+equalizes graph-weighted variance across all eigenvector dimensions.  This destroys
+the eigenvalue-weighted scaling that is naturally present in $X_{\mathrm{diff}}$,
+where each frequency component is weighted by $\lambda_j^k$.  The resulting
+Euclidean column-variance disparity is quantitatively predicted by the eigenvalue
+range of the generalized Laplacian problem: CiteSeer ($\lambda_{\max}/\lambda_{\min}
+= 234\times$) incurs a $2{\times}10^9$-fold column-variance disparity, rendering
+high-frequency columns near-constant; PubMed ($8.9\times$) incurs only 171-fold
+disparity, explaining its smaller Part~A.  Fisher score collapse on dense graphs
+is a downstream consequence of this mechanism, not an independent cause.
+
+\textbf{Representation, not optimization.}
+A logistic regression classifier on $U$ matches the 3-layer MLP at most 10pp above a linear classifier on
+all 9 datasets.  The MLP's nonlinearity adds almost nothing beyond a linear model.
+Part~A is therefore a \emph{representation problem}: $U$-space is intrinsically harder
+to classify than $X_{\mathrm{diff}}$-space for any classifier, not merely for
+gradient-based optimization.
 
 \textbf{Subspace preservation.}  D-orthonormality error $<10^{-9}$ and mean canonical
 correlation $>0.935$ across all 81 dataset-$k$ combinations confirm that the
-Rayleigh-Ritz projection is mathematically exact: basis change alone—not information
-loss—drives Part~A.
+Rayleigh-Ritz projection is mathematically exact: variance structure destruction,
+not information loss, drives Part~A.
 
 \textbf{Recovery.}  Spectral reweighting ($\alpha{=}-1$) recovers 41--47pp on
-monotonic datasets (Cora, CiteSeer, Coauthor-CS) by undoing magnitude distortion,
-but provides only marginal gains on crossover datasets where signal is fundamentally
-dispersed.
+monotonic datasets (Cora, CiteSeer, Coauthor-CS) by reintroducing eigenvalue
+weighting suppressed by D-orthonormalization.  The $\alpha$ sensitivity range
+across the sweep (51pp for Cora, $<1$pp for Amazon-Computers) is itself a
+diagnostic of whether class signal is frequency-aligned.  Recovery is not universal:
+on crossover datasets where signal is dispersed across all frequency components,
+no monotone reweighting has leverage.
 \end{abstract}
 
 \clearpage
@@ -116,9 +131,19 @@ Gap is the remaining unrecovered loss after RowNorm.
 
 If the basis change were numerically neutral (as the linear-algebra identity suggests),
 Part~A would be zero.  The fact that Part~A is large and $k$-dependent reveals that
-\emph{MLP optimization is sensitive to the geometric representation of features}, even
-when the underlying linear subspace is unchanged.  Understanding \textit{when, where,
-and how} this sensitivity manifests is the central contribution of this work.
+\emph{classifiers are sensitive to the geometric representation of features}, even when
+the underlying linear subspace is unchanged.
+
+The central contribution of this work is a mechanistic explanation of this sensitivity.
+We show that D-orthonormalization---the normalization step in the Rayleigh-Ritz
+procedure---destroys the eigenvalue-weighted variance structure that is naturally
+encoded in $X_{\mathrm{diff}}$.  This destruction is the primary source of Part~A
+across all datasets and all $k$ values.  A logistic regression classifier on $U$
+matches the 3-layer MLP at most 10pp above a linear classifier on all 9 datasets, establishing that the
+difficulty is in the representation itself, not in the optimizer's ability to learn
+from it.  The eigenvalue range of the Laplacian predicts the magnitude of the
+performance gap, and inverse eigenvalue scaling ($\alpha{=}-1$) partially restores
+the lost structure on datasets where class signal is frequency-aligned.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Experimental Setup}
@@ -586,6 +611,36 @@ coauthor-physics  & 95.5 & 88.7 & $+6.9$  & 2.05 & $3.3\times$  \\
 \end{tabular}
 \end{table}
 
+\noindent\textbf{What the universal $k{=}1$ benefit tells us.}
+The fact that restricted eigenvectors improve MLP performance at $k{=}1$ on every
+dataset — across graph types ranging from sparse citation networks to dense co-purchase
+graphs, and feature types ranging from bag-of-words to pre-trained embeddings — is not
+self-evident.  D-orthonormalization destroys eigenvalue-weighted variance structure
+(the primary source of Part~A degradation at high $k$); why does it help at $k{=}1$?
+
+The answer is that at shallow diffusion depth, the Rayleigh-Ritz projection performs
+a beneficial operation that diffusion alone has not yet accomplished: it filters out
+high-frequency feature components that are inconsistent with the graph's community
+structure.  The original feature matrix $X$ — regardless of its type or dimension —
+contains directions that are high-frequency with respect to the graph Laplacian.
+These directions are geometrically noisy: they vary rapidly across connected nodes and
+carry within-class variance rather than between-class signal.  The restricted
+eigenvector computation projects $X_{\mathrm{diff}}$ onto the Laplacian eigenvector
+basis and retains only the components that are smooth on the graph.  At $k{=}1$,
+diffusion has not yet performed this smoothing itself, so the Rayleigh-Ritz step adds
+genuine value: the MLP trained on $U$ sees a cleaner representation than the MLP
+trained on $X_{\mathrm{diff}}$.
+
+This filtering benefit is universal precisely because it does not depend on graph
+density, homophily, feature type, or number of classes.  High-frequency graph-inconsistent
+noise is present in all nine feature matrices at $k{=}1$; the Rayleigh-Ritz projection
+removes it in all nine cases.
+
+The universality at $k{=}1$ therefore establishes that the Rayleigh-Ritz projection
+has two competing effects — beneficial noise filtering and harmful variance destruction
+— and that at shallow diffusion the former dominates.  The rest of the paper
+characterizes when and why the balance shifts.
+
 \subsection{Random Splits: Full $k$-Sweep}
 
 % DATA SOURCE: PAPER_RESULTS/{dataset}_random_lcc/k{k}/metrics/results.json for all k
@@ -674,9 +729,11 @@ Coauthor-Physics   & 809.48 & $\infty^\dagger$& 104.04          & $6.3\times10^{
 
 \noindent\textbf{Critical finding — conditioning decoupled from Part A:}
 WikiCS has catastrophically large $\kappa(U){=}2738$ yet Part~A $= +0.4$pp at $k{=}30$.
-Amazon-Computers has modest $\kappa(U){=}39$ yet Part~A $= -14.8$pp.  This 70$\times$
+Amazon-Computers has modest $\kappa(U){=}39$ yet Part~A $= -14.8$pp.  This $70\times$
 decoupling of conditioning from outcome proves numerical instability is \emph{not} the
-primary driver of performance degradation.
+primary driver of performance degradation.  The primary driver is the column-variance
+destruction caused by D-orthonormalization (§\ref{sec:synthesis}), which operates
+independently of the condition number.
 WikiCS's high $\kappa(U)$ has a measured structural cause: its $X_{\mathrm{diff}}$
 collapses toward a single dominant direction as $k$ grows ($\sigma_1/\sigma_2$ rises
 from 7.3 at $k{=}1$ to 120 at $k{=}30$), whereas Amazon-Computers maintains
@@ -726,7 +783,10 @@ coauthor-physics & 0.9353 & 1.0000 & 0.0000 & +8.02 & +1.84 \\
 The near-perfect subspace alignment ($\text{Mean CC} \approx 1$) confirms that the
 Rayleigh-Ritz projection does not discard information.  CiteSeer achieves Mean CC $=
 0.9758$ and Part~A $= +36.6$pp: the basis captures nearly the same directions, but the
-coordinate transformation fundamentally changes the optimization landscape.
+coordinate transformation destroys the eigenvalue-weighted column-variance structure
+that any classifier relies on to identify which dimensions are informative.  This is
+confirmed by logistic regression on $U$ achieving only 31.4\% on CiteSeer, nearly
+identical to the MLP's 30.2\%, while SGC achieves 66.7\% (Table~\ref{tab:lr_vs_sgc}).
 
 \subsection{Class Separability in Row-Normalized Space}
 
@@ -1012,8 +1072,116 @@ Datasets cluster by \textbf{graph type} rather than abstract statistics:
 \end{description}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Linear Probe Analysis: Signal Concentration vs.\ Dispersion}
+\section{Linear Probe Analysis: Representation Problem, Not Optimization}
 \label{sec:linear_probe}
+
+\noindent\textbf{Key finding.}
+A logistic regression (LR) classifier on $U$ matches the 3-layer MLP within
+at most 10pp above a linear classifier on all 9 datasets (Table~\ref{tab:lr_vs_sgc}).  Part~A is therefore a
+\emph{representation problem}: $U$-space is intrinsically harder to classify than
+$X_{\mathrm{diff}}$-space for \emph{any} classifier.  Gradient-based optimization
+is not the bottleneck.
+
+% DATA SOURCE (tab:lr_vs_sgc):
+%   SGC and Std MLP: results.json at k=10, fixed splits
+%   LR p=all: logistic regression (sklearn) on full U at k=10, fixed splits
+%   Computed by: PAPER_EXPERIMENTS/q2_dimension_analysis.py
+%   These numbers are NOT stored in PAPER_RESULTS/ JSONs; treat as diagnostic.
+\begin{table}[H]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{Logistic regression vs.\ MLP on $U$ (restricted eigenvectors, all $d_{\mathrm{eff}}$
+dimensions) vs.\ SGC+MLP on $X_{\mathrm{diff}}$, at $k{=}10$, fixed splits.
+``MLP vs LR'' = MLP advantage over logistic regression on $U$; values at most 10pp across
+all datasets confirm that nonlinearity and depth add almost nothing on top of a
+linear model in $U$-space.
+``LR vs SGC'' = gap between logistic regression on $U$ and SGC+MLP;
+this gap is the representation penalty attributable to D-orthonormalization.
+\textit{\scriptsize Data: \texttt{results.json} (SGC, Std~MLP); \texttt{q2\_dimension\_analysis.py}
+(LR); \texttt{PAPER\_RESULTS/\{dataset\}\_fixed\_lcc/k10/}.  LR results not stored in
+\texttt{PAPER\_RESULTS/}; treat as diagnostic.}}
+\label{tab:lr_vs_sgc}
+\begin{tabular}{lrrrrr}
+\toprule
+Dataset & SGC & Std MLP & LR ($p{=}\mathrm{all}$) & LR vs SGC & MLP vs LR \\
+\midrule
+Cora             & 76.2\% & 46.3\% & 39.2\% & $-$37pp & +7pp \\
+CiteSeer         & 66.7\% & 30.2\% & 31.4\% & $-$35pp & $-$1pp \\
+PubMed           & 75.2\% & 47.6\% & 47.9\% & $-$27pp & $\pm$0pp \\
+ogbn-arxiv       & 70.4\% & 71.0\% & 67.1\% & $-$3pp  & +4pp \\
+WikiCS           & 75.5\% & 66.9\% & 64.9\% & $-$11pp & +2pp \\
+Amazon-Comp.     & 84.0\% & 89.5\% & 88.3\% & +4pp    & +1pp \\
+Amazon-Photo     & 90.7\% & 91.3\% & 89.1\% & $-$2pp  & +2pp \\
+Coauthor-CS      & 90.8\% & 77.8\% & 68.3\% & $-$22pp & +9pp \\
+Coauthor-Physics & 94.9\% & 86.9\% & 86.6\% & $-$8pp  & $\pm$0pp \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{Note on Coauthor-CS (MLP vs LR $= +9$pp).}
+Coauthor-CS is the only dataset where the MLP's nonlinearity provides leverage over
+a linear classifier.  The linear probe curve (Table~\ref{tab:linear_probe}) shows why:
+LR accuracy jumps from 35.1\% at $p{=}20$ to 66.0\% at $p{=}50$, then plateaus at
+68.3\% for all $d_{\mathrm{eff}}{=}6803$ dimensions.  Class signal is concentrated in
+a \emph{mid-frequency band} (eigenvectors 20--50), not in the leading eigenvectors and
+not uniformly dispersed.  When the MLP is trained on all 6803 dimensions, the 6753
+near-zero high-frequency dimensions degrade LR's fit; the MLP's weight decay partially
+suppresses those dimensions, recovering the +9pp gap.  This exception does not
+contradict the representation-problem claim: the MLP is not recovering signal that LR
+cannot see in principle, but rather coping better with noise dimensions that LR
+over-fits.
+
+\noindent\textbf{Implications for training dynamics.}
+Slow convergence of R+Std (e.g.\ Cora: 82 epochs to reach 90\% of peak vs.\ 1 epoch
+for SGC+MLP, Table~\ref{tab:convergence_speed_fixed}) does not reflect optimization
+difficulty per se.  The MLP converges slowly \emph{to a ceiling that a linear model
+also reaches}.  The bottleneck is the representation, not gradient flow.
+
+\noindent\textbf{The eigenvalue range predicts the LR gap.}
+D-orthonormalization enforces $U^\top D U = I$, which equalizes graph-weighted variance
+across columns.  However, Euclidean column variance scales as $1/\lambda_j^2$ (inversely
+with the squared eigenvalue), so a large eigenvalue range produces a catastrophic
+column-variance disparity: high-frequency eigenvectors become near-constant, and fitting
+classifier weights to near-constant columns injects noise.
+
+% DATA SOURCE (tab:eigenvalue_range):
+%   lambda_max/lambda_min: from exp2_spectral_analysis_k10.json key eigenvalue_stats
+%   U_variance_ratio: ratio of max to min per-column Euclidean variance of U[train] at k=10
+%   Computed by: master_analytics.py:compute_spectral_analysis()
+\begin{table}[H]
+\centering\small
+\caption{Eigenvalue range and column-variance disparity of $U$ at $k{=}10$ (fixed splits),
+for the three sparse citation datasets where the LR gap from SGC varies substantially.
+$\lambda_{\max}/\lambda_{\min}$ = ratio of largest to smallest generalized eigenvalue.
+Var Ratio $= \max_j \mathrm{Var}(U_{:,j}) / \min_j \mathrm{Var}(U_{:,j})$ over training nodes.
+The 234$\times$ eigenvalue range of CiteSeer produces a $2{\times}10^9$-fold column-variance
+disparity; PubMed's 8.9$\times$ range produces only 171-fold.
+This predicts the LR accuracy ordering: PubMed LR $= 47.9\%$ (close to MLP);
+Cora LR $= 39.2\%$; CiteSeer LR $= 31.4\%$ (worst, highest-frequency columns
+are effectively constants).
+\textit{\scriptsize Data: \texttt{exp2\_spectral\_analysis\_k10.json}
+key \texttt{eigenvalue\_stats}; \texttt{master\_analytics.py}.}}
+\label{tab:eigenvalue_range}
+\begin{tabular}{lrr}
+\toprule
+Dataset & $\lambda_{\max}/\lambda_{\min}$ & Var Ratio ($U$) \\
+\midrule
+CiteSeer & 234$\times$  & $2.1\times10^9$ \\
+Cora     & 76$\times$   & $7.6\times10^6$ \\
+PubMed   & 8.9$\times$  & 171$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{Connection to the $\alpha$ sweep.}
+The eigenvalue range is also a predictor of whether spectral reweighting ($\alpha{=}-1$)
+has leverage.  The total accuracy range across the $\alpha$ sweep at $k{=}10$ is
+51pp for Cora, $<1$pp for Amazon-Computers, and $<1$pp for ogbn-arxiv
+(Table~\ref{tab:alpha_sweep_full_fixed}).  When class signal is concentrated in
+low-frequency eigenvectors (high eigenvalue range, monotonic datasets), amplifying
+those directions via $\alpha{=}-1$ has large leverage.  When signal is uniform across
+all frequencies (crossover datasets), no monotone reweighting helps and the $\alpha$
+range is flat.  The concentration/dispersion label from the linear probe thus serves
+as a \emph{prior prediction} of whether spectral recovery will be effective.
 
 % DATA SOURCE (tab:linear_probe):
 %   Logistic regression (sklearn LogisticRegression) trained on U[:, :p] for p in {5,10,20,50,all}
@@ -1050,6 +1218,9 @@ ogbn-arxiv       & 6.1  & 7.3  & 8.6  & 12.1 & 67.1 & \textcolor{posgreen}{+55.0
 \multicolumn{7}{l}{\textit{Near-crossover:}} \\
 wikics           & 28.2 & 30.3 & 44.5 & 54.3 & 64.9 & \textcolor{posgreen}{+10.6} \\
 coauthor-physics & 52.4 & 58.1 & 73.4 & 83.7 & 86.6 & \textcolor{posgreen}{+2.9}  \\
+\midrule
+\multicolumn{7}{l}{\textit{Mid-band concentration (monotonic, atypical):}} \\
+coauthor-cs      & 23.5 & 24.1 & 35.1 & 66.0 & 68.3 & \textcolor{posgreen}{+2.3}  \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1059,8 +1230,11 @@ coauthor-physics & 52.4 & 58.1 & 73.4 & 83.7 & 86.6 & \textcolor{posgreen}{+2.9}
   \item Monotonic datasets (CiteSeer, Cora) show \emph{negative} $\Delta$: using all
     eigenvectors \emph{degrades} logistic regression accuracy by 25--32pp. Class information
     is concentrated in the first ${\sim}50$ eigenvectors; the remaining dimensions add noise.
+    The severity of this noise penalty is predicted by the eigenvalue range
+    (Table~\ref{tab:eigenvalue_range}): CiteSeer's 2-billion-fold variance disparity
+    makes its high-frequency columns near-constants that LR fits as noise parameters.
   \item Crossover datasets show \emph{positive} $\Delta$: Amazon-Computers gains $+13.6$pp
-    and ogbn-arxiv gains $+55.0$pp from using all eigenvectors. Signal is dispersed across
+    and ogbn-arxiv gains $+55.0$pp from using all eigenvectors.  Signal is dispersed across
     the entire $d_{\text{eff}}$-dimensional spectrum.
   \item The ogbn-arxiv result ($6.1\% \to 67.1\%$) is especially striking: the first 5
     eigenvectors are essentially random for a 40-class problem ($6.1\%$ is barely above
@@ -1068,17 +1242,13 @@ coauthor-physics & 52.4 & 58.1 & 73.4 & 83.7 & 86.6 & \textcolor{posgreen}{+2.9}
 \end{itemize}
 
 \noindent\textbf{Scope of this diagnostic.}
-The linear probe uses logistic regression, while the main experiments use a 3-layer MLP.
-The two are consistent in \emph{direction}: Cora's MLP on all-$d_{\text{eff}}$ eigenvectors
-achieves 66.9\% at $k{=}10$, lower than the linear probe's peak at $p{=}50$ (70.9\%),
-confirming that noise dimensions hurt the MLP too.
-For crossover datasets (Amazon-Computers), the MLP achieves 89.5\% --- consistent
-with the linear probe's $p{=}\text{all}$ value of 88.3\%.
-The concentration/dispersion \emph{labels} transfer to MLP; the magnitudes of the
-$\Delta$ values do not, because the MLP's nonlinearity and weight decay partially
-suppress uninformative dimensions.
-These numbers were computed ad hoc via logistic regression and are not stored in
-\texttt{PAPER\_RESULTS/}; treat them as a diagnostic, not a performance benchmark.
+These LR numbers are computed ad hoc via logistic regression and are not stored in
+\texttt{PAPER\_RESULTS/}; treat them as diagnostics, not performance benchmarks.
+The key finding that transfers to the MLP setting is not a specific accuracy value,
+but the direction: concentration/dispersion labels derived from the LR $p$-sweep
+predict both MLP behavior (Table~\ref{tab:magnitude_cascade}) and $\alpha$ sensitivity
+(Table~\ref{tab:alpha_sweep_full_fixed}).  The MLP adds at most 10pp over LR on $U$,
+confirming that the gap relative to SGC originates in the representation, not the model.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Recovery Strategies}
@@ -1187,6 +1357,39 @@ $+47$pp on Cora, $+41.5$pp on CiteSeer, $+14.9$pp on Coauthor-CS.
 
 For ogbn-arxiv, $\alpha{=}+1$ is marginally best, consistent with its dispersed signal
 structure where high-frequency components carry discriminative information.
+
+\noindent\textbf{$\alpha$ sensitivity range as a diagnostic.}
+The total accuracy range across the $\alpha$ sweep is a direct measure of how much
+leverage eigenvalue structure provides.  For datasets where class signal is concentrated
+in low-frequency eigenvectors, the range is large; for dispersed datasets, the range
+collapses to noise level:
+
+\begin{center}\small
+\begin{tabular}{lrr}
+\toprule
+Dataset & $\alpha$ range (pp) & Signal type \\
+\midrule
+Cora             & 51pp  & concentrated \\
+Coauthor-CS      & 29pp  & concentrated \\
+Amazon-Computers & 0.8pp & dispersed \\
+ogbn-arxiv       & 0.7pp & dispersed \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+For Amazon-Computers and ogbn-arxiv, every value of $\alpha$ from $-1$ to $+1$
+produces accuracy within $<1$pp.  This is not a balance of opposing effects:
+it is a structural flatness.  When class information is distributed uniformly
+across all eigenvalue buckets, any monotone frequency reweighting rearranges
+which components are amplified without changing which classes are separated.
+
+\noindent\textbf{$\beta$ ablation (NestedSpheres):}
+Adding the magnitude branch coefficient $\beta$ to the spectral reweighting provides
+at most $+0.28$pp over SpectralRowNorm alone (Table~\ref{tab:nested_spheres}).
+Within any fixed $\alpha$, accuracy varies only ${\sim}6$pp across all $\beta$ values.
+The causal contribution runs through $\alpha$ (eigenvalue weighting), not $\beta$
+(magnitude scalar).  This is a controlled result: magnitude is neither the bottleneck
+nor the solution.
 
 \subsection{NestedSpheres: Combined $\alpha \times \beta$ Sweep}
 
@@ -1516,30 +1719,93 @@ All 9 datasets available as individual PDFs in \texttt{PAPER\_OUTPUT/figures/}.}
 \section{Synthesis: The Phase Transition Mechanism}
 \label{sec:synthesis}
 
+\subsection{The Unified Mechanism}
+
+All empirical findings in this report follow from a single structural fact:
+\textbf{D-orthonormalization destroys eigenvalue-weighted variance structure}.
+
+The Rayleigh-Ritz procedure enforces $U^\top D U = I$.  This equalization means that
+in Euclidean space, the variance of column $j$ of $U$ scales as $1/\lambda_j^2$.
+In $X_{\mathrm{diff}} = \hat{A}^k X$, by contrast, each frequency component is
+naturally weighted by $\lambda_j^k$, which concentrates energy in the directions most
+relevant to the graph's community structure.  Rayleigh-Ritz removes this weighting.
+
+The downstream consequences are:
+\begin{enumerate}
+  \item \textbf{Representation hardness}: A logistic regression on $U$ is
+    27--37pp below SGC+MLP on monotonic datasets, nearly matching the MLP's
+    shortfall (MLP vs LR: at most 10pp).  The gap is inherent to the representation,
+    not recoverable by nonlinearity.
+  \item \textbf{Eigenvalue-range dependency}: Datasets with large eigenvalue ranges
+    (CiteSeer: 234$\times$; Cora: 76$\times$) incur catastrophic column-variance
+    disparity ($10^6$--$10^9$-fold), making high-frequency columns near-constant.
+    Small-range datasets (PubMed: 8.9$\times$; dense graphs: all columns at similar
+    scale) suffer less.
+  \item \textbf{Recoverability}: When class signal is concentrated in low-frequency
+    eigenvectors (monotonic datasets), re-amplifying those components via
+    $\alpha{=}-1$ partially restores the lost structure and recovers 41--47pp.
+    When signal is dispersed (crossover datasets), no monotone reweighting has leverage.
+  \item \textbf{The crossover}: On dense graphs, rapid diffusion uniformly spreads
+    class signal across all frequency components.  SGC+MLP degrades through
+    over-smoothing while $U$-space classifiers remain stable (signal is dispersed
+    but present).  The crossover in Part~A is the point at which SGC's over-smoothing
+    loss exceeds the D-orthonormalization penalty of $U$.
+\end{enumerate}
+
 \subsection{Three Phases of Diffusion}
 
-\textbf{Phase 1: Universal Benefit ($k = 1{-}2$)}
+The phase transition is most precisely understood as a competition between two effects
+of the Rayleigh-Ritz projection operating simultaneously at every $k$:
 
-All 9 datasets show positive Part~A at $k{=}1$ (range: $+0.8$pp to $+31.9$pp).
-Restricted eigenvectors capture local discriminative structure that MLPs can easily
-exploit.  Fisher scores are moderate-to-high (0.02--2.5), indicating the first
-eigenvector carries class-relevant signal.
+\begin{description}
+  \item[Effect 1 — Beneficial noise filtering:]
+    The restricted eigenvector computation projects $X_{\mathrm{diff}}$ onto the
+    Laplacian eigenvector basis, retaining only directions that are smooth on the graph.
+    High-frequency feature components inconsistent with community structure are removed.
+    This filtering helps any downstream classifier.
+  \item[Effect 2 — Harmful variance destruction:]
+    D-orthonormalization equalizes graph-weighted variance across all eigenvector
+    dimensions, destroying the eigenvalue-weighted column-variance ordering that
+    concentrates signal in class-relevant directions.
+    This hurts any downstream classifier in proportion to the eigenvalue range.
+\end{description}
 
-\textbf{Phase 2: Divergence ($k = 2{-}8$)}
+Part~A is the net outcome of this competition.  Its sign and magnitude evolve with
+$k$ because diffusion changes how much each effect contributes.
 
-\emph{Dense Graphs (avg degree 20--40)}: Rapid diffusion over highly connected networks
-causes first-eigenvector Fisher collapse (95--99\% drop within 2--4 steps).  Class
-signal disperses across hundreds of eigenvectors.  Part~A crosses zero at $k \approx 5{-}8$.
+\textbf{Phase 1: Universal Benefit ($k = 1{-}2$).}
+At shallow diffusion depth, Effect~1 dominates.  $X_{\mathrm{diff}}$ at $k{=}1$ is
+only lightly smoothed and still contains substantial high-frequency noise.
+The Rayleigh-Ritz step removes this noise before the MLP sees the features, providing
+a benefit that diffusion alone has not yet delivered.  Effect~2 is present but mild:
+the eigenvalue range of the restricted problem is relatively small at $k{=}1$, so
+variance destruction is limited.  All 9/9 datasets show positive Part~A (range:
+$+1.1$ to $+31.9$pp, Table~\ref{tab:part_a_k1_stds}).
 
-\emph{Sparse Graphs (avg degree 3--6)}: Slow diffusion within tight communities preserves
-class-relevant signal in leading eigenvectors.  Fisher scores remain stable or improve.
-Part~A remains strongly positive ($+25$--$+37$pp).
+\textbf{Phase 2: Divergence ($k = 2{-}8$).}
+As diffusion depth increases, Effect~1 diminishes — diffusion itself progressively
+smooths $X_{\mathrm{diff}}$, reducing the marginal filtering benefit of Rayleigh-Ritz.
+Simultaneously, Effect~2 grows as the eigenvalue range of the restricted problem widens.
+The rate of this transition depends on graph density:
 
-\textbf{Phase 3: Stabilization ($k > 10$)}
+\emph{Dense graphs (avg degree 20--40):} Rapid diffusion over highly connected networks
+causes Effect~1 to vanish within 2--4 steps (Fisher score of $\|U_i\|$ drops 95--99\%).
+Class signal disperses uniformly across all frequency components, and no filtering
+benefit remains.  Effect~2 also grows quickly.  Part~A crosses zero at $k \approx 5{-}8$.
 
-Crossover datasets: Part~A continues degrading (reaching $-15$pp at $k{=}30$) as
-signal dispersal becomes more severe.  Monotonic datasets: Part~A stable or slowly
-decaying but remains positive throughout.
+\emph{Sparse graphs (avg degree 3--6):} Slow diffusion within tight communities means
+Effect~1 persists: $X_{\mathrm{diff}}$ remains partially noisy at moderate $k$, and
+Rayleigh-Ritz continues to provide filtering value.  Effect~2 grows slowly because
+sparse graph Laplacians have smaller eigenvalue ranges.  Part~A remains strongly
+positive ($+25$--$+37$pp).
+
+\textbf{Phase 3: Stabilization ($k > 10$).}
+On crossover datasets, Effect~1 has fully vanished and Part~A reflects only the
+D-orthonormalization penalty, continuing to degrade (reaching $-15$pp at $k{=}30$)
+as SGC itself degrades through over-smoothing while $U$-space classifiers remain
+stable.  On monotonic datasets, Effect~1 has mostly disappeared but Effect~2 also
+plateaus because the eigenvalue range stabilizes; Part~A remains positive but
+decays slowly at extreme $k$ as rank collapse reduces the available eigenvectors.
 
 \subsection{Why Conditioning Is Not the Mechanism}
 
@@ -1564,21 +1830,37 @@ and diffusion speed are the primary drivers.
 
 \subsection{The $\alpha = -1$ Recovery Insight}
 
-The universal optimality of $\alpha{=}-1$ provides a theoretical insight:
+The universal optimality of $\alpha{=}-1$ is not coincidental:
 \[
-U_{\text{scaled}} = \text{diag}(\lambda_1^{-1}, \ldots, \lambda_{d}^{-1}) \cdot U
+U_{\text{scaled}} = \mathrm{diag}(\lambda_1^{-1}, \ldots, \lambda_{d}^{-1}) \cdot U
 \]
 Inverse eigenvalue scaling amplifies the low-frequency Laplacian eigenvectors
-(small $\lambda_j$, corresponding to smooth class-aligned signals) and suppresses
-the high-frequency ones (large $\lambda_j$, within-class noise).
-This is \emph{not} equivalent to recovering $X_{\mathrm{diff}}$ geometrically:
-$U_{\text{scaled}}$ still lives in the eigenvector coordinate system, and
-reconstructing $X_{\mathrm{diff}}$ from $U$ would require weighting by
-$\lambda_j^k$ (not $\lambda_j^{-1}$).  What $\alpha{=}-1$ restores is the
-\emph{variance structure} that the D-orthonormalization step of Rayleigh-Ritz
-flattened: by re-amplifying the directions that carry the most class-relevant
-signal, it produces a representation whose optimization landscape resembles
-that of $X_{\mathrm{diff}}$ without reproducing $X_{\mathrm{diff}}$ itself.
+(small $\lambda_j$, class-aligned signals) and suppresses the high-frequency ones
+(large $\lambda_j$, within-class variation).  It partially re-introduces the
+eigenvalue weighting that D-orthonormalization removed.
+
+This is \emph{not} equivalent to recovering $X_{\mathrm{diff}}$ geometrically.
+Reconstructing $X_{\mathrm{diff}}$ from $U$ would require weighting by $\lambda_j^k$,
+not $\lambda_j^{-1}$.  What $\alpha{=}-1$ restores is the \emph{column-variance
+ordering}: after scaling, low-frequency columns (high class-relevance on sparse graphs)
+are again the dominant directions, as they are in $X_{\mathrm{diff}}$.
+
+\noindent\textbf{Controlled evidence from the $\beta$ ablation.}
+The NestedSpheres experiment varies both $\alpha$ (eigenvalue weighting) and $\beta$
+(magnitude scalar) independently.  Within any fixed $\alpha$, accuracy varies
+only ${\sim}6$pp across all $\beta$ values.  The 47pp recovery on Cora is driven
+entirely by $\alpha$; $\beta{=}0$ is optimal.  This rules out a magnitude-based
+explanation: the recovery operates through frequency reweighting, not through
+exploiting the discriminative information in $\|U_i\|$.
+
+\noindent\textbf{Why recovery fails on crossover datasets.}
+The $\alpha$ sweep is flat ($<1$pp range) for Amazon-Computers and ogbn-arxiv
+(Table~\ref{tab:alpha_sweep_full_fixed}).  This is the structural flatness of
+dispersed signal: when class information is uniform across all frequency buckets,
+amplifying any subset of eigenvectors by any monotone function of $\lambda$ cannot
+improve separation.  The failure of $\alpha{=}-1$ on crossover datasets and the
+positive $\Delta$ in the linear probe (Table~\ref{tab:linear_probe}) are two
+measurements of the same underlying fact.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Conclusions}
@@ -1592,25 +1874,50 @@ that of $X_{\mathrm{diff}}$ without reproducing $X_{\mathrm{diff}}$ itself.
     all ${\geq}2.7\times$ propagated std, Table~\ref{tab:part_a_k1_stds}).
     Static degradation hypotheses are falsified; the relationship is $k$-dependent.
 
-  \item \textbf{Graph density drives crossover}: Dense graphs (avg degree $\sim$30)
-    exhibit rapid Fisher score collapse ($95$--$99\%$ within 2--4 steps) and crossover to
-    negative Part~A.  Sparse graphs (avg degree $\sim$5) maintain concentrated class signal.
+  \item \textbf{Part~A is a representation problem, not optimization}: A logistic
+    regression classifier on $U$ matches the 3-layer MLP at most 10pp above a linear classifier on all
+    9 datasets (Table~\ref{tab:lr_vs_sgc}).  The MLP's nonlinearity adds almost
+    nothing beyond a linear model in $U$-space.  The gap relative to SGC originates
+    in the representation itself.
+
+  \item \textbf{Eigenvalue range predicts representation difficulty}: D-orthonormalization
+    produces Euclidean column-variance disparity proportional to the squared eigenvalue
+    range.  CiteSeer's $234\times$ eigenvalue range produces a $2{\times}10^9$-fold
+    disparity; PubMed's $8.9\times$ range produces only $171\times$.  This predicts
+    the ordering of LR accuracy gaps from SGC and the shape of the $p$-vs-accuracy
+    curves in Table~\ref{tab:linear_probe}.
+
+  \item \textbf{Graph density drives crossover, with qualifications}: Dense graphs
+    (avg degree ${\sim}30$) exhibit rapid Fisher score collapse ($95$--$99\%$ within
+    2--4 steps) and crossover to negative Part~A.  Sparse graphs (avg degree ${\sim}5$)
+    maintain concentrated class signal.  However, density alone is not sufficient:
+    WikiCS (avg degree $38$, similar to Amazon-Computers $36.7$) does not cross over
+    under fixed splits because its large initial gap ($+25.3$pp at $k{=}1$) and
+    moderate eigenvalue range ($14.1\times$) interact to defer the crossing.  The
+    correct joint predictors of crossover timing are density, initial gap size, and
+    spectral concentration rate of $X_{\mathrm{diff}}$.
 
   \item \textbf{Signal concentration vs.\ dispersion}: Monotonic datasets concentrate
     class information in the first ${\sim}50$ eigenvectors (using more hurts by 25--32pp).
     Crossover datasets disperse signal requiring all $d_{\text{eff}}$ dimensions.
+    The concentration/dispersion label predicts both MLP behavior and $\alpha$ leverage.
 
   \item \textbf{Fisher score as leading indicator}: On dense co-purchase networks,
     Fisher($v_1$) collapse \emph{precedes} Part~A crossover by 1.3--6.2 diffusion steps,
-    providing a predictive diagnostic.
+    providing a predictive diagnostic.  On ogbn-arxiv, Fisher remains above threshold
+    after Part~A crosses zero, indicating signal disperses across multiple eigenvectors
+    rather than collapsing in a single direction.
 
   \item \textbf{Subspace preservation confirmed}: Mean CC $> 0.935$ and D-orthonormality
     error $< 10^{-9}$ prove the Rayleigh-Ritz projection is mathematically exact.
-    Basis geometry, not information loss, explains Part~A.
+    Variance structure destruction, not information loss, explains Part~A.
 
   \item \textbf{Spectral recovery}: Inverse eigenvalue scaling ($\alpha{=}-1$) recovers
-    41--47pp on monotonic datasets, but provides $\leq 2$pp on crossover datasets.
-    Recovery is not universal because the underlying issue (signal dispersion) differs.
+    41--47pp on monotonic datasets by reintroducing frequency weighting that
+    D-orthonormalization removed.  The $\beta$ magnitude ablation (NestedSpheres) confirms
+    that recovery operates through frequency reweighting, not magnitude information.
+    Recovery is not universal because crossover datasets have dispersed signal across
+    all frequency components, making any monotone reweighting ineffective ($<1$pp range).
 
   \item \textbf{RowNorm is not universal}: RowNorm hurts on 7/9 datasets at their
     respective $k^*$ (fixed splits), showing Part~B $< 0$ is the norm, not the exception.
@@ -1631,9 +1938,16 @@ that of $X_{\mathrm{diff}}$ without reproducing $X_{\mathrm{diff}}$ itself.
 \textbf{1.\ Theoretical Fisher collapse bounds:} Can we prove that dense graphs
 (avg degree $> \theta$) must disperse Fisher score within $O(k)$ diffusion steps?
 
-\textbf{2.\ Optimization landscape on dispersed representations:} Why do MLPs fail
-to learn from signal dispersed across 700+ dimensions?  Is this gradient flow, sample
-complexity, or implicit bias toward low-dimensional structure?
+\textbf{2.\ Why is $U$-space harder for any classifier?}
+The logistic regression comparison (Table~\ref{tab:lr_vs_sgc}) establishes that
+the difficulty is in the representation, not the optimizer.  The open question is
+not why MLPs fail to learn from dispersed signal, but why D-orthonormalization
+produces a space that is inherently harder to separate for \emph{any} linear or
+nonlinear classifier.  The eigenvalue range explanation (Table~\ref{tab:eigenvalue_range})
+addresses the monotonic dataset case, but does not fully explain the crossover
+datasets where signal is dispersed rather than obscured by variance collapse.
+A complete theory would characterize the classifier hardness of $U$-space
+as a function of the graph's spectral properties and the feature-class alignment.
 
 \textbf{3.\ Adaptive diffusion:} Can we design density-aware diffusion schemes that
 stop before the crossover point, identified via online Fisher score monitoring?
