@@ -3,6 +3,10 @@
 \usepackage{booktabs}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{amsthm}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+\newtheorem{remark}{Remark}
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{tabularx}
@@ -14,6 +18,8 @@
 \usepackage{threeparttable}
 \usepackage{hyperref}
 \usepackage{longtable}
+\usepackage{enumitem}
+\usepackage[numbers,sort&compress]{natbib}
 
 \definecolor{posgreen}{RGB}{0,120,0}
 \definecolor{negnred}{RGB}{180,0,0}
@@ -44,11 +50,11 @@ than simple monotonic degradation.
 \textbf{Universal low-$k$ benefit.}
 Restricted eigenvectors improve MLP performance at $k{=}1$ on \emph{all} 9/9
 datasets (Part A range: $+1.1$pp to $+31.9$pp).
-All values exceed $2\times$ propagated standard deviation across 15 seeds
+All 9/9 gaps are statistically significant at ${>}2\sigma$ across 15 seeds
 (Table~\ref{tab:part_a_k1_stds}); the weakest case is ogbn-arxiv
-($+1.1$pp, $2.7\times$ propagated std).
+($+1.1$pp, $2.7\sigma$).
 
-\textbf{Three behavioral regimes at higher $k$.}
+\textbf{Four behavioral regimes at higher $k$.}
 (1)~\textit{Monotonic} (Cora, CiteSeer, PubMed, Coauthor-CS, Coauthor-Physics—5/9
 datasets): Part~A remains strongly positive at $k{=}30$ ($+3$--$+33$pp).
 (2)~\textit{Crossover} (Amazon-Computers, Amazon-Photo—2/9): Part~A transitions
@@ -64,12 +70,15 @@ values at high $k$ ($-3.1$pp at $k{=}30$ under random splits).
 The Rayleigh-Ritz D-orthonormalization step enforces $U^\top D U = I$, which
 equalizes graph-weighted variance across all eigenvector dimensions.  This destroys
 the eigenvalue-weighted scaling that is naturally present in $X_{\mathrm{diff}}$,
-where each frequency component is weighted by $\lambda_j^k$.  The resulting
-Euclidean column-variance disparity is quantitatively predicted by the eigenvalue
-range of the generalized Laplacian problem: CiteSeer ($\lambda_{\max}/\lambda_{\min}
-= 234\times$) incurs a $2{\times}10^9$-fold column-variance disparity, rendering
-high-frequency columns near-constant; PubMed ($8.9\times$) incurs only 171-fold
-disparity, explaining its smaller Part~A.  Fisher score collapse on dense graphs
+where each frequency component is weighted by $\lambda_j^k$.  The resulting Euclidean column-variance disparity is topology-dependent: column
+norms are bounded by degree statistics rather than eigenvalue rank
+(Proposition~\ref{prop:energy_inversion}), but on irregular graphs the variance
+correlates empirically with eigenvalue range.
+CiteSeer ($\lambda_{\max}/\lambda_{\min} = 234\times$) incurs a
+$2{\times}10^9$-fold column-variance disparity; PubMed ($8.9\times$) incurs only
+$171\times$.  Columns with near-zero Euclidean variance receive near-zero
+discriminative gradient signal (Proposition~\ref{prop:gradient_collapse}),
+explaining the smaller Part~A for PubMed.  Fisher score collapse on dense graphs
 is a downstream consequence of this mechanism, not an independent cause.
 
 \textbf{Representation, not optimization.}
@@ -101,17 +110,22 @@ no monotone reweighting has leverage.
 
 \subsection{Problem Statement}
 
-Simple Graph Convolution (SGC) performs $k$-step graph diffusion:
+Simplyfing Graph Convolution (SGC) performs $k$-step graph diffusion:
 \[
 X_{\text{diff}} = \hat{A}^k X, \qquad \hat{A} = D^{-1/2}AD^{-1/2}
 \]
 where $\hat{A}$ is the normalized adjacency matrix with self-loops.
 The restricted eigenvector representation $U$ solves the Rayleigh-Ritz generalized
-eigenvalue problem restricted to $\text{col}(X_{\text{diff}})$, yielding a basis that
+eigenvalue problem restricted to $\mathrm{col}(X_{\mathrm{diff}})$, yielding a basis that
 spans the same subspace but in the coordinate frame of the graph Laplacian.
-
-Since $\text{span}(U) = \text{span}(X_{\text{diff}})$, the information content is
-identical.  Yet MLPs trained on $U$ and on $X_{\text{diff}}$ perform very differently.
+The central mathematical fact of this work is:
+\begin{equation}
+  \boxed{\mathrm{span}(U) \;=\; \mathrm{span}(X_{\mathrm{diff}})}
+  \label{eq:span_invariance}
+\end{equation}
+The information content of $U$ and $X_{\mathrm{diff}}$ is therefore identical,
+any linear function expressible from one is expressible from the other.
+Yet MLPs trained on $U$ and on $X_{\mathrm{diff}}$ perform very differently.
 We quantify this via:
 
 \begin{align}
@@ -135,8 +149,8 @@ Part~A would be zero.  The fact that Part~A is large and $k$-dependent reveals t
 the underlying linear subspace is unchanged.
 
 The central contribution of this work is a mechanistic explanation of this sensitivity.
-We show that D-orthonormalization---the normalization step in the Rayleigh-Ritz
-procedure---destroys the eigenvalue-weighted variance structure that is naturally
+We show that D-orthonormalization, the normalization step in the Rayleigh-Ritz
+procedure, destroys the eigenvalue-weighted variance structure that is naturally
 encoded in $X_{\mathrm{diff}}$.  This destruction is the primary source of Part~A
 across all datasets and all $k$ values.  A logistic regression classifier on $U$
 matches the 3-layer MLP at most 10pp above a linear classifier on all 9 datasets, establishing that the
@@ -144,6 +158,95 @@ difficulty is in the representation itself, not in the optimizer's ability to le
 from it.  The eigenvalue range of the Laplacian predicts the magnitude of the
 performance gap, and inverse eigenvalue scaling ($\alpha{=}-1$) partially restores
 the lost structure on datasets where class signal is frequency-aligned.
+
+\subsection{Relationship to Statistical Whitening (Wadia et al.)}
+\label{sec:wadia}
+
+A natural question is whether Part~A is simply an instance of the whitening damage
+documented by \citet{wadia2021whitening}, who showed that task-agnostic whitening
+of features destroys sample-sample relationships that neural networks rely on for
+generalization.  We answer this directly by comparing Rayleigh-Ritz against three
+standard whitening methods, PCA, ZCA, and Full~ZCA (Wadia's method), on the
+same 9 datasets at $k \in \{1, 2, 10\}$ (Table~\ref{tab:whitening_comparison}).
+
+\noindent\textbf{RR damage is categorically larger.}
+Rayleigh-Ritz causes an average of $+29.3$pp damage under fixed splits and $+21.7$pp
+under random splits --- 2--6$\times$ larger than any statistical whitening method.
+Full~ZCA, Wadia's own method, averages only $+12.7$pp (fixed) and $+3.8$pp (random).
+PCA whitening, which achieves the Wadia generalization-collapse criterion
+($K \approx I$) on 8--9/9 datasets at $k \leq 2$, causes only $+4.6$pp damage.
+The severity of Rayleigh-Ritz damage is not explained by generic whitening effects.
+
+\noindent\textbf{RowNorm recovery is specific to spectral whitening.}
+RowNorm recovers $+10.9$pp on Rayleigh-Ritz (fixed) and $+16.2$pp (random), but
+provides only $+0.2$pp recovery on Full~ZCA and is \emph{actively harmful} on
+ZCA-whitened features ($-4.8$pp fixed).  This specificity confirms that RowNorm
+exploits the geometric structure unique to Rayleigh-Ritz eigenvectors ---
+D-orthonormality and spectral frequency ordering --- which are absent in
+statistically whitened features.
+
+\noindent\textbf{The damage mechanism differs from Wadia's K$\approx$I collapse.}
+Wadia's criterion predicts damage when the Gram matrix $K = X_{\mathrm{train}}
+X_{\mathrm{train}}^\top$ approaches identity, destroying sample-sample structure.
+Rayleigh-Ritz \emph{never} achieves $K \approx I$: the mean $|\lambda_i - 1|$
+of its training Gram matrix is $\geq 0.9965$ in all 27 experiments (mean
+$0.9992$), identical in magnitude to the unwhitened original.  PCA \emph{does}
+achieve $K \approx I$ at $k \leq 2$ (9/9 datasets at $k{=}1$, 8/9 at $k{=}2$)
+yet causes the least damage.  The failures of PCA/ZCA at $k{=}10$ on five
+high-dimensional datasets (WikiCS, Amazon, Coauthor-CS/Physics) are a
+numerical artefact: heavy diffusion collapses 72--92\% of the training
+spectrum to near-zero, so the whitening regularization floor ($\epsilon = 10^{-6}$)
+inflates those directions by a factor of $1/\sqrt{\epsilon} = 1000$, destroying
+the $K \approx I$
+condition.  This instability is itself a finding about whitening under heavy
+diffusion, not evidence against the Wadia criterion.  The Wadia criterion and
+the Rayleigh-Ritz damage are inversely ordered --- confirming that the mechanism
+here is the destruction of eigenvalue-weighted Euclidean variance structure by
+D-orthonormalization, not Gram-matrix collapse.
+
+% DATA SOURCE (tab:whitening_comparison):
+%   PAPER_EXPERIMENTS/PAPER_RESULTS/whitening_comparison/summary.txt
+%   Table 4 aggregate statistics, both splits.
+%   Script: PAPER_EXPERIMENTS/whitening_comparison.py (k in {1,2,10}, 15 seeds,
+%   fixed split 1x, random splits 5x 60/20/20).
+%   Original column = 3-layer MLP on X_diff (not the linear SGC from main paper).
+%   RR column uses corrected eigenvectors (D-orthonormality error < 1e-9).
+\begin{table}[H]
+\centering\small\setlength{\tabcolsep}{5pt}
+\caption{Whitening comparison: average damage and RowNorm recovery across
+9 datasets $\times$ $k \in \{1,2,10\}$ (27 experiments per split type).
+Damage $=$ MLP on $X_{\mathrm{diff}}$ $-$ Whitened MLP (positive $=$ whitening hurts).
+RowNorm Recovery $=$ MLP+RowNorm $-$ MLP within each whitening regime
+(positive $=$ RowNorm helps).
+\textit{Original} column uses a 3-layer MLP on $X_{\mathrm{diff}}$; not the
+linear SGC model from Table~\ref{tab:primary_results_fixed}.
+Wadia $K{\approx}I$ = fraction of experiments where the training Gram matrix
+satisfies mean$|\lambda_i{-}1| < 0.1$ (Wadia generalization-collapse criterion).
+\textit{\scriptsize Data: \texttt{whitening\_comparison.py};
+\texttt{PAPER\_RESULTS/whitening\_comparison/summary.txt}.}}
+\label{tab:whitening_comparison}
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{3}{c}{Fixed Splits} & \multicolumn{3}{c}{Random Splits} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Method & Damage & RN Recov. & Dmg $>1$pp & Damage & RN Recov. & Dmg $>1$pp \\
+\midrule
+PCA (train)     & $+4.6$pp  & $+1.4$pp           & 20/27 & $+4.4$pp  & $+0.4$pp  & 20/27 \\
+ZCA (train)     & $+5.4$pp  & $-4.8$pp\tnote{†}  & 20/27 & $+4.8$pp  & $-1.1$pp  & 19/27 \\
+Full ZCA (Wadia)& $+12.7$pp & $+0.2$pp           & 19/27 & $+3.8$pp  & $+0.4$pp  & 19/27 \\
+\textbf{Rayleigh-Ritz} & $\mathbf{+29.3}$\textbf{pp} & $\mathbf{+10.9}$\textbf{pp} & \textbf{27/27} & $\mathbf{+21.7}$\textbf{pp} & $\mathbf{+16.2}$\textbf{pp} & \textbf{26/27} \\
+\midrule
+Wadia $K{\approx}I$\tnote{‡} & \multicolumn{2}{c}{PCA: 21/27, ZCA: 20/27} & & \multicolumn{3}{c}{FullZCA: 0/27 \quad RR: 0/27} \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}\small
+\item[†] ZCA+RowNorm is actively harmful: ZCA produces approximately isotropic
+Euclidean features, so RowNorm's spherical projection destroys the statistical
+uncorrelation ZCA achieved.
+\item[‡] Gram matrix $K{\approx}I$ counts computed on fixed splits only;
+\texttt{gram\_matrix\_check()} was not run on random-split experiments.
+\end{tablenotes}
+\end{table}
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Experimental Setup}
@@ -196,9 +299,31 @@ coauthor-physics & 34,493 & 247,962 & 14.38 & 5 & 8,415 & 7,697 & 0.931 \\
 \caption{$d_{\mathrm{eff}}(k) = \mathrm{rank}(\hat{A}^k X)$ (numerical rank, tol\,$=10^{-10}$)
 across the full $k$-sweep (fixed splits).
 \textbf{Bold} = value differs from $k{=}1$, indicating diffusion-induced rank loss.
+\textit{Why rank decreases with $k$:}
+Each column of $X_{\mathrm{diff}} = \hat{A}^k X$ decomposes as
+$x_{\mathrm{diff}} = \sum_j (1{-}\mu_j)^k \phi_j(\phi_j^\top x)$,
+where $(1{-}\mu_j)^k$ is the weight on the $j$-th eigenvector of $\hat{A}$.
+This weight is non-increasing in $k$ for all $\mu_j \in (0,2)$: once a direction
+falls below the numerical threshold it stays below, so $d_{\mathrm{eff}}$ is
+monotonically non-increasing in $k$.
+Collapse requires two conditions simultaneously: (1) $\mu_j \approx 1$
+(mid-spectrum), so the weight decays rapidly toward zero, \emph{and}
+(2) the original features $X$ have nontrivial projection onto $\phi_j$, so the
+direction contributed nonzero rank to begin with.
+\textit{Why some datasets are immune:}
+When $d$ is small relative to the graph's spectral support
+(PubMed $d{=}500$; WikiCS $d{=}300$; ogbn-arxiv $d{=}128$; Amazon-Comp.\ $d{=}767$),
+the feature columns project predominantly onto low-frequency eigenvectors
+($\mu_j \approx 0$, weights near 1) with negligible mid-spectrum projection ---
+so no direction collapses regardless of $k$.
+\textit{Why CiteSeer collapses earliest:}
+$d{=}3703$ (largest feature dimension) combined with a sparse graph (avg.\ degree 3.47)
+produces slow diffusion and many mid-spectrum eigenvectors, each receiving nontrivial
+projection from the high-dimensional bag-of-words features.
+Rank loss begins at $k{=}4$ and is monotone: 56\% lost by $k{=}30$.
 Three regimes: (1) always stable (PubMed, ogbn-arxiv, WikiCS, Amazon-Computers);
 (2) stable to $k{=}12$, collapse at $k{\geq}20$ (Cora, Coauthor-CS/Physics, Amazon-Photo);
-(3) early collapse from $k{=}4$ (CiteSeer: 2035$\to$900 by $k{=}30$, 56\% loss).
+(3) early collapse from $k{=}4$ (CiteSeer only).
 \textit{\scriptsize Data: \texttt{analytics/exp2\_spectral\_analysis\_k\{k\}.json}
 key \texttt{`d\_effective'}; \texttt{graph\_utils.py:compute\_restricted\_eigenvectors()}.}}
 \label{tab:deff_vs_k}
@@ -221,18 +346,16 @@ Coauthor-Phys.   & 7697 & 7697 & 7697 & 7697 & 7697 & 7697 & 7697 & \textbf{7264
 
 \subsection{Models}
 
-Nine model architectures are evaluated:
+Seven model architectures are evaluated:
 
 \begin{enumerate}
   \item \textbf{SGC+MLP}: 3-layer MLP on $\hat{A}^k X$ (diffused features, biased).
   \item \textbf{Restricted+Std (R+Std)}: 3-layer MLP on $U$ (restricted eigenvectors, biased).
   \item \textbf{Restricted+RowNorm (R+RN)}: Row-normalizes $U$ at input and each layer; no bias.
-  \item \textbf{CosineRowNorm}: RowNorm + cosine classifier.
-  \item \textbf{LogMagnitudeMLP}: RowNorm + appends $\log(\|U_i\|)$ feature.
-  \item \textbf{DualStreamMLP}: Separate branches for direction (RowNorm) and magnitude.
-  \item \textbf{SpectralRowNormMLP}: Scales $U$ by $\lambda^\alpha$ before row-normalizing.
-  \item \textbf{NestedSpheresMLP}: Combined $\alpha{\times}\beta$ sweep ($5{\times}5$ grid).
-  \item \textbf{NestedSpheresClassifier}: Full architecture combining spectral + magnitude.
+  \item \textbf{LogMagnitudeMLP}: RowNorm + appends $\log(\|U_i\|)$ as an additional feature.
+  \item \textbf{DualStreamMLP}: Separate branches for direction (RowNorm) and magnitude ($\|U_i\|$), fused before the classifier.
+  \item \textbf{SpectralRowNormMLP}: Scales $U$ by $\lambda^\alpha$ before row-normalizing; $\alpha$ selected on validation.
+  \item \textbf{NestedSpheresMLP}: Combined $\alpha{\times}\beta$ sweep ($5{\times}5$ grid); $\alpha$ controls eigenvalue reweighting, $\beta$ controls magnitude branch weight.
 \end{enumerate}
 
 \subsection{Hyperparameters}
@@ -248,7 +371,7 @@ Weight decay & $5\times10^{-4}$ \\
 Max epochs & 500 \\
 Early stopping patience & 100 (on val accuracy) \\
 Seeds per config & 15 \\
-Fixed splits & 1 (Planetoid standard; Amazon/Coauthor 60/20/20 seed=42; WikiCS split 0; ogbn-arxiv OGB official) \\
+Fixed splits & 1 \\
 Random splits & 5 seeds, 60/20/20 \\
 $k$ sweep & $\{1,2,4,6,8,10,12,20,30\}$ \\
 \bottomrule
@@ -294,20 +417,28 @@ the effective dimension is its numerical rank:
   \;=\; \mathrm{rank}(X_{\mathrm{diff}}),
   \qquad d_{\mathrm{eff}} \leq \min(n,\,d).
 \]
-\textbf{Code.}
-Computed in \texttt{src/graph\_utils.py:compute\_restricted\_eigenvectors()},
-lines~276--285, via \texttt{np.linalg.matrix\_rank(X\_diffused, tol=1e-10)}.
-The QR factorization is truncated to the first \texttt{rank\_X} columns, giving the
+The QR factorization is truncated to the first $d_{\mathrm{eff}}$ columns, giving the
 orthonormal basis $Q \in \mathbb{R}^{n \times d_{\mathrm{eff}}}$ used for all downstream
 Rayleigh-Ritz steps.
 
 \textbf{Relationship between $k$ and $d_{\mathrm{eff}}$.}
-As $k$ increases, each column of $X_{\mathrm{diff}} = \hat{A}^k X$ can be written as a
-linear combination of $\hat{A}$'s eigenvectors $\phi_j$, weighted by
-$\lambda_j^k \cdot \langle \phi_j, x_{\text{col}} \rangle$.
-Since $\hat{A}$'s eigenvalues lie in $[0,1]$ (normalized adjacency with self-loops),
-small eigenvalues decay exponentially---$\lambda_j^k \to 0$ for $\lambda_j \ll 1$---so
-the rank of $X_{\mathrm{diff}}$ can only decrease or stay the same as $k$ grows.
+As $k$ increases, each column of $X_{\mathrm{diff}} = \hat{A}^k X$ decomposes as
+$\sum_j (1{-}\mu_j)^k \phi_j \langle \phi_j, x_{\text{col}} \rangle$,
+where $\mu_j$ are eigenvalues of $\hat{L} = I - \hat{A}$ and $(1{-}\mu_j)^k$ is the
+diffusion weight on the $j$-th eigenvector.
+The eigenvalues of $\hat{L}$ lie in $[0, 2)$ for connected non-bipartite graphs with
+self-loops (the self-loops in $\tilde{A} = A + I$ ensure $\mu_n < 2$).
+Consequently the eigenvalues of $\hat{A} = I - \hat{L}$ lie in $(-1, 1]$, not $(0,1]$:
+negative eigenvalues can and do occur.
+The weight $|1{-}\mu_j|^k$ is strictly less than 1 for all $\mu_j \in (0, 2)$ and
+decays to zero as $k \to \infty$; only the $\mu_j = 0$ component (weight exactly 1)
+is preserved unconditionally.
+Rank collapse therefore occurs when mid-spectrum components ($\mu_j \approx 1$,
+weight $\approx 0$) have nontrivial initial projection in $X$: those directions
+fall below the numerical threshold and the rank decreases.
+Low-frequency components ($\mu_j \approx 0$, weight $\approx 1$) are preserved,
+explaining why datasets whose features project predominantly onto the low-frequency
+eigenvectors are immune to rank collapse.
 Three qualitative regimes are observed in practice:
 \begin{itemize}
   \item \textbf{Dense graphs} (Amazon-Computers, Amazon-Photo, WikiCS, ogbn-arxiv):
@@ -377,13 +508,10 @@ a near-zero score means all classes have indistinguishable magnitudes.
 All classes receive equal weight regardless of size (unweighted).
 For imbalanced datasets (e.g.\ ogbn-arxiv with 40 classes of unequal size),
 this over-represents small classes.
-
-\textbf{Code.}
-\texttt{PAPER\_EXPERIMENTS/master\_training.py:compute\_fisher\_diagnostic()},
-computed on \textbf{training nodes only} (no data leakage).
-Saved to \texttt{PAPER\_RESULTS/\ldots/k\{k\}/diagnostics/fisher\_diagnostic.json},
-key~\texttt{`fisher\_score'} (mean across splits).
-Loaded by \texttt{master\_analytics.py:load\_fisher\_k()} for k-sensitivity tables.
+Table~\ref{tab:fisher_collapse} reports Fisher scores at key diffusion depths
+($k \in \{1, 10, 30\}$) for all 9 datasets, quantifying the rate of collapse.
+The timing analysis --- at which diffusion depth Fisher$(U)$ drops below $0.1$
+relative to where Part~A crosses zero --- is reported in Table~\ref{tab:fisher_timing}.
 
 % ─── Class Separability ───────────────────────────────────────────────────────
 \subsubsection*{Class Separability in Row-Normalized Space}
@@ -407,19 +535,17 @@ Values $<1$ indicate class overlap (spread within classes exceeds inter-class di
 \emph{Computational note:} for large classes, intra-class distances are computed on a
 random subset of $\leq 200$ nodes, with at most 50 pairwise distances per node, to
 keep runtime tractable.
-
-\textbf{Code.}
-\texttt{PAPER\_EXPERIMENTS/master\_analytics.py:compute\_spectral\_analysis()},
-lines~152--187 (Experiment~2).
-Saved to \texttt{exp2\_spectral\_analysis\_k10.json}, key~\texttt{`spectral\_separability'}.
-Table assembled by \texttt{generate\_paper\_artifacts\_v2.py} into
-\texttt{PAPER\_OUTPUT/tables/table\_4\_2\_separability.tex}.
+Table~\ref{tab:separability} reports separability, inter-class distance, and
+intra-class distance at $k{=}10$ for all 9 datasets; values below $0.35$ across
+all datasets confirm that class overlap in the row-normalized space is universal,
+with discriminative signal residing in subtle directional differences rather than
+well-separated clusters.
 
 % ─── Subspace Alignment ───────────────────────────────────────────────────────
 \subsubsection*{Subspace Alignment via Canonical Correlations (CCA)}
 
-The subspace alignment score verifies numerically whether $\mathrm{col}(U) =
-\mathrm{col}(X_{\mathrm{diff}})$ (Rayleigh-Ritz guarantees this theoretically;
+The subspace alignment score verifies numerically whether $\mathrm{span}(U) =
+\mathrm{span}(X_{\mathrm{diff}})$ (Rayleigh-Ritz guarantees this theoretically;
 this metric catches any numerical deviation).
 
 \textbf{Mathematical background.}
@@ -435,11 +561,11 @@ $\cos\theta_i = 0$ means orthogonal.
   \item \textbf{Orthonormalize $U$:} Since $U$ is $D$-orthonormal (not standard-orthonormal),
     compute $Q_U$ via QR:
     \[Q_U \in \mathbb{R}^{n \times d_{\mathrm{eff}}}, \quad Q_U^\top Q_U = I,
-      \quad \mathrm{col}(Q_U) = \mathrm{col}(U).\]
+      \quad \mathrm{span}(Q_U) = \mathrm{span}(U).\]
   \item \textbf{Orthonormal basis for $X_{\mathrm{diff}}$:} Take top-$d_{\mathrm{eff}}$
     left singular vectors via SVD:
     \[V_k \in \mathbb{R}^{n \times d_{\mathrm{eff}}}, \quad V_k^\top V_k = I,
-      \quad \mathrm{col}(V_k) \approx \mathrm{col}(X_{\mathrm{diff}}).\]
+      \quad \mathrm{span}(V_k) \approx \mathrm{span}(X_{\mathrm{diff}}).\]
   \item \textbf{Cross-Gram matrix:}
     \[M = Q_U^\top V_k \in \mathbb{R}^{d_{\mathrm{eff}} \times d_{\mathrm{eff}}}.\]
   \item \textbf{Canonical correlations} = singular values of $M$:
@@ -450,16 +576,14 @@ $\cos\theta_i = 0$ means orthogonal.
 \end{enumerate}
 Computed on training nodes when $n_{\mathrm{tr}} \geq d_{\mathrm{eff}}$;
 falls back to all nodes otherwise (to avoid rank deficiency).
-
-\textbf{Code.}
-\texttt{PAPER\_EXPERIMENTS/master\_analytics.py:compute\_subspace\_alignment()},
-lines~265--331 (Experiment~9, called within the Exp~2 loop).
-Saved to \texttt{exp2\_spectral\_analysis\_k10.json}, key~\texttt{`subspace\_alignment'}.
-Table assembled by \texttt{generate\_paper\_artifacts\_v2.py} into
-\texttt{PAPER\_OUTPUT/tables/table\_4\_3\_subspace\_alignment.tex}.
+Table~\ref{tab:subspace_alignment} reports mean, maximum, and minimum canonical
+correlations at $k{=}10$ for all 9 datasets; mean CC $> 0.935$ across all datasets
+confirms that the Rayleigh-Ritz projection preserves the subspace exactly, so
+the performance gap in Part~A is driven by basis geometry, not information loss.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Primary Results: Part A, Part B, Gap}
+\textit{Question: Does basis choice affect MLP performance?}
 \label{sec:primary}
 
 \subsection{Fixed Splits: Optimal $k^*$ per Dataset}
@@ -544,6 +668,7 @@ Coauthor-Physics     &   1 & 96.06\% & 88.77\% & 92.48\% & \textbf{+7.30} & +3.7
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Part A Evolution Across All $k$ Values}
+\textit{Question: How does basis sensitivity evolve with diffusion depth?}
 \label{sec:k_sweep}
 
 \subsection{Fixed Splits: Full $k$-Sweep}
@@ -681,6 +806,7 @@ at all $k$ values.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Spectral Properties of $U$}
+\textit{Question: Is the gap caused by information loss or basis geometry?}
 \label{sec:spectral}
 
 \subsection{Condition Numbers and Variance Analysis}
@@ -753,7 +879,7 @@ concentration, not numerical failure in the eigensolver.
 \begin{table}[H]
 \centering\small\setlength{\tabcolsep}{5pt}
 \caption{Subspace alignment at $k{=}10$ (fixed splits): canonical correlations between
-$\mathrm{col}(U)$ and the leading $d_{\mathrm{eff}}$ left singular vectors of $X_{\mathrm{diff}}$.
+$\mathrm{span}(U)$ and the leading $d_{\mathrm{eff}}$ left singular vectors of $X_{\mathrm{diff}}$.
 Computed via $\mathrm{MeanCC} = \overline{\sigma_i(Q_U^\top V_k)}$ where $Q_U=\mathrm{qr}(U)$
 and $V_k$ = top-$d_{\mathrm{eff}}$ left singular vectors of $X_{\mathrm{diff}}$ (see
 \S\ref{sec:metrics_provenance}).  Near~1 means Rayleigh-Ritz preserves dominant directions.
@@ -831,14 +957,38 @@ coauthor-physics & 0.0303 & 0.0429 & 1.4135 \\
 \end{tabular}
 \end{table}
 
-All datasets show intra-class distances $\approx1.4$ (nodes on the unit sphere after
-row-normalization are well-spread within classes), while inter-class distances are much
-smaller.  Separability below 0.35 for all datasets indicates class overlap is universal
-in the normalized space---the discriminative signal resides in subtle direction
-differences, not well-separated clusters.
+All datasets show intra-class distances $\approx 1.4$ across all nine datasets.
+This is not merely ``large'' --- on a unit sphere in high dimensions, two random points
+have expected pairwise distance $\sqrt{2} \approx 1.414$.  The intra-class distance
+being indistinguishable from this random baseline means nodes within the same class
+are as scattered in direction as randomly placed points.  Meanwhile inter-class
+centroid distances range from $0.04$ to $0.46$ --- far smaller than the within-class
+spread.  Separability below $0.35$ for all datasets is therefore not a borderline
+result; it is evidence that class structure in the row-normalized space is universally
+weak, with discriminative signal residing in subtle directional differences rather
+than well-separated clusters.
+
+\textbf{Connection to RowNorm failure.}
+Row normalization removes magnitude and retains only direction.
+Table~\ref{tab:separability} provides the geometric explanation for why Part~B is
+negative on 7/9 datasets: after normalization, the directions $\tilde{U}_i$ carry
+almost no class-discriminative signal.  RowNorm does not fail because of a poor
+implementation --- it fails because the directional component of $U$ is a weak
+representation of class membership.
+
+\textbf{Connection to Fisher score.}
+The Fisher score (Section~\ref{sec:metrics_provenance}) measures whether the
+\emph{magnitude} $\|U_i\|_2$ discriminates classes before any normalization.
+Table~\ref{tab:separability} measures whether the \emph{direction} $\tilde{U}_i$
+discriminates classes after normalization.  Both are near zero across all datasets.
+Together they establish that neither the magnitude nor the direction of $U$'s rows
+carries strong class signal in the raw representation --- whatever class information
+exists in $U$ is encoded in the full coordinate structure, which D-orthonormalization
+has distorted relative to $X_{\mathrm{diff}}$.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Fisher Score Analysis: The Collapse Mechanism}
+\textit{Question: What mechanism drives the crossover to negative Part A?}
 \label{sec:fisher}
 
 \subsection{Fisher Score at $k = 10$ (All Datasets)}
@@ -995,11 +1145,33 @@ than collapsing in a single dominant direction.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Graph Topology: Why Some Datasets Crossover}
+\textit{Question: Which graph property predicts crossover behavior?}
 \label{sec:topology}
 
 \subsection{Structural Comparison}
 
-% DATA SOURCE (tab:graph_properties):
+The k-sweep results (Tables~\ref{tab:part_a_k_sweep_fixed} and~\ref{tab:part_a_k_sweep_random})
+reveal two distinct behavioral regimes: datasets where Part~A remains positive throughout
+the full k-sweep (monotonic), and datasets where Part~A crosses zero and becomes negative
+at moderate diffusion depth (crossover).  This section asks whether the crossover is
+predictable from graph structure alone --- and if so, which structural property drives it.
+
+To answer this, we compare seven graph properties between the two groups.
+The result is unambiguous on one dimension and negative on all others:
+average degree shows a 422\% difference between crossover and monotonic datasets,
+while homophily, modularity, spectral gap, and label assortativity show differences
+of only 4--7\% --- effectively identical between groups.
+Density, not label structure, is the primary correlate of crossover behavior.
+The mechanism is diffusion speed: dense graphs spread information across the entire
+network within 2--4 steps, dispersing class signal uniformly across all spectral
+frequencies before the MLP can exploit it; sparse graphs diffuse slowly, keeping
+class signal concentrated in leading eigenvectors throughout the k-sweep.
+
+One important exception --- WikiCS --- has density comparable to the crossover
+datasets yet does not cross over under fixed splits.  This exception is analyzed
+in detail in \S\ref{sec:fisher} and in the dataset clusters below; it establishes
+that density is a strong correlate but not a sufficient predictor of crossover,
+and that initial feature-graph alignment modulates the effect of density.
 %   avg_degree:          exp2_spectral_analysis_k10.json -> analysis.avg_degree
 %                        (computed in master_analytics.py:compute_spectral_analysis() lines 217-221)
 %   homophily:           exp2_spectral_analysis_k10.json -> analysis.homophily
@@ -1073,6 +1245,7 @@ Datasets cluster by \textbf{graph type} rather than abstract statistics:
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Linear Probe Analysis: Representation Problem, Not Optimization}
+\textit{Question: Is Part A an optimization failure or a representation problem?}
 \label{sec:linear_probe}
 
 \noindent\textbf{Key finding.}
@@ -1081,6 +1254,24 @@ at most 10pp above a linear classifier on all 9 datasets (Table~\ref{tab:lr_vs_s
 \emph{representation problem}: $U$-space is intrinsically harder to classify than
 $X_{\mathrm{diff}}$-space for \emph{any} classifier.  Gradient-based optimization
 is not the bottleneck.
+
+\noindent\textbf{Why logistic regression settles this question.}
+If Part~A were an optimization problem, it would mean the MLP has the capacity to
+classify $U$ well but gradient descent fails to find the right weights --- perhaps
+because the loss landscape is difficult, the features are poorly scaled, or training
+is too short.  In that case, a more powerful model or longer training would close
+the gap.  If Part~A is instead a representation problem, then $U$-space is
+intrinsically harder to classify for \emph{any} model, regardless of optimization
+quality.
+
+Logistic regression is the sharpest instrument for distinguishing these two cases.
+It has no hidden layers, no nonlinearity, and no learned feature interactions --- it
+fits a single linear hyperplane.  If LR on $U$ performs nearly as badly as the 3-layer
+MLP on $U$, then the MLP's extra capacity --- its depth, its nonlinearity, its
+256-dimensional hidden representations --- is adding almost nothing.  The bottleneck
+is not the optimizer or the architecture.  It is the geometry of $U$ itself.
+The ``MLP vs LR'' column in Table~\ref{tab:lr_vs_sgc} is therefore the decisive
+diagnostic: it measures how much the MLP adds over a linear model in $U$-space.
 
 % DATA SOURCE (tab:lr_vs_sgc):
 %   SGC and Std MLP: results.json at k=10, fixed splits
@@ -1137,11 +1328,23 @@ difficulty per se.  The MLP converges slowly \emph{to a ceiling that a linear mo
 also reaches}.  The bottleneck is the representation, not gradient flow.
 
 \noindent\textbf{The eigenvalue range predicts the LR gap.}
-D-orthonormalization enforces $U^\top D U = I$, which equalizes graph-weighted variance
-across columns.  However, Euclidean column variance scales as $1/\lambda_j^2$ (inversely
-with the squared eigenvalue), so a large eigenvalue range produces a catastrophic
-column-variance disparity: high-frequency eigenvectors become near-constant, and fitting
-classifier weights to near-constant columns injects noise.
+D-orthonormalization enforces $U^\top \tilde{D} U = I$, equalizing
+\emph{graph-weighted} variance across columns.
+This does \emph{not} equalize Euclidean variance.
+By Proposition~\ref{prop:energy_inversion}, the Euclidean column norm of $u_j$
+is bounded between $1/\sqrt{\tilde{d}_{\max}}$ and $1/\sqrt{\tilde{d}_{\min}}$,
+independent of $\lambda_j$ --- a sharp contrast with $X_{\mathrm{diff}}$, where
+energy in direction $j$ scales as $(1{-}\lambda_j)^{2k}$ and strongly favours
+low-frequency, class-discriminative components.
+On irregular graphs, columns whose eigenvectors are closely aligned with the
+degree distribution (typically low-frequency components) become approximately
+constant in Euclidean space.
+By Proposition~\ref{prop:gradient_collapse}, such columns receive near-zero
+discriminative gradient signal during training.
+The empirically observed variance disparity (Table~\ref{tab:eigenvalue_range})
+is therefore topology-dependent, not a direct consequence of a $1/\lambda_j^2$
+algebraic identity; its magnitude correlates with both eigenvalue range and
+degree heterogeneity.
 
 % DATA SOURCE (tab:eigenvalue_range):
 %   lambda_max/lambda_min: from exp2_spectral_analysis_k10.json key eigenvalue_stats
@@ -1252,6 +1455,7 @@ confirming that the gap relative to SGC originates in the representation, not th
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Recovery Strategies}
+\textit{Question: Can the performance lost by basis change be recovered?}
 \label{sec:recovery}
 
 \subsection{Magnitude Recovery Cascade}
@@ -1437,6 +1641,7 @@ secondary.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Training Dynamics}
+\textit{Question: Does basis choice affect optimization speed or only final accuracy?}
 \label{sec:training}
 
 \subsection{Training Curve Figures}
@@ -1590,7 +1795,7 @@ generated by \texttt{generate\_paper\_artifacts\_v2.py}.}}
 \includegraphics[width=0.95\textwidth]{figures/figure_3_2_part_a_vs_k.pdf}
 \caption{Part~A (pp) vs.\ diffusion depth $k$ for all 9 datasets (fixed splits).
 Each curve shows how the SGC+MLP $-$ R+Std accuracy gap evolves with $k$.
-Three regimes are visible: (1) monotonic positive (citation/collaboration networks---always
+Four regimes are visible: (1) monotonic positive (citation/collaboration networks---always
 above zero), (2) crossover to negative (co-purchase networks---cross zero at $k{\approx}5{-}8$),
 (3) deferred crossover (WikiCS---25pp initial gap closes to +0.4pp by $k{=}30$;
 crosses at $k{\approx}10{-}12$ under random splits),
@@ -1717,25 +1922,34 @@ All 9 datasets available as individual PDFs in \texttt{PAPER\_OUTPUT/figures/}.}
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Synthesis: The Phase Transition Mechanism}
+\textit{Question: What single mechanism explains all observed phenomena?}
 \label{sec:synthesis}
 
 \subsection{The Unified Mechanism}
 
-All empirical findings in this report follow from a single structural fact:
+The primary empirical findings on monotonic datasets follow from a single structural fact:
 \textbf{D-orthonormalization destroys eigenvalue-weighted variance structure}.
+The crossover behavior on dense graphs requires an additional mechanism ---
+diffusion-induced signal dispersion --- described in \S\ref{sec:phases}.
 
-The Rayleigh-Ritz procedure enforces $U^\top D U = I$.  This equalization means that
-in Euclidean space, the variance of column $j$ of $U$ scales as $1/\lambda_j^2$.
+The Rayleigh-Ritz procedure enforces $U^\top \tilde{D} U = I$,
+equalizing \emph{graph-weighted} variance across all eigenvector dimensions.
+This does \emph{not} equalize Euclidean variance.
+By Proposition~\ref{prop:energy_inversion}(ii), Euclidean column norms are
+bounded in $[1/\sqrt{\tilde{d}_{\max}},\, 1/\sqrt{\tilde{d}_{\min}}]$,
+independent of eigenvalue rank.
 In $X_{\mathrm{diff}} = \hat{A}^k X$, by contrast, each frequency component is
-naturally weighted by $\lambda_j^k$, which concentrates energy in the directions most
-relevant to the graph's community structure.  Rayleigh-Ritz removes this weighting.
+naturally weighted by $(1{-}\lambda_j)^k$, which concentrates energy in the
+directions most relevant to the graph's community structure.
+Rayleigh-Ritz removes this weighting, inverting the spectral energy hierarchy.
 
 The downstream consequences are:
 \begin{enumerate}
   \item \textbf{Representation hardness}: A logistic regression on $U$ is
     27--37pp below SGC+MLP on monotonic datasets, nearly matching the MLP's
-    shortfall (MLP vs LR: at most 10pp).  The gap is inherent to the representation,
-    not recoverable by nonlinearity.
+    shortfall (MLP vs LR: at most 10pp).  The bulk of the gap is inherent to
+    the representation; the MLP recovers at most 10pp over logistic regression,
+    leaving the majority unrecovered by nonlinearity alone.
   \item \textbf{Eigenvalue-range dependency}: Datasets with large eigenvalue ranges
     (CiteSeer: 234$\times$; Cora: 76$\times$) incur catastrophic column-variance
     disparity ($10^6$--$10^9$-fold), making high-frequency columns near-constant.
@@ -1746,13 +1960,389 @@ The downstream consequences are:
     $\alpha{=}-1$ partially restores the lost structure and recovers 41--47pp.
     When signal is dispersed (crossover datasets), no monotone reweighting has leverage.
   \item \textbf{The crossover}: On dense graphs, rapid diffusion uniformly spreads
-    class signal across all frequency components.  SGC+MLP degrades through
-    over-smoothing while $U$-space classifiers remain stable (signal is dispersed
-    but present).  The crossover in Part~A is the point at which SGC's over-smoothing
-    loss exceeds the D-orthonormalization penalty of $U$.
+    class signal across all frequency components.  We interpret the crossover in
+    Part~A as SGC+MLP degrading through over-smoothing while $U$-space classifiers
+    remain comparatively stable (signal is dispersed but present): Part~A crosses
+    zero at the point where SGC's over-smoothing loss exceeds the
+    D-orthonormalization penalty of $U$.
 \end{enumerate}
 
+\subsection{Formal Analysis}
+
+We state two propositions that together explain the root mechanism.
+All proofs use only linear algebra and the definition of $\tilde{D}$-orthonormality.
+No theorem about the full Laplacian eigenvectors is required; the statements
+apply directly to the Rayleigh-Ritz restricted eigenvectors used in all experiments.
+
+\paragraph{Notation.}
+Two separate spectral systems appear in the analysis and must be kept distinct.
+
+\textit{Diffusion system.}
+$\tilde{A} = A + I$,
+$\tilde{D} = \mathrm{diag}(\tilde{d}_1,\ldots,\tilde{d}_n)$ (degree matrix of
+$\tilde{A}$), $\hat{A} = \tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}$ (symmetric
+normalized adjacency with self-loops),
+$\hat{L} = I - \hat{A} = \tilde{D}^{-1/2}(\tilde{D}-\tilde{A})\tilde{D}^{-1/2}$
+(normalized Laplacian with self-loops).
+Its eigenvectors $\phi_j$ and eigenvalues $\mu_j$ satisfy
+$\hat{L}\phi_j = \mu_j\phi_j$, $\|\phi_j\|_2 = 1$,
+$0 \leq \mu_1 \leq \cdots \leq \mu_n < 2$ for connected graphs with self-loops.
+These govern the spectral decomposition of $X_{\mathrm{diff}} = \hat{A}^k X_0$.
+
+\textit{Rayleigh-Ritz system.}
+$L = D - A$ (unnormalized Laplacian, no self-loops),
+$D = \mathrm{diag}(d_1,\ldots,d_n)$ (plain degree matrix, no self-loops).
+The restricted eigenvectors are computed as $U = QV$ where
+$Q \in \mathbb{R}^{n\times d_{\mathrm{eff}}}$ ($Q^\top Q = I_{d_{\mathrm{eff}}}$)
+is the orthonormal basis for $\mathrm{span}(X_{\mathrm{diff}})$, and
+$V = [v_1,\ldots,v_{d_{\mathrm{eff}}}]$ solves the projected generalized eigenproblem:
+\[
+  (Q^\top L Q)\,V \;=\; (Q^\top D Q)\,V\,\Lambda,
+  \qquad
+  V^\top (Q^\top D Q)\,V = I,
+\]
+where $\Lambda = \mathrm{diag}(\lambda_1,\ldots,\lambda_{d_{\mathrm{eff}}})$
+are the Rayleigh-Ritz eigenvalue approximations (eigenvalues of
+$D^{-1/2}LD^{-1/2}$ restricted to $\mathrm{span}(X_{\mathrm{diff}})$).
+This yields $U^\top D U = V^\top(Q^\top D Q)V = I$ directly.
+The Rayleigh-Ritz property guarantees $\mathrm{span}(U) = \mathrm{span}(X_{\mathrm{diff}})$
+(Eq.~\ref{eq:span_invariance}) regardless of which generalized eigenproblem is used
+inside the subspace; subspace alignment is verified empirically (Mean CC $> 0.935$,
+Table~\ref{tab:subspace_alignment}), confirming that the span invariance holds
+numerically to error $< 10^{-9}$ across all 81 dataset-$k$ combinations.
+
+% ── Proposition 1 ──────────────────────────────────────────────────────────────
+\begin{proposition}[Spectral Energy Inversion under D-Orthonormalization]
+\label{prop:energy_inversion}
+\hfill
+
+\noindent\textbf{(i) Energy in $X_{\mathrm{diff}}$ is eigenvalue-weighted.}
+Let $\Phi = [\phi_1,\ldots,\phi_n]$ be the orthonormal eigenvectors of $\hat{L}$
+($\hat{L}\phi_j = \mu_j\phi_j$, $\|\phi_j\|_2 = 1$).
+The diffused features $X_{\mathrm{diff}} = \hat{A}^k X_0$ decompose as:
+\[
+  X_{\mathrm{diff}} \;=\; \sum_{j=1}^{n} (1-\mu_j)^k\,\phi_j\,(\phi_j^\top X_0).
+\]
+The Frobenius energy in the $j$-th eigendirection is
+$(1{-}\mu_j)^{2k}\|\phi_j^\top X_0\|_F^2$,
+weighted by $|1-\mu_j|^{2k}$: this weight decreases on $[0,1]$, increases on $[1,2]$,
+and is minimized at $\mu_j = 1$.
+In the homophilous non-bipartite graphs used in this work ($\mu_n < 2$),
+class-discriminative signal is predominantly low-frequency ($\mu_j \approx 0$),
+so diffusion acts as an effective low-pass filter in practice.
+
+\noindent\textbf{(ii) Euclidean column norms of $U$ are eigenvalue-independent.}
+For each column $u_j$ of the $D$-orthonormal matrix $U = QV$:
+\[
+  \frac{1}{\sqrt{d_{\max}}} \;\leq\; \|u_j\|_2 \;\leq\; \frac{1}{\sqrt{d_{\min}}}
+\]
+where $d_{\min} = \min_i d_i$ and $d_{\max} = \max_i d_i$ (plain degrees, no self-loops).
+This bound is \emph{independent of $\lambda_j$}.
+
+\noindent\textbf{Consequence.}
+$D$-orthonormalization abolishes the diffusion-induced basis-vector norm hierarchy of
+$X_{\mathrm{diff}}$.
+In $X_{\mathrm{diff}}$, the ratio of energy between two eigendirections $p$ and $q$ is:
+\[
+  \frac{\|\Pi_p X_{\mathrm{diff}}\|_F^2}{\|\Pi_q X_{\mathrm{diff}}\|_F^2}
+  \;=\;
+  \frac{|1-\mu_p|^{2k}}{|1-\mu_q|^{2k}}
+  \cdot
+  \frac{\|\Pi_p X_0\|_F^2}{\|\Pi_q X_0\|_F^2}.
+\]
+In particular, when $\mu_p \approx 0$ (low-frequency) and $\mu_q \approx 1$
+(mid-spectrum), the first factor grows as $(1-\mu_p)^{2k} \gg |1-\mu_q|^{2k}$,
+amplifying any initial energy imbalance exponentially with $k$
+(whenever the initial spectral energies $\|\Pi_p X_0\|_F^2$,
+$\|\Pi_q X_0\|_F^2$ are comparable).
+
+In $U$, the ratio of Euclidean column norms is bounded by $\sqrt{d_{\max}/d_{\min}}$
+regardless of $k$ or $\lambda_j$, by part~(ii).
+\end{proposition}
+
+\begin{proof}
+\textbf{Part (i).}
+Since $\hat{A} = \Phi(I-\mathrm{M})\Phi^\top$ where $\mathrm{M} = \mathrm{diag}(\mu_1,\ldots,\mu_n)$,
+and $\Phi^\top\Phi = I$:
+\[
+  X_{\mathrm{diff}} = \hat{A}^k X_0
+  = \Phi(I-\mathrm{M})^k\Phi^\top X_0
+  = \sum_{j=1}^n (1-\mu_j)^k\,\phi_j\,(\phi_j^\top X_0).
+\]
+Since the $\phi_j$ are orthonormal, the terms are orthogonal in $\mathbb{R}^n$.
+The Frobenius norm of the $j$-th term is
+$\|(1-\mu_j)^k\phi_j(\phi_j^\top X_0)\|_F^2
+= (1-\mu_j)^{2k}\|\phi_j^\top X_0\|_F^2$
+(using $\|\phi_j\|_2 = 1$).
+The weight $|1-\mu_j|^{2k}$ is
+monotonically decreasing on $[0,1]$ and increasing on $[1,2]$; it is minimized at
+$\mu_j = 1$ and maximized at the endpoints $\mu_j \in \{0,2\}$.
+In the non-bipartite graphs used in this work ($\mu_n < 2$), the dominant
+low-pass behavior holds: components with $\mu_j \approx 0$ retain the most energy.
+
+\textbf{Part (ii).}
+Write $u_j = Qv_j$ where $Q^\top Q = I_{d_{\mathrm{eff}}}$.
+Then $\|u_j\|_2^2 = v_j^\top Q^\top Q v_j = \|v_j\|_2^2$.
+The $D$-orthonormality condition gives
+$u_j^\top D u_j = v_j^\top(Q^\top D Q)v_j = 1$.
+Let $M = Q^\top D Q \in \mathbb{R}^{d_{\mathrm{eff}}\times d_{\mathrm{eff}}}$.
+Since $d_{\min}I \preceq D \preceq d_{\max}I$:
+\[
+  d_{\min}\,\|v_j\|_2^2 \;\leq\; v_j^\top M v_j \;=\; 1
+  \;\leq\; d_{\max}\,\|v_j\|_2^2.
+\]
+Rearranging gives $1/d_{\max} \leq \|v_j\|_2^2 \leq 1/d_{\min}$,
+and therefore $1/d_{\max} \leq \|u_j\|_2^2 \leq 1/d_{\min}$.
+Taking square roots gives the stated bound.
+The bound involves only $d_{\min}$ and $d_{\max}$; it does not
+involve $\lambda_j$.  \qed
+\end{proof}
+
+\begin{remark}[On the empirically observed large variance ratios]
+\label{rem:variance_ratios}
+Proposition~\ref{prop:energy_inversion}(ii) bounds column \emph{norms}, not column
+\emph{variances}.
+The large empirical variance ratios in Table~\ref{tab:eigenvalue_range} (up to
+$2{\times}10^9$ for CiteSeer) arise because some columns of $U$ are approximately
+constant: their mean $\bar{u}_j \approx \|u_j\|_2/\sqrt{n}$, making their variance
+$\|u_j\|_2^2/n - \bar{u}_j^2 \approx 0$.
+This near-constancy is topology-dependent.
+For the lowest-frequency eigenvector ($\lambda_1 \approx 0$), the normalized Laplacian
+eigenvector of the RR system satisfies
+$\phi_1^{(RR)} \approx D^{1/2}\mathbf{1}/\|D^{1/2}\mathbf{1}\|_2$
+(the Fiedler-limit Perron vector of the random walk), giving
+$u_1 = D^{-1/2}\phi_1^{(RR)} \approx \mathbf{1}/\|D^{1/2}\mathbf{1}\|_2$
+--- a near-constant vector with variance $\approx 0$.
+More generally, on the homophilous graphs considered here, several low-frequency
+modes are empirically smoother and more degree-aligned, so their transformed
+coordinates $u_j = D^{-1/2}\phi_j^{(RR)}$ can exhibit low Euclidean variance.
+This is an empirical observation on these benchmark graphs, not a general theorem.
+The correlation between eigenvalue range and empirical variance ratio is therefore
+real but operates through degree-eigenvector alignment, not through an algebraic
+$1/\lambda_j^2$ identity.
+\end{remark}
+
+% ── Proposition 2 ──────────────────────────────────────────────────────────────
+\begin{proposition}[Near-Constant Columns Receive Near-Zero Discriminative Gradient Signal]
+\label{prop:gradient_collapse}
+Let logistic regression with weight matrix $W \in \mathbb{R}^{C\times d_{\mathrm{eff}}}$
+and bias $b \in \mathbb{R}^C$ be trained on features $U \in \mathbb{R}^{n\times d_{\mathrm{eff}}}$
+with cross-entropy loss.
+The gradient of $\mathcal{L}$ with respect to $W_{c,j}$ (weight connecting feature $j$
+to class $c$) decomposes as:
+\[
+  \frac{\partial \mathcal{L}}{\partial W_{c,j}}
+  \;=\;
+  \underbrace{-\bar{u}_j \sum_i (y_{ic} - p_{ic})}_{\text{bias-equivalent (non-discriminative)}}
+  \;\;-\;\;
+  \underbrace{\sum_i (y_{ic} - p_{ic})(u_j(i) - \bar{u}_j)}_{\text{discriminative signal}}
+\]
+where $p_{ic} = \mathrm{softmax}(Wu_i + b)_c$, $y_{ic} \in \{0,1\}$, and
+$\bar{u}_j = n^{-1}\sum_i u_j(i)$.
+The discriminative component satisfies:
+\[
+  \left|\sum_i (y_{ic} - p_{ic})(u_j(i) - \bar{u}_j)\right|
+  \;\leq\; n \cdot \mathrm{Std}(U_{:,j})
+\]
+where $\mathrm{Std}(U_{:,j}) = \sqrt{\mathrm{Var}(U_{:,j})}$.
+As $\mathrm{Var}(U_{:,j}) \to 0$, the discriminative gradient signal from feature $j$
+vanishes regardless of the model weights.
+\end{proposition}
+
+\begin{proof}
+The gradient of cross-entropy w.r.t.\ $W_{c,j}$ is:
+\[
+  \frac{\partial \mathcal{L}}{\partial W_{c,j}} = -\sum_i (y_{ic} - p_{ic})\,u_j(i).
+\]
+Write $u_j(i) = \bar{u}_j + (u_j(i) - \bar{u}_j)$ and separate:
+\[
+  = -\bar{u}_j\sum_i(y_{ic} - p_{ic}) - \sum_i(y_{ic} - p_{ic})(u_j(i) - \bar{u}_j).
+\]
+The first term $-\bar{u}_j\sum_i(y_{ic} - p_{ic})$ equals $\bar{u}_j$ times the
+gradient w.r.t.\ the bias $b_c$.
+It encodes only mean-level class imbalance, not inter-class discriminative variation
+from feature $j$ beyond what the bias already captures.
+At any stationary point (in particular the optimum), $\partial\mathcal{L}/\partial b_c
+= -\sum_i(y_{ic}-p_{ic}) = 0$, so this term vanishes.
+
+For the discriminative component, by the triangle inequality:
+\[
+  \left|\sum_i(y_{ic} - p_{ic})(u_j(i)-\bar{u}_j)\right|
+  \;\leq\; \max_i|y_{ic}-p_{ic}| \cdot \sum_i|u_j(i)-\bar{u}_j|.
+\]
+Since $y_{ic} \in \{0,1\}$ and $p_{ic} \in (0,1)$, we have $\max_i|y_{ic}-p_{ic}| \leq 1$.
+By Cauchy-Schwarz, $\sum_i|u_j(i)-\bar{u}_j| \leq \sqrt{n}\,\|u_j - \bar{u}_j\mathbf{1}\|_2
+= \sqrt{n}\cdot\sqrt{n\cdot\mathrm{Var}(U_{:,j})} = n\cdot\mathrm{Std}(U_{:,j})$.
+Therefore:
+\[
+  \left|\sum_i(y_{ic}-p_{ic})(u_j(i)-\bar{u}_j)\right| \;\leq\; n\cdot\mathrm{Std}(U_{:,j}).
+\]
+As $\mathrm{Var}(U_{:,j}) \to 0$ (column $j$ becomes constant),
+$\mathrm{Std}(U_{:,j}) \to 0$ and the bound goes to zero. \qed
+\end{proof}
+
+\begin{remark}[Extension to MLPs and Adam]
+\label{rem:mlp_adam}
+Proposition~\ref{prop:gradient_collapse} is stated for logistic regression because
+the gradient decomposition is exact in the linear case.
+For an $L$-layer MLP, the first-layer weight gradient is
+$\partial\mathcal{L}/\partial W^{(1)}_{:,j} = \sum_i \delta_i\,u_j(i)$ where
+$\delta_i \in \mathbb{R}^h$ is the backpropagated signal to the first hidden layer.
+The bias-equivalent/discriminative decomposition carries through with
+$\delta_i$ in place of $(y_{ic}-p_{ic})$; the bound becomes
+$\|\partial\mathcal{L}/\partial W^{(1)}_{:,j}\|_2 \leq \mathrm{Std}(U_{:,j})\cdot C_\theta$
+where $C_\theta = n\max_i\|\delta_i\|_2$ depends on the remaining weights.
+The LR experimental evidence (Table~\ref{tab:lr_vs_sgc}: MLP vs LR $\leq$ 10pp
+on all datasets) confirms that the same mechanism operates in the nonlinear setting
+--- a deeper model cannot recover gradient signal that is absent due to near-constant
+columns.
+
+For \textbf{Adam}: the effective update for weight $W_{c,j}$ is
+$\hat{g}_j/(\sqrt{\hat{v}_j} + \epsilon_{\mathrm{Adam}})$ where $\hat{g}_j,\hat{v}_j$
+are bias-corrected first and second gradient moments.
+When column $j$ is $\epsilon$-constant, $|\hat{g}_j| = O(\epsilon)$ and
+$\hat{v}_j = O(\epsilon^2)$ by the proposition.
+The adaptive step is $O(\epsilon)/(\sqrt{O(\epsilon^2)} + \epsilon_{\mathrm{Adam}})
+= O(1)$ only when $\sqrt{\hat{v}_j} \ll \epsilon_{\mathrm{Adam}} = 10^{-8}$,
+i.e., only when $\hat{v}_j \ll 10^{-16}$ --- a regime not reached in practice.
+Adam therefore provides only marginal rescue for near-constant columns; both
+numerator and denominator grow proportionally with $\epsilon$, leaving the
+effective signal-to-noise ratio unchanged.
+\end{remark}
+
+% ── Proposition 3 ──────────────────────────────────────────────────────────────
+\begin{proposition}[Row Normalization Cannot Increase Bayes-Optimal Accuracy]
+\label{prop:rownorm_bound}
+
+Let $U \in \mathbb{R}^{n \times d}$ be a feature matrix for a $C$-class node
+classification problem with labels $y \in \{1,\ldots,C\}$.
+Define the row-normalized representation
+\[
+  \tilde{U}_i \;=\; \frac{U_i}{\|U_i\|_2}, \qquad i = 1,\ldots,n.
+\]
+Then:
+\begin{enumerate}[label=(\roman*)]
+  \item \textbf{Information bound.}
+    The Bayes-optimal accuracy satisfies
+    \[
+      \mathrm{Acc}^*(\tilde{U}) \;\leq\; \mathrm{Acc}^*(U).
+    \]
+    Row normalization cannot increase the achievable accuracy ceiling.
+
+  \item \textbf{Equality condition.}
+    A sufficient condition for equality is that the row magnitude $\|U_i\|_2$
+    carries no additional class information beyond what the direction $\tilde{U}_i$
+    already provides:
+    \[
+      \|U_i\|_2 \;\perp\; y_i \;\mid\; \tilde{U}_i.
+    \]
+    In particular, this holds when $\mathrm{Fisher}(U) = 0$
+    (all class-conditional magnitude distributions are identical).
+
+  \item \textbf{Diagnostic interpretation of Part~B.}
+    When $\mathrm{Part~B} > 0$ empirically --- meaning an MLP on $\tilde{U}$
+    outperforms an MLP on $U$ --- this does not contradict~(i).
+    It implies that the MLP on $U$ is \emph{optimization-limited}:
+    \[
+      \mathrm{Acc}_{\mathrm{MLP}}(U) \;<\; \mathrm{Acc}^*(U),
+    \]
+    and RowNorm improves optimization (better-conditioned loss landscape, reduced
+    column-variance disparity) enough to offset the information loss.
+    Part~B $> 0$ therefore diagnoses optimization failure, not representation
+    improvement.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+\textbf{Part~(i).}
+The map $\psi: U_i \mapsto U_i/\|U_i\|_2$ is a deterministic function of $U_i$.
+By the \textbf{data processing inequality} for Shannon mutual information,
+for any deterministic function $\psi$:
+\[
+  I(\tilde{U}_i;\, y_i) \;=\; I(\psi(U_i);\, y_i) \;\leq\; I(U_i;\, y_i).
+\]
+Since Bayes-optimal accuracy is a non-decreasing function of mutual information
+(more precisely, $\mathrm{Acc}^*(X) \leq 1 - H(y|X)/\log C$ and
+$H(y|X)$ is non-increasing in $I(X;y)$), we conclude
+\[
+  \mathrm{Acc}^*(\tilde{U}) \;\leq\; \mathrm{Acc}^*(U).
+\]
+
+\textbf{Alternatively, via posterior averaging.}
+For any class $c$, the tower property of conditional expectation gives:
+\[
+  P(y_i = c \mid \tilde{U}_i)
+  \;=\; \mathbb{E}\bigl[P(y_i = c \mid U_i) \;\big|\; \tilde{U}_i\bigr].
+\]
+This holds because $\tilde{U}_i = \psi(U_i)$ is a coarsening of $U_i$:
+any event measurable w.r.t.\ $\tilde{U}_i$ is measurable w.r.t.\ $U_i$.
+Now apply Jensen's inequality to the convex function $\max_c(\cdot)$:
+\[
+  \max_c P(y_i = c \mid \tilde{U}_i)
+  \;=\; \max_c \mathbb{E}\bigl[P(y_i=c\mid U_i)\;\big|\;\tilde{U}_i\bigr]
+  \;\leq\; \mathbb{E}\bigl[\max_c P(y_i=c\mid U_i)\;\big|\;\tilde{U}_i\bigr].
+\]
+Taking expectations over $\tilde{U}_i$ and applying the law of total expectation:
+\[
+  \mathrm{Acc}^*(\tilde{U})
+  = \mathbb{E}\Bigl[\max_c P(y_i=c\mid\tilde{U}_i)\Bigr]
+  \leq \mathbb{E}\Bigl[\max_c P(y_i=c\mid U_i)\Bigr]
+  = \mathrm{Acc}^*(U). \quad \checkmark
+\]
+
+\textbf{Part~(ii).}
+Equality in Jensen holds if and only if $\max_c P(y_i=c\mid U_i)$ is
+$\sigma(\tilde{U}_i)$-measurable, i.e., the optimal class assignment is the
+same for all $U_i$ sharing the same direction.
+This requires the argmax posterior to be constant on each ray
+$\{rU_i : r > 0\}$, which is equivalent to $\|U_i\|_2$ providing no
+additional discriminative information:
+$\|U_i\|_2 \perp y_i \mid \tilde{U}_i$.
+
+When $\mathrm{Fisher}(U) = 0$, the between-class variance of magnitudes is zero,
+meaning $\mathbb{E}[\|U_i\|_2 \mid y_i = c]$ is the same for all $c$.
+Under any symmetric noise model, this implies
+$P(\|U_i\|_2 \mid y_i, \tilde{U}_i) = P(\|U_i\|_2 \mid \tilde{U}_i)$,
+i.e., magnitude is class-conditionally independent of label given direction.
+
+\textbf{Part~(iii).}
+Suppose $\mathrm{Acc}_{\mathrm{MLP}}(\tilde{U}) > \mathrm{Acc}_{\mathrm{MLP}}(U)$.
+By part~(i), $\mathrm{Acc}^*(\tilde{U}) \leq \mathrm{Acc}^*(U)$.
+Therefore:
+\[
+  \mathrm{Acc}_{\mathrm{MLP}}(U)
+  < \mathrm{Acc}_{\mathrm{MLP}}(\tilde{U})
+  \leq \mathrm{Acc}^*(\tilde{U})
+  \leq \mathrm{Acc}^*(U).
+\]
+The MLP on $U$ is strictly below its own Bayes ceiling.
+The gap $\mathrm{Acc}^*(U) - \mathrm{Acc}_{\mathrm{MLP}}(U)$ is the
+\emph{optimization gap} on $U$.
+RowNorm reduces this gap by improving the optimization landscape
+(Proposition~\ref{prop:gradient_collapse}: reducing column-variance
+disparity increases discriminative gradient signal).
+The net effect on accuracy is positive when the optimization gain
+exceeds the information loss. \qed
+\end{proof}
+
+\begin{remark}[Why Part~B is negative on most datasets]
+\label{rem:partb_negative}
+Proposition~\ref{prop:rownorm_bound}(i) bounds the \emph{ceiling}, not the
+\emph{achieved} accuracy.
+When $\mathrm{Fisher}(U) > 0$, magnitude carries genuine class signal.
+Discarding it via RowNorm both loses this signal (ceiling decreases) and improves
+optimization (gap to ceiling shrinks).
+Part~B is negative when the signal loss dominates; positive when the optimization
+gain dominates.
+The empirical pattern --- Part~B $< 0$ on 7/9 datasets at their optimal $k^*$,
+with the exceptions being datasets where Fisher scores remain moderate
+(Amazon-Photo, Coauthor-Physics) --- is exactly consistent with this analysis:
+magnitude carries recoverable class signal on those datasets, and the optimization
+gain from RowNorm does not compensate.
+\end{remark}
+
 \subsection{Three Phases of Diffusion}
+\label{sec:phases}
 
 The phase transition is most precisely understood as a competition between two effects
 of the Rayleigh-Ritz projection operating simultaneously at every $k$:
@@ -1789,7 +2379,12 @@ Simultaneously, Effect~2 grows as the eigenvalue range of the restricted problem
 The rate of this transition depends on graph density:
 
 \emph{Dense graphs (avg degree 20--40):} Rapid diffusion over highly connected networks
-causes Effect~1 to vanish within 2--4 steps (Fisher score of $\|U_i\|$ drops 95--99\%).
+causes Effect~1 to vanish within 2--4 steps.
+We use the Fisher score of $\|U_i\|$ (dropping 95--99\% within these steps,
+Table~\ref{tab:fisher_collapse}) as a diagnostic proxy: when Fisher(U) collapses,
+the first Laplacian eigenvector of $U$ carries no class-discriminative signal,
+indicating the Laplacian basis is no longer aligned with class structure and the
+high-frequency components that Rayleigh-Ritz removes are no longer class-irrelevant noise.
 Class signal disperses uniformly across all frequency components, and no filtering
 benefit remains.  Effect~2 also grows quickly.  Part~A crosses zero at $k \approx 5{-}8$.
 
@@ -1825,8 +2420,8 @@ and spectral concentration rate, not an independent factor.
 
 Homophily shows only a $4.4\%$ difference between crossover and monotonic datasets
 (0.753 vs.\ 0.787).  Amazon-Photo has homophily $= 0.827$ (similar to Cora $= 0.804$)
-yet crosses over.  Homophily alone cannot explain the phase transition; graph density
-and diffusion speed are the primary drivers.
+yet crosses over.  Homophily is not a sufficient predictor of the phase transition;
+graph density and diffusion speed are the primary drivers.
 
 \subsection{The $\alpha = -1$ Recovery Insight}
 
@@ -1836,8 +2431,10 @@ U_{\text{scaled}} = \mathrm{diag}(\lambda_1^{-1}, \ldots, \lambda_{d}^{-1}) \cdo
 \]
 Inverse eigenvalue scaling amplifies the low-frequency Laplacian eigenvectors
 (small $\lambda_j$, class-aligned signals) and suppresses the high-frequency ones
-(large $\lambda_j$, within-class variation).  It partially re-introduces the
-eigenvalue weighting that D-orthonormalization removed.
+(large $\lambda_j$, within-class variation).  It partially re-introduces
+\emph{a} low-frequency-amplifying weighting, analogous in effect to the
+diffusion weighting that D-orthonormalization destroyed, though operating in
+the $\lambda_j$ system rather than the $\mu_j$ system of the diffusion operator.
 
 This is \emph{not} equivalent to recovering $X_{\mathrm{diff}}$ geometrically.
 Reconstructing $X_{\mathrm{diff}}$ from $U$ would require weighting by $\lambda_j^k$,
@@ -1880,12 +2477,16 @@ measurements of the same underlying fact.
     nothing beyond a linear model in $U$-space.  The gap relative to SGC originates
     in the representation itself.
 
-  \item \textbf{Eigenvalue range predicts representation difficulty}: D-orthonormalization
-    produces Euclidean column-variance disparity proportional to the squared eigenvalue
-    range.  CiteSeer's $234\times$ eigenvalue range produces a $2{\times}10^9$-fold
-    disparity; PubMed's $8.9\times$ range produces only $171\times$.  This predicts
-    the ordering of LR accuracy gaps from SGC and the shape of the $p$-vs-accuracy
-    curves in Table~\ref{tab:linear_probe}.
+  \item \textbf{Eigenvalue range predicts representation difficulty}: By
+    Proposition~\ref{prop:energy_inversion}, D-orthonormalization abolishes the
+    eigenvalue-weighted energy hierarchy of $X_{\mathrm{diff}}$; Euclidean column
+    norms are bounded by degree statistics, not eigenvalue rank.
+    On irregular graphs this produces topology-dependent Euclidean column-variance
+    disparity that correlates empirically with eigenvalue range:
+    CiteSeer's $234\times$ range produces a $2{\times}10^9$-fold disparity;
+    PubMed's $8.9\times$ range produces only $171\times$.
+    This predicts the ordering of LR accuracy gaps from SGC and the shape of
+    the $p$-vs-accuracy curves in Table~\ref{tab:linear_probe}.
 
   \item \textbf{Graph density drives crossover, with qualifications}: Dense graphs
     (avg degree ${\sim}30$) exhibit rapid Fisher score collapse ($95$--$99\%$ within
@@ -1957,5 +2558,114 @@ mechanisms exhibit similar $k$-dependent phase transitions?
 
 \textbf{5.\ Beyond $k{=}30$:} Do monotonic datasets eventually crossover at very
 high diffusion, or does community structure permanently protect them?
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Related Work}
+\label{sec:related}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\paragraph{Graph diffusion and spectral representations.}
+Simple Graph Convolution (SGC)~\citep{wu2019simplifying} showed that the
+nonlinearity in GCN~\citep{kipf2017semi} is not essential for competitive
+node classification: collapsing the $k$-layer GCN into a single linear map
+on $k$-diffused features $X_{\mathrm{diff}} = \hat{A}^k X$ suffices, and in
+many settings outperforms deeper models.
+This decoupling of diffusion from classification is the starting point of our
+investigation.
+We construct the Rayleigh-Ritz restricted eigenvector basis $U$ satisfying
+\[
+  \mathrm{span}(U) \;=\; \mathrm{span}(X_{\mathrm{diff}})
+\]
+exactly (verified empirically: Mean CC $> 0.935$, D-orthonormality error
+$< 10^{-9}$ across all 81 dataset-$k$ combinations), and ask: given that
+$U$ and $X_{\mathrm{diff}}$ contain identical linear information, why do MLPs
+trained on $U$ perform dramatically differently from MLPs trained on
+$X_{\mathrm{diff}}$?
+APPNP~\citep{gasteiger2019predictpropagate} and
+GPR-GNN~\citep{chien2021adaptive} extend the decoupled paradigm with learnable
+propagation weights and PageRank-style diffusion, while
+ChebNet~\citep{defferrard2016fastlocalized} constructs spectral filters via
+Chebyshev polynomials of the Laplacian.
+All of these methods use coordinate representations of diffused features;
+none controls for span equality to isolate basis geometry as the experimental
+variable.
+
+\paragraph{Expressivity and the role of spectral basis choice.}
+Wang \& Zhang~\citep{wang2022howpowerful} provide a systematic analysis of the
+expressive power of spectral GNNs, showing that the choice of filter basis
+determines which graph functions a model can approximate.
+Their analysis treats basis choice as a modelling decision affecting
+expressivity; our work treats it as an experimental variable in a controlled
+setting where the subspace is held fixed.
+The two perspectives are complementary: Wang \& Zhang ask what a model
+\emph{can} represent given a spectral basis; we ask what an MLP \emph{does}
+represent when the same subspace is presented in different coordinate frames.
+The spectral clustering literature~\citep{vonluxburg2007tutorial} provides a
+sharp contrast: $k$-means clustering is invariant to orthogonal rotations of
+its input because it operates on Euclidean distances, which are
+rotation-invariant.
+MLPs are not rotation-invariant — they process absolute coordinate values —
+which is why the same class-discriminative information, expressed in different
+bases, can lead to dramatically different classification accuracy.
+Parlett~\citep{parlett1980symmetric} and Golub \&
+Van~Loan~\citep{golub2013matrixcomputations} provide the numerical linear
+algebra foundations for the Rayleigh-Ritz projection used throughout this work.
+
+\paragraph{Coordinate geometry and its effect on optimization.}
+The closest antecedent to our theoretical framing is
+Wadia et al.~\citep{wadia2021whitening}, who proved that whitening and
+second-order optimization both make dataset information unusable during training
+by destroying the alignment between the data's covariance structure and the
+labels.
+Their analysis applies to ZCA and PCA whitening in standard supervised learning;
+our work shows that $D$-orthonormalization in the Rayleigh-Ritz projection
+produces an analogous and strictly larger destruction of class-discriminative
+geometry in graph settings (Table~\ref{tab:whitening_comparison}: RR causes
+2--6$\times$ more damage than ZCA or PCA on the same datasets).
+The general principle that input coordinate geometry affects optimization
+dynamics has deep roots: LeCun et al.~\citep{lecun2012efficientbackprop}
+documented that correlated or poorly-scaled inputs slow gradient descent
+through adverse loss-surface curvature, and Batch
+Normalization~\citep{ioffe2015batchnorm} made the same observation practical
+at scale.
+Our Proposition~\ref{prop:gradient_collapse} formalizes this for the specific
+case of near-constant eigenvector columns: columns with near-zero Euclidean
+variance produce near-zero discriminative gradient regardless of network depth
+or optimizer choice.
+
+\paragraph{Over-smoothing and diffusion depth.}
+Li et al.~\citep{li2018deeperinsights} first connected GCN-style propagation
+to Laplacian smoothing and identified over-smoothing — convergence of node
+representations toward a class-uninformative stationary distribution — as the
+primary pathology of deep message passing.
+Oono \& Suzuki~\citep{oono2020exponentially} proved that GNN representations
+lose expressive power exponentially with depth, a spectral-domain result
+directly related to our finding that diffusion-induced Fisher score collapse
+governs the Part~A crossover.
+Our work adds a new dimension to this picture: the crossover from
+eigenvector-detrimental to eigenvector-beneficial Part~A is not simply an
+over-smoothing phenomenon in $X_{\mathrm{diff}}$.
+Rather, it reflects a competition between over-smoothing in $X_{\mathrm{diff}}$
+and $D$-orthonormalization damage in $U$; the crossover occurs when
+the former exceeds the latter (Section~\ref{sec:synthesis}).
+PairNorm~\citep{zhao2020pairnorm} and DropEdge~\citep{rong2020dropedge}
+address over-smoothing through normalization and stochastic edge removal
+respectively; neither addresses the basis-geometry question we study.
+
+\paragraph{Benchmarks and evaluation.}
+The Planetoid datasets (Cora, CiteSeer, PubMed) and their fixed splits are
+introduced in~\citep{yang2016revisiting}; evaluation pitfalls with these
+splits — including the sensitivity to training set size that we observe in
+the fixed-vs-random split comparisons — are documented in
+Shchur et al.~\citep{shchur2018pitfalls}, who introduced the Amazon and
+Coauthor benchmark datasets used in our experiments.
+The Open Graph Benchmark~\citep{hu2020opengraphbenchmark} provides ogbn-arxiv,
+the largest dataset in our study, with a standardized evaluation protocol.
+Together these nine datasets span a wide range of graph topologies (average
+degree 3.5--38), feature dimensions (128--8415), and class counts (3--40),
+making the phase transition we observe robust to dataset-specific confounds.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
 
 \end{document}

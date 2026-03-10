@@ -1,7 +1,8 @@
 ================================================================================
 WHITENING COMPARISON -- SUMMARY
 Generated from: PAPER_EXPERIMENTS/PAPER_RESULTS/whitening_comparison/
-Datasets: Cora, CiteSeer, PubMed, WikiCS, AmazonPhoto, AmazonComp, CoauthorCS, CoauthorPhy
+Datasets: Cora, CiteSeer, PubMed, WikiCS, AmazonPhoto, AmazonComp, CoauthorCS, CoauthorPhy,
+          ogbn-arxiv
 k values: 1, 2, 10    Splits: fixed (1 split, 15 seeds), random (5 splits x 15 seeds)
 Models in whitening script: MLP = StandardMLP(raw U), MLP+RN = RowNormMLP(raw U)
 
@@ -43,9 +44,12 @@ CoauthorCS      10        72.68       72.68     +0.00         65.25        77.77
 CoauthorPhy      1        92.10       92.10     +0.00         84.87        88.69     -3.82
 CoauthorPhy      2        91.85       91.85     +0.00         86.53        89.34     -2.82
 CoauthorPhy     10        88.69       88.69     +0.00         86.84        86.86     -0.02
+ogbn-arxiv       1        65.66       65.66     +0.00          7.95        67.08    -59.12
+ogbn-arxiv       2        69.97       69.97     +0.00          7.95        70.93    -62.98
+ogbn-arxiv      10        70.53       70.53     +0.00          7.96        71.02    -63.07
 ------------------------------------------------------------------------------------------
 Mean |diff| RR+RN:   0.000 pp  (CONFIRMED CONSISTENT: 0.000 pp)
-Mean |diff| RR_MLP:  7.096 pp  (expected: StandardScaler gap)
+Mean |diff| RR_MLP:  13.166 pp  (expected: StandardScaler gap)
 
 Conclusion: RR+RN results are perfectly consistent across the two pipelines.
 The RR_MLP gap is systematic (not a bug): master_training.py scales U first, whitening does not.
@@ -80,12 +84,15 @@ CoauthorCS      10     +1.04     +1.34      +0.85    +25.50  |    +1.46     +1.2
 CoauthorPhy      1     +2.64     +4.09      +3.49    +11.28  |    +1.67     +4.28      +4.09     +3.90
 CoauthorPhy      2     +1.92     +2.94      +3.01     +9.61  |    +1.54     +3.10      +3.01     +4.15
 CoauthorPhy     10     -0.13     +0.03      -0.10     +7.73  |    +0.18     +0.21      +0.27     +5.87
+ogbn-arxiv       1     -1.21     -1.73      -1.73    +58.22  |    +0.45     +0.35      +0.25     +1.19
+ogbn-arxiv       2     -1.81     -2.19      -2.19    +61.28  |    +0.20     +0.15      +0.26     +0.47
+ogbn-arxiv      10     -4.58     -4.66      -4.69    +58.46  |    -2.12     -2.10      -2.12     -1.82
 ------------------------------------------------------------------------------------------------------
-MEAN                   +5.52     +6.38     +14.65    +25.55  |    +3.86    +11.63     +14.28    +20.91
+MEAN                   +4.63     +5.35     +12.71    +29.31  |    +3.38    +10.28     +12.63    +18.58
 
-Damage ranking (avg, fixed): PCA(+5.5pp) < ZCA(+6.4pp) < FullZCA(+14.7pp) < RR(+25.6pp).
+Damage ranking (avg, fixed): PCA < ZCA < FullZCA < RR.
 RR causes the most damage because it destroys the variance structure without any replacement.
-WikiCS/Amazon datasets at k=10: original methods slightly HELP (diffusion over-smooths X_diff).
+WikiCS/Amazon datasets at k=10: PCA/ZCA/FullZCA slightly HELP (diffusion over-smooths X_diff).
 
 --------------------------------------------------------------------------------
 TABLE 3: RowNorm Recovery  =  Method_MLP+RN - Method_MLP  (pp, fixed split)
@@ -117,42 +124,44 @@ CoauthorCS      10      +0.14     -0.29     +0.23      -0.88     +7.43
 CoauthorPhy      1      -0.15     +0.83     -0.33      -0.75     +7.24
 CoauthorPhy      2      -0.14     +0.24     -0.30      -0.14     +5.32
 CoauthorPhy     10      -0.01     -0.31     -0.19      -0.37     +1.86
+ogbn-arxiv       1      +0.67     -0.98     -1.41      -1.31    +57.70
+ogbn-arxiv       2      +1.20     -0.80     -1.13      -1.25    +62.01
+ogbn-arxiv      10      +2.30     -0.15     -0.26      -0.27    +62.57
 ----------------------------------------------------------------------
-MEAN                    +0.01     +1.67     -5.25      +0.38     +4.65
+MEAN                    +0.16     +1.41     -4.77      +0.24    +10.89
 
-RowNorm on original X_diff: near zero (+0.01pp) -- Part B for X_diff is negligible.
-RowNorm on PCA-whitened:    modest +1.67pp benefit.
-RowNorm on ZCA-whitened:    negative -5.25pp -- ZCA+RowNorm is actively harmful (Cora/PubMed).
-RowNorm on RR:              +4.65pp benefit on avg, but NEGATIVE on Cora/CiteSeer (Part B<0).
-   Cora k=10: RR RowNorm recovery = -4.40pp (RowNorm hurts on RR).
-   This is the Part B < 0 anomaly documented in the main paper.
+RowNorm on original X_diff: near zero -- Part B for X_diff is negligible.
+RowNorm on ZCA-whitened:    often NEGATIVE -- ZCA+RowNorm is actively harmful (Cora/PubMed).
+RowNorm on RR:              positive on avg, but NEGATIVE on Cora k>=2 (Part B<0 anomaly).
+   Cora k=2:  RR RowNorm = -1.72pp  |  Cora k=10: RR RowNorm = -4.40pp
+   This is the Part B < 0 finding documented in the main paper.
 
 --------------------------------------------------------------------------------
-TABLE 4: Aggregate Statistics across all 24 experiments (8 datasets x 3 k)
+TABLE 4: Aggregate Statistics  (fixed: 27 experiments, random: 27 experiments)
 --------------------------------------------------------------------------------
 
-  [FIXED SPLIT -- 24 experiments]
+  [FIXED SPLIT -- 27 experiments = 9 datasets x 3 k]
   Method               MLP%    MLP+RN%   Damage pp   RN_Recov pp    Dmg>1pp   RN_hlp>1pp
   --------------------------------------------------------------------------------------
-  original            84.47      84.48       +0.00         +0.01        0/24          1/24
-  pca_whiten          78.95      80.62       +5.52         +1.67       20/24         11/24
-  zca_whiten          78.09      72.85       +6.38         -5.25       20/24          2/24
-  full_zca            69.82      70.20      +14.65         +0.38       19/24          7/24
-  rayleigh_ritz       58.92      63.57      +25.55         +4.65       24/24         16/24
+  original            82.56      82.72       +0.00         +0.16        0/27          3/27
+  pca_whiten          77.93      79.35       +4.63         +1.41       20/27         11/27
+  zca_whiten          77.21      72.44       +5.35         -4.77       20/27          2/27
+  full_zca            69.86      70.09      +12.71         +0.24       19/27          7/27
+  rayleigh_ritz       53.26      64.14      +29.31        +10.89       27/27         19/27
 
-  [RANDOM SPLIT -- 24 experiments]
+  [RANDOM SPLIT -- 27 experiments = 9 datasets x 3 k]
   Method               MLP%    MLP+RN%   Damage pp   RN_Recov pp    Dmg>1pp   RN_hlp>1pp
   --------------------------------------------------------------------------------------
-  original            87.73      87.73       +0.00         -0.00        0/24          1/24
-  pca_whiten          82.38      82.84       +5.34         +0.46       20/24          3/24
-  zca_whiten          81.86      80.74       +5.86         -1.13       19/24          1/24
-  full_zca            83.05      83.57       +4.68         +0.52       19/24          4/24
-  rayleigh_ritz       69.89      81.33      +17.84        +11.44       23/24         20/24
+  original            85.54      85.67       +0.00         +0.13        0/27          3/27
+  pca_whiten          81.17      81.52       +4.37         +0.35       20/27          3/27
+  zca_whiten          80.73      79.64       +4.81         -1.08       19/27          1/27
+  full_zca            81.78      82.16       +3.76         +0.38       19/27          4/27
+  rayleigh_ritz       63.89      80.12      +21.65        +16.23       26/27         23/27
 
 Fixed vs Random split differences:
-  RR damage: fixed=+25.6pp vs random=+17.8pp (fixed split has small n_train -> harder).
-  RR RowNorm recovery: fixed=+4.6pp vs random=+11.4pp (more training data helps RowNorm).
-  PCA/ZCA damage similar across splits (~5-6pp).
+  RR damage: fixed > random (fixed split has small n_train on citation graphs -> harder).
+  RR RowNorm recovery: larger on random split (more training data helps RowNorm).
+  PCA/ZCA/FullZCA damage similar across splits.
 
 --------------------------------------------------------------------------------
 WADIA CRITERION: Gram matrix K = X_train X_train^T has eigenvalues approx 1
@@ -185,54 +194,47 @@ CoauthorCS      10       N      N      N         N      N
 CoauthorPhy      1       N      Y      N         N      N
 CoauthorPhy      2       N      N      N         N      N
 CoauthorPhy     10       N      N      N         N      N
+ogbn-arxiv       1       N      Y      Y         N      N
+ogbn-arxiv       2       N      Y      Y         N      N
+ogbn-arxiv      10       N      Y      Y         N      N
 ---------------------------------------------------------
-Fraction of 8 datasets passing criterion, by k:
-  k= 1:  orig=0.00  PCA=1.00  ZCA=0.88  FullZCA=0.00  RR=0.00
-  k= 2:  orig=0.00  PCA=0.88  ZCA=0.88  FullZCA=0.00  RR=0.00
-  k=10:  orig=0.00  PCA=0.38  ZCA=0.38  FullZCA=0.00  RR=0.00
+Fraction of 9 datasets passing criterion, by k:
+  k= 1:  orig=0.00  PCA=1.00  ZCA=0.89  FullZCA=0.00  RR=0.00
+  k= 2:  orig=0.00  PCA=0.89  ZCA=0.89  FullZCA=0.00  RR=0.00
+  k=10:  orig=0.00  PCA=0.44  ZCA=0.44  FullZCA=0.00  RR=0.00
 
 Findings:
   - Original X_diff and RR: NEVER pass K=I criterion (K condition number > 10^6).
-  - PCA whitening: passes at k=1,2 (8/8 datasets), partial at k=10 (3/8 datasets).
+  - PCA whitening: passes at k=1,2 for most datasets, partial at k=10.
   - ZCA whitening: similar to PCA but slightly less reliable.
   - Full ZCA: NEVER passes despite being designed for this (rank-deficiency prevents it).
   - Wadia collapse expected for PCA at low k, but performance loss is moderate (~5pp),
     not catastrophic. The K=I regime degrades but does not collapse MLP performance.
-
-Critical observation: PCA achieves K=I (Wadia regime) yet still outperforms RR_MLP (raw).
-This confirms that the Wadia generalization collapse is a softer effect than the RR damage.
+  - PCA achieves K=I yet still outperforms RR_MLP (raw). Wadia effect < RR damage.
 
 --------------------------------------------------------------------------------
 KEY FINDINGS SUMMARY
 --------------------------------------------------------------------------------
 
-1. DAMAGE ORDERING (most to least): RR > FullZCA > ZCA > PCA > Original
-   Rayleigh-Ritz is the most damaging transformation (avg 25.6pp on fixed, 17.8pp on random).
+1. DAMAGE ORDERING (most to least, fixed split): RR > FullZCA > ZCA > PCA > Original
+   Rayleigh-Ritz is the most damaging transformation across all 9 datasets.
    This quantifies Part A: projecting onto U destroys discriminative structure.
 
 2. ROWNORM BEHAVIOR ACROSS WHITENING METHODS:
    - On original X_diff: RowNorm negligible (+0.01pp)
-   - On PCA-whitened:    RowNorm mildly helpful (+1.7pp)
-   - On ZCA-whitened:    RowNorm HARMFUL (-5.25pp) -- Cora/PubMed worst affected
-   - On FullZCA:         RowNorm near-neutral (+0.38pp)
-   - On RR:              RowNorm moderately helpful (+4.65pp avg), but HARMFUL on Cora/CiteSeer
+   - On PCA-whitened:    RowNorm mildly helpful
+   - On ZCA-whitened:    RowNorm often HARMFUL -- ZCA+RowNorm is actively detrimental
+   - On FullZCA:         RowNorm near-neutral
+   - On RR:              RowNorm moderately helpful on avg, but HARMFUL on Cora/CiteSeer
    Conclusion: RowNorm does not universally recover whitening damage.
 
-3. PART B < 0 CONFIRMED on Cora and CiteSeer within the RR regime:
-   Cora k=1:  RR RowNorm effect = -0.32pp (neutral to slightly harmful)
-   Cora k=2:  RR RowNorm effect = -1.72pp (harmful)
-   Cora k=10: RR RowNorm effect = -4.40pp (harmful)
-   CiteSeer k=1: -2.58pp, k=2: +0.14pp (marginal), k=10: +1.52pp
-   This is consistent with the main paper finding that Part B < 0 on Cora/CiteSeer.
+3. PART B < 0 CONFIRMED on Cora within the RR regime (fixed split):
+   Cora k=2:  -1.72pp  |  Cora k=10: -4.40pp
+   Consistent with main paper finding. Recovers partially on random split.
 
-4. RANDOM SPLIT EFFECT:
-   With more training data (random 60/20/20), RowNorm recovers more effectively on RR:
-   RR RowNorm random = +11.44pp vs fixed = +4.65pp.
-   This suggests the Part B < 0 anomaly on Cora fixed is partly a small-sample artifact.
-   RR damage also decreases: 25.6pp (fixed) -> 17.8pp (random).
+4. RANDOM SPLIT: RR RowNorm recovery much larger than fixed split.
+   Suggests Part B < 0 on Cora fixed is partly a small-sample artifact.
 
-5. WADIA REGIME VS ACTUAL PERFORMANCE:
-   PCA achieves K=I (Wadia generalization collapse regime) at k=1,2 but still yields
-   reasonable accuracy (-5.5pp vs original). The Wadia effect is real but not catastrophic.
-   RR never achieves K=I yet causes much larger damage. Wadia's criterion does not
-   explain the RR damage -- the mechanism is different (eigenvalue-variance structure).
+5. WADIA vs RR: PCA achieves K=I (Wadia regime) yet causes far less damage than RR.
+   The RR damage mechanism (eigenvalue-variance structure destruction) is distinct
+   from Wadia generalization collapse.
