@@ -1,0 +1,353 @@
+nohup: ignoring input
+======== cora ========
+/home/md724/Spectral-Basis/venv/lib/python3.12/site-packages/outdated/__init__.py:36: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import parse_version
+======================================================================
+EXP 9: Softmax Regression Convergence  —  cora
+k values: [1, 2, 4, 6, 8, 10, 12, 20, 30]  |  seeds: 15  |  epochs: 500
+weight_decay: 0.0  |  lr: 0.01  |  device: cuda
+save arrays:  False
+======================================================================
+
+[1] Loading dataset...
+    Nodes: 2,708  Features: 1433  Classes: 7
+
+[2] Building initial graph matrices...
+
+[3] Extracting LCC...
+    LCC: 2,485 nodes, 7 classes
+    Fixed split — train: 122, val: 459, test: 915
+
+======================================================================
+[Step 1] Computing and saving data arrays...
+======================================================================
+
+  k = 1
+    d_eff = 1427, X_diff.shape = (2485, 1433), U.shape = (2485, 1427)
+    ortho_error = 1.62e-10  [PASS]
+    mean canonical correlation = 1.000000  [PASS]
+
+  k = 2
+    d_eff = 1427, X_diff.shape = (2485, 1433), U.shape = (2485, 1427)
+    ortho_error = 1.95e-10  [PASS]
+    mean canonical correlation = 1.000000  [PASS]
+
+  k = 4
+    d_eff = 1427, X_diff.shape = (2485, 1433), U.shape = (2485, 1427)
+    ortho_error = 2.36e-10  [PASS]
+    mean canonical correlation = 1.000000  [PASS]
+
+  k = 6
+    d_eff = 1427, X_diff.shape = (2485, 1433), U.shape = (2485, 1427)
+    ortho_error = 2.41e-10  [PASS]
+    mean canonical correlation = 1.000000  [PASS]
+
+  k = 8
+    d_eff = 1427, X_diff.shape = (2485, 1433), U.shape = (2485, 1427)
+    ortho_error = 2.41e-10  [PASS]
+    mean canonical correlation = 1.000000  [PASS]
+
+  k = 10
+    d_eff = 1427, X_diff.shape = (2485, 1433), U.shape = (2485, 1427)
+    ortho_error = 2.41e-10  [PASS]
+    mean canonical correlation = 1.000000  [PASS]
+
+  k = 12
+    d_eff = 1427, X_diff.shape = (2485, 1433), U.shape = (2485, 1427)
+    ortho_error = 2.41e-10  [PASS]
+    mean canonical correlation = 1.000000  [PASS]
+
+  k = 20
+    d_eff = 1262, X_diff.shape = (2485, 1433), U.shape = (2485, 1262)
+    ortho_error = 2.37e-10  [PASS]
+    mean canonical correlation = 1.000000  [PASS]
+
+  k = 30
+    d_eff = 862, X_diff.shape = (2485, 1433), U.shape = (2485, 862)
+    ortho_error = 2.17e-10  [PASS]
+    mean canonical correlation = 1.000000  [PASS]
+
+[Step 1] All verifications passed. (--save-arrays not set, skipping file writes.)
+
+======================================================================
+[Step 2] Running softmax regression experiment...
+======================================================================
+
+  k=1, optimizer=SGD
+  X_diff: (122, 1433)  Y: (122, 1427)
+    seed  5/15 — X_diff final_test=61.42%  Y final_test=12.68%
+    seed 10/15 — X_diff final_test=59.56%  Y final_test=11.04%
+    seed 15/15 — X_diff final_test=63.06%  Y final_test=11.91%
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k1/softmax/exp9_sgd.json
+
+  ── k=1  SGD ────────────────────────────────────
+  Feature        Test%     ±Std    Ep→90%    Ep→95%    PeakVal%
+  --------------------------------------------------------------
+  X_diff        61.65%  ± 1.89%     351.9     416.6      59.52%
+  Y (U)         12.77%  ± 0.87%       2.7       5.6      15.82%
+  --------------------------------------------------------------
+  |X_diff − Y| test gap: 48.88 pp  *** UNEXPECTED (>1pp) — span identity says these should be equal ***
+
+  k=1, optimizer=ADAM
+  X_diff: (122, 1433)  Y: (122, 1427)
+    seed  5/15 — X_diff final_test=70.49%  Y final_test=17.60%
+    seed 10/15 — X_diff final_test=69.84%  Y final_test=17.60%
+    seed 15/15 — X_diff final_test=70.27%  Y final_test=17.81%
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k1/softmax/exp9_adam.json
+
+  ── k=1  ADAM ────────────────────────────────────
+  Feature        Test%     ±Std    Ep→90%    Ep→95%    PeakVal%
+  --------------------------------------------------------------
+  X_diff        70.35%  ± 0.34%       7.9      10.7      73.75%
+  Y (U)         17.59%  ± 0.12%       4.0       9.3      19.35%
+  --------------------------------------------------------------
+  |X_diff − Y| test gap: 52.76 pp  *** UNEXPECTED (>1pp) — span identity says these should be equal ***
+
+  k=2, optimizer=SGD
+  X_diff: (122, 1433)  Y: (122, 1427)
+    seed  5/15 — X_diff final_test=66.45%  Y final_test=13.11%
+    seed 10/15 — X_diff final_test=64.26%  Y final_test=13.33%
+    seed 15/15 — X_diff final_test=66.89%  Y final_test=11.37%
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k2/softmax/exp9_sgd.json
+
+  ── k=2  SGD ────────────────────────────────────
+  Feature        Test%     ±Std    Ep→90%    Ep→95%    PeakVal%
+  --------------------------------------------------------------
+  X_diff        65.80%  ± 1.73%     346.7     406.6      64.44%
+  Y (U)         12.83%  ± 1.02%      11.1      17.0      15.98%
+  --------------------------------------------------------------
+  |X_diff − Y| test gap: 52.97 pp  *** UNEXPECTED (>1pp) — span identity says these should be equal ***
+
+  k=2, optimizer=ADAM
+  X_diff: (122, 1433)  Y: (122, 1427)
+    seed  5/15 — X_diff final_test=76.28%  Y final_test=18.80%
+    seed 10/15 — X_diff final_test=76.72%  Y final_test=19.23%
+    seed 15/15 — X_diff final_test=76.94%  Y final_test=18.80%
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k2/softmax/exp9_adam.json
+
+  ── k=2  ADAM ────────────────────────────────────
+  Feature        Test%     ±Std    Ep→90%    Ep→95%    PeakVal%
+  --------------------------------------------------------------
+  X_diff        76.50%  ± 0.21%       7.3      10.0      78.13%
+  Y (U)         18.76%  ± 0.20%      39.0      63.3      23.22%
+  --------------------------------------------------------------
+  |X_diff − Y| test gap: 57.74 pp  *** UNEXPECTED (>1pp) — span identity says these should be equal ***
+
+  k=4, optimizer=SGD
+  X_diff: (122, 1433)  Y: (122, 1427)
+    seed  5/15 — X_diff final_test=64.92%  Y final_test=10.60%
+    seed 10/15 — X_diff final_test=62.40%  Y final_test=13.11%
+    seed 15/15 — X_diff final_test=66.89%  Y final_test=11.15%
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k4/softmax/exp9_sgd.json
+
+  ── k=4  SGD ────────────────────────────────────
+  Feature        Test%     ±Std    Ep→90%    Ep→95%    PeakVal%
+  --------------------------------------------------------------
+  X_diff        64.98%  ± 2.22%     346.2     418.2      63.91%
+  Y (U)         12.42%  ± 1.01%       3.1       9.0      16.43%
+  --------------------------------------------------------------
+  |X_diff − Y| test gap: 52.56 pp  *** UNEXPECTED (>1pp) — span identity says these should be equal ***
+
+  k=4, optimizer=ADAM
+  X_diff: (122, 1433)  Y: (122, 1427)
+    seed  5/15 — X_diff final_test=77.16%  Y final_test=20.87%
+    seed 10/15 — X_diff final_test=76.39%  Y final_test=20.98%
+    seed 15/15 — X_diff final_test=76.94%  Y final_test=21.20%
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k4/softmax/exp9_adam.json
+
+  ── k=4  ADAM ────────────────────────────────────
+  Feature        Test%     ±Std    Ep→90%    Ep→95%    PeakVal%
+  --------------------------------------------------------------
+  X_diff        76.77%  ± 0.19%       6.3       9.4      78.01%
+  Y (U)         21.06%  ± 0.13%      26.0      68.1      21.76%
+  --------------------------------------------------------------
+  |X_diff − Y| test gap: 55.71 pp  *** UNEXPECTED (>1pp) — span identity says these should be equal ***
+
+  k=6, optimizer=SGD
+  X_diff: (122, 1433)  Y: (122, 1427)
+    seed  5/15 — X_diff final_test=62.95%  Y final_test=14.21%
+    seed 10/15 — X_diff final_test=59.23%  Y final_test=12.68%
+    seed 15/15 — X_diff final_test=65.90%  Y final_test=14.21%
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k6/softmax/exp9_sgd.json
+
+  ── k=6  SGD ────────────────────────────────────
+  Feature        Test%     ±Std    Ep→90%    Ep→95%    PeakVal%
+  --------------------------------------------------------------
+  X_diff        62.96%  ± 2.76%     353.3     426.9      62.18%
+  Y (U)         12.95%  ± 0.74%       4.3       9.4      15.99%
+  --------------------------------------------------------------
+  |X_diff − Y| test gap: 50.00 pp  *** UNEXPECTED (>1pp) — span identity says these should be equal ***
+
+  k=6, optimizer=ADAM
+  X_diff: (122, 1433)  Y: (122, 1427)
+    seed  5/15 — X_diff final_test=76.94%  Y final_test=22.08%
+    seed 10/15 — X_diff final_test=76.72%  Y final_test=22.40%
+    seed 15/15 — X_diff final_test=76.94%  Y final_test=22.19%
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k6/softmax/exp9_adam.json
+
+  ── k=6  ADAM ────────────────────────────────────
+  Feature        Test%     ±Std    Ep→90%    Ep→95%    PeakVal%
+  --------------------------------------------------------------
+  X_diff        76.83%  ± 0.14%       7.4      10.5      80.20%
+  Y (U)         22.22%  ± 0.12%      12.0      59.5      20.65%
+  --------------------------------------------------------------
+  |X_diff − Y| test gap: 54.61 pp  *** UNEXPECTED (>1pp) — span identity says these should be equal ***
+
+  k=8, optimizer=SGD
+  X_diff: (122, 1433)  Y: (122, 1427)
+    seed  5/15 — X_diff final_test=59.34%  Y final_test=12.68%
+    seed 10/15 — X_diff final_test=54.32%  Y final_test=13.11%
+    seed 15/15 — X_diff final_test=63.72%  Y final_test=12.68%
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k8/softmax/exp9_sgd.json
+
+  ── k=8  SGD ────────────────────────────────────
+  Feature        Test%     ±Std    Ep→90%    Ep→95%    PeakVal%
+  --------------------------------------------------------------
+  X_diff        59.56%  ± 3.35%     360.4     415.5      59.61%
+  Y (U)         12.67%  ± 0.75%       6.2      11.6      16.54%
+  --------------------------------------------------------------
+  |X_diff − Y| test gap: 46.89 pp  *** UNEXPECTED (>1pp) — span identity says these should be equal ***
+
+  k=8, optimizer=ADAM
+  X_diff: (122, 1433)  Y: (122, 1427)
+    seed  5/15 — X_diff final_test=77.05%  Y final_test=20.66%
+    seed 10/15 — X_diff final_test=76.94%  Y final_test=20.33%
+    seed 15/15 — X_diff final_test=76.94%  Y final_test=20.22%
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k8/softmax/exp9_adam.json
+
+  ── k=8  ADAM ────────────────────────────────────
+  Feature        Test%     ±Std    Ep→90%    Ep→95%    PeakVal%
+  --------------------------------------------------------------
+  X_diff        76.99%  ± 0.12%       8.0      11.7      81.22%
+  Y (U)         20.47%  ± 0.22%       5.9      35.3      21.80%
+  --------------------------------------------------------------
+  |X_diff − Y| test gap: 56.52 pp  *** UNEXPECTED (>1pp) — span identity says these should be equal ***
+
+  k=10, optimizer=SGD
+  X_diff: (122, 1433)  Y: (122, 1427)
+    seed  5/15 — X_diff final_test=55.96%  Y final_test=13.11%
+    seed 10/15 — X_diff final_test=50.38%  Y final_test=12.24%
+    seed 15/15 — X_diff final_test=61.64%  Y final_test=13.99%
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k10/softmax/exp9_sgd.json
+
+  ── k=10  SGD ────────────────────────────────────
+  Feature        Test%     ±Std    Ep→90%    Ep→95%    PeakVal%
+  --------------------------------------------------------------
+  X_diff        56.23%  ± 3.93%     361.5     415.3      56.33%
+  Y (U)         13.47%  ± 0.90%       8.6      16.9      16.40%
+  --------------------------------------------------------------
+  |X_diff − Y| test gap: 42.76 pp  *** UNEXPECTED (>1pp) — span identity says these should be equal ***
+
+  k=10, optimizer=ADAM
+  X_diff: (122, 1433)  Y: (122, 1427)
+    seed  5/15 — X_diff final_test=77.27%  Y final_test=21.20%
+    seed 10/15 — X_diff final_test=77.05%  Y final_test=21.86%
+    seed 15/15 — X_diff final_test=77.05%  Y final_test=21.31%
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k10/softmax/exp9_adam.json
+
+  ── k=10  ADAM ────────────────────────────────────
+  Feature        Test%     ±Std    Ep→90%    Ep→95%    PeakVal%
+  --------------------------------------------------------------
+  X_diff        77.13%  ± 0.08%       8.3      12.7      81.55%
+  Y (U)         21.41%  ± 0.21%      24.4     104.9      21.29%
+  --------------------------------------------------------------
+  |X_diff − Y| test gap: 55.72 pp  *** UNEXPECTED (>1pp) — span identity says these should be equal ***
+
+  k=12, optimizer=SGD
+  X_diff: (122, 1433)  Y: (122, 1427)
+    seed  5/15 — X_diff final_test=53.01%  Y final_test=12.79%
+    seed 10/15 — X_diff final_test=46.89%  Y final_test=13.01%
+    seed 15/15 — X_diff final_test=59.67%  Y final_test=13.66%
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k12/softmax/exp9_sgd.json
+
+  ── k=12  SGD ────────────────────────────────────
+  Feature        Test%     ±Std    Ep→90%    Ep→95%    PeakVal%
+  --------------------------------------------------------------
+  X_diff        53.31%  ± 3.60%     370.5     417.2      53.29%
+  Y (U)         12.88%  ± 0.86%       4.9      11.2      15.95%
+  --------------------------------------------------------------
+  |X_diff − Y| test gap: 40.43 pp  *** UNEXPECTED (>1pp) — span identity says these should be equal ***
+
+  k=12, optimizer=ADAM
+  X_diff: (122, 1433)  Y: (122, 1427)
+    seed  5/15 — X_diff final_test=77.49%  Y final_test=23.72%
+    seed 10/15 — X_diff final_test=77.49%  Y final_test=23.39%
+    seed 15/15 — X_diff final_test=77.49%  Y final_test=23.17%
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k12/softmax/exp9_adam.json
+
+  ── k=12  ADAM ────────────────────────────────────
+  Feature        Test%     ±Std    Ep→90%    Ep→95%    PeakVal%
+  --------------------------------------------------------------
+  X_diff        77.45%  ± 0.08%       8.5      13.3      81.44%
+  Y (U)         23.36%  ± 0.21%       9.3      25.3      20.70%
+  --------------------------------------------------------------
+  |X_diff − Y| test gap: 54.09 pp  *** UNEXPECTED (>1pp) — span identity says these should be equal ***
+
+  k=20, optimizer=SGD
+  X_diff: (122, 1433)  Y: (122, 1262)
+    seed  5/15 — X_diff final_test=41.31%  Y final_test=14.86%
+    seed 10/15 — X_diff final_test=38.03%  Y final_test=13.88%
+    seed 15/15 — X_diff final_test=47.43%  Y final_test=12.90%
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k20/softmax/exp9_sgd.json
+
+  ── k=20  SGD ────────────────────────────────────
+  Feature        Test%     ±Std    Ep→90%    Ep→95%    PeakVal%
+  --------------------------------------------------------------
+  X_diff        42.93%  ± 2.53%     365.5     422.5      42.21%
+  Y (U)         12.76%  ± 0.98%       4.4      18.0      15.95%
+  --------------------------------------------------------------
+  |X_diff − Y| test gap: 30.17 pp  *** UNEXPECTED (>1pp) — span identity says these should be equal ***
+
+  k=20, optimizer=ADAM
+  X_diff: (122, 1433)  Y: (122, 1262)
+    seed  5/15 — X_diff final_test=77.81%  Y final_test=22.73%
+    seed 10/15 — X_diff final_test=77.49%  Y final_test=23.28%
+    seed 15/15 — X_diff final_test=77.70%  Y final_test=22.62%
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k20/softmax/exp9_adam.json
+
+  ── k=20  ADAM ────────────────────────────────────
+  Feature        Test%     ±Std    Ep→90%    Ep→95%    PeakVal%
+  --------------------------------------------------------------
+  X_diff        77.63%  ± 0.09%       8.8      20.5      81.66%
+  Y (U)         22.75%  ± 0.20%      45.7     112.3      22.80%
+  --------------------------------------------------------------
+  |X_diff − Y| test gap: 54.89 pp  *** UNEXPECTED (>1pp) — span identity says these should be equal ***
+
+  k=30, optimizer=SGD
+  X_diff: (122, 1433)  Y: (122, 862)
+    seed  5/15 — X_diff final_test=33.22%  Y final_test=13.77%
+    seed 10/15 — X_diff final_test=27.87%  Y final_test=13.99%
+    seed 15/15 — X_diff final_test=35.85%  Y final_test=11.37%
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k30/softmax/exp9_sgd.json
+
+  ── k=30  SGD ────────────────────────────────────
+  Feature        Test%     ±Std    Ep→90%    Ep→95%    PeakVal%
+  --------------------------------------------------------------
+  X_diff        33.25%  ± 2.97%     339.5     382.2      31.76%
+  Y (U)         13.05%  ± 1.18%       4.9      16.3      16.15%
+  --------------------------------------------------------------
+  |X_diff − Y| test gap: 20.20 pp  *** UNEXPECTED (>1pp) — span identity says these should be equal ***
+
+  k=30, optimizer=ADAM
+  X_diff: (122, 1433)  Y: (122, 862)
+    seed  5/15 — X_diff final_test=78.69%  Y final_test=31.48%
+    seed 10/15 — X_diff final_test=77.70%  Y final_test=32.24%
+    seed 15/15 — X_diff final_test=78.58%  Y final_test=31.26%
+  Saved: /home/md724/Spectral-Basis/PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k30/softmax/exp9_adam.json
+
+  ── k=30  ADAM ────────────────────────────────────
+  Feature        Test%     ±Std    Ep→90%    Ep→95%    PeakVal%
+  --------------------------------------------------------------
+  X_diff        78.16%  ± 0.31%      10.1      39.9      81.80%
+  Y (U)         31.69%  ± 0.31%     136.5     164.1      30.07%
+  --------------------------------------------------------------
+  |X_diff − Y| test gap: 46.47 pp  *** UNEXPECTED (>1pp) — span identity says these should be equal ***
+
+======================================================================
+EXP 9 COMPLETE
+Results → PAPER_EXPERIMENTS/PAPER_RESULTS/cora_fixed_lcc/k*/softmax/
+Data    → data/cora_fixed_lcc/
+======================================================================
+======== citeseer ========
+/home/md724/Spectral-Basis/venv/lib/python3.12/site-packages/outdated/__init__.py:36: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import parse_version
