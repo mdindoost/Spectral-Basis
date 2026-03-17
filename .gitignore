@@ -47,3 +47,5 @@ run_all.log
 # SpectralGeometryMisalignment — ignore large binary data, track scripts and results
 SpectralGeometryMisalignment/data/
 !SpectralGeometryMisalignment/results/
+
+CLAUDE.md
