@@ -43,3 +43,7 @@ Archive/
 
 run_all.log
 .pytest_cache/data/
+
+# SpectralGeometryMisalignment — ignore large binary data, track scripts and results
+SpectralGeometryMisalignment/data/
+!SpectralGeometryMisalignment/results/
