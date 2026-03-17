@@ -446,8 +446,4 @@ Q1: Is the underdetermined regime (Cora, CiteSeer fixed splits) within
 Q2: Should we extend epoch budget (e.g. 2000-5000) on Coauthor-CS / SGD
     to show Y eventually converging toward X's accuracy?
 
-Q3: The SGD result (slow convergence) is the cleaner paper finding.
-    The Adam result (memorization) mixes two effects. Should we present
-    them separately or together?
-
 ================================================================================
