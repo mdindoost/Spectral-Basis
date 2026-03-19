@@ -104,6 +104,88 @@ def build_no_selfloop_matrices(edge_index_lcc: np.ndarray, n: int):
     return L, D
 
 
+# ── Whitening transforms ──────────────────────────────────────────────────────
+
+def compute_standard_zca(X: np.ndarray):
+    """
+    Standard ZCA whitening (compact form).
+
+    Centers X first (X_c = X - mean), then computes compact PCA whitening:
+      Z = X_c @ V_k @ diag(1/sqrt(eigvals_k))   shape (n, d_eff_z)
+      Z^T Z = I_{d_eff_z}
+
+    Centering is applied because standard ZCA is defined on centered data.
+    For full-rank X (d_eff_z = d), this is equivalent to standard ZCA.
+    For rank-deficient X, this is the compact form restricted to the non-null
+    subspace — same as PCA whitening in d_eff_z dimensions.
+
+    Returns: (Z float64, d_eff_z, ortho_error)
+    Raises RuntimeError if ortho_error >= 1e-6.
+    """
+    X_c = X - X.mean(axis=0)           # center over all n nodes
+    C   = X_c.T @ X_c                  # d × d
+    C   = 0.5 * (C + C.T)              # symmetrize for numerical stability
+    eigvals, V = np.linalg.eigh(C)     # ascending order
+
+    tol      = 1e-10 * eigvals.max()
+    keep     = eigvals > tol
+    eigvals_k = eigvals[keep]
+    V_k       = V[:, keep]             # d × d_eff_z
+    d_eff_z   = int(keep.sum())
+
+    Z = (X_c @ V_k) / np.sqrt(eigvals_k)   # n × d_eff_z
+
+    # Verify: Z^T Z should be I_{d_eff_z}
+    G           = Z.T @ Z
+    ortho_error = float(np.max(np.abs(G - np.eye(d_eff_z))))
+    if ortho_error >= 1e-6:
+        raise RuntimeError(
+            f'Standard ZCA ortho check FAILED: max|Z^T Z - I| = {ortho_error:.2e}'
+        )
+    return Z, d_eff_z, ortho_error
+
+
+def compute_d_zca_whitening(X: np.ndarray, D):
+    """
+    D-ZCA whitening (compact form) — Yiannis's formulation.
+
+    Computes D-weighted covariance C = X^T D X, then compact PCA whitening:
+      W = X @ V_k @ diag(1/sqrt(eigvals_k))   shape (n, d_eff_w)
+      W^T D W = I_{d_eff_w}
+
+    X is NOT centered (matching Yiannis's original code). D is the no-self-loop
+    degree matrix (same D used for Y in Rayleigh-Ritz).
+
+    For full-rank X (d_eff_w = d), equivalent to Yiannis's full ZCA form.
+    For rank-deficient X, restricted to non-null subspace (avoids shape mismatch
+    in verification that would occur with the full d × d form).
+
+    Returns: (W float64, d_eff_w, ortho_error)
+    Raises RuntimeError if ortho_error >= 1e-6.
+    """
+    DX  = D @ X                        # n × d  (sparse × dense)
+    C   = X.T @ DX                     # d × d, = X^T D X
+    C   = 0.5 * (C + C.T)              # symmetrize
+    eigvals, V = np.linalg.eigh(C)     # ascending order
+
+    tol      = 1e-10 * eigvals.max()
+    keep     = eigvals > tol
+    eigvals_k = eigvals[keep]
+    V_k       = V[:, keep]             # d × d_eff_w
+    d_eff_w   = int(keep.sum())
+
+    W = (X @ V_k) / np.sqrt(eigvals_k)    # n × d_eff_w
+
+    # Verify: W^T D W should be I_{d_eff_w}
+    G           = W.T @ (D @ W)
+    ortho_error = float(np.max(np.abs(G - np.eye(d_eff_w))))
+    if ortho_error >= 1e-6:
+        raise RuntimeError(
+            f'D-ZCA ortho check FAILED: max|W^T D W - I| = {ortho_error:.2e}'
+        )
+    return W, d_eff_w, ortho_error
+
+
 # ── Per-dataset processing ────────────────────────────────────────────────────
 
 def process_dataset(dataset_name: str) -> dict:
@@ -168,7 +250,37 @@ def process_dataset(dataset_name: str) -> dict:
             f'max|Y^T D Y - I| = {ortho_err:.2e}  (threshold 1e-6)'
         )
 
-    # ── 6. Fixed split masks ──────────────────────────────────────────────────
+    # ── 6. Compute Z = Standard ZCA whitening of X ────────────────────────────
+    z_path = os.path.join(DATA_OUT_ROOT, _folder_name(dataset_name), 'Z.npy')
+    if os.path.isfile(z_path):
+        print(f'Loading Z from cache: {z_path}')
+        Z_loaded = np.load(z_path).astype(np.float64)
+        d_eff_z  = Z_loaded.shape[1]
+        G_z      = Z_loaded.T @ Z_loaded
+        ortho_err_z = float(np.max(np.abs(G_z - np.eye(d_eff_z))))
+        Z = Z_loaded
+        print(f'  d_eff_z={d_eff_z}, ortho_error={ortho_err_z:.2e}  [CACHED]')
+    else:
+        print('Computing Z = Standard ZCA whitening (centered X)...')
+        Z, d_eff_z, ortho_err_z = compute_standard_zca(X_dense)
+        print(f'  d_eff_z={d_eff_z}, ortho_error={ortho_err_z:.2e}  [PASS]')
+
+    # ── 7. Compute W = D-ZCA whitening of X ───────────────────────────────────
+    w_path = os.path.join(DATA_OUT_ROOT, _folder_name(dataset_name), 'W.npy')
+    if os.path.isfile(w_path):
+        print(f'Loading W from cache: {w_path}')
+        W_loaded = np.load(w_path).astype(np.float64)
+        d_eff_w  = W_loaded.shape[1]
+        G_w      = W_loaded.T @ (D @ W_loaded)
+        ortho_err_w = float(np.max(np.abs(G_w - np.eye(d_eff_w))))
+        W_feat = W_loaded
+        print(f'  d_eff_w={d_eff_w}, ortho_error={ortho_err_w:.2e}  [CACHED]')
+    else:
+        print('Computing W = D-ZCA whitening (Yiannis formulation, D no self-loops)...')
+        W_feat, d_eff_w, ortho_err_w = compute_d_zca_whitening(X_dense, D)
+        print(f'  d_eff_w={d_eff_w}, ortho_error={ortho_err_w:.2e}  [PASS]')
+
+    # ── 8. Fixed split masks ──────────────────────────────────────────────────
     # split_idx_lcc holds remapped LCC indices (integer arrays)
     tr_idx_fixed = split_idx_lcc['train_idx'] if split_idx_lcc else np.array([], dtype=int)
     va_idx_fixed = split_idx_lcc['val_idx']   if split_idx_lcc else np.array([], dtype=int)
@@ -186,7 +298,7 @@ def process_dataset(dataset_name: str) -> dict:
     assert not np.any(fixed_train_mask & fixed_test_mask), 'Train/Test overlap!'
     assert not np.any(fixed_val_mask & fixed_test_mask),   'Val/Test overlap!'
 
-    # ── 7. Random split masks (stratified 60/20/20 on LCC nodes) ─────────────
+    # ── 9. Random split masks (stratified 60/20/20 on LCC nodes) ─────────────
     all_indices   = np.arange(n)
     random_masks  = {}
     for seed in RANDOM_SEEDS:
@@ -205,13 +317,15 @@ def process_dataset(dataset_name: str) -> dict:
         te_m = np.zeros(n, dtype=bool); te_m[te] = True
         random_masks[seed] = (tr_m, va_m, te_m)
 
-    # ── 8. Save all files ─────────────────────────────────────────────────────
+    # ── 10. Save all files ────────────────────────────────────────────────────
     folder    = _folder_name(dataset_name)
     out_dir   = os.path.join(DATA_OUT_ROOT, folder)
     os.makedirs(out_dir, exist_ok=True)
 
     np.save(os.path.join(out_dir, 'X.npy'),              X_dense.astype(np.float32))
     np.save(os.path.join(out_dir, 'Y.npy'),              Y.astype(np.float32))
+    np.save(os.path.join(out_dir, 'Z.npy'),              Z.astype(np.float32))
+    np.save(os.path.join(out_dir, 'W.npy'),              W_feat.astype(np.float32))
     np.save(os.path.join(out_dir, 'labels.npy'),          labels_arr)
     np.save(os.path.join(out_dir, 'fixed_train_mask.npy'), fixed_train_mask)
     np.save(os.path.join(out_dir, 'fixed_val_mask.npy'),   fixed_val_mask)
@@ -224,19 +338,25 @@ def process_dataset(dataset_name: str) -> dict:
 
     print(f'  Saved to: {out_dir}/')
 
-    # ── 9. Verification summary ───────────────────────────────────────────────
+    # ── 11. Verification summary ──────────────────────────────────────────────
     print(f'\n  Summary:')
-    print(f'    {"n":>10} {"d":>6} {"d_eff":>6} '
-          f'{"train":>8} {"val":>8} {"test":>8}  {"ortho_err":>12}')
-    print(f'    {n:>10,} {d:>6} {d_eff:>6} '
+    print(f'    {"n":>10} {"d":>6} {"d_eff_y":>8} {"d_eff_z":>8} {"d_eff_w":>8} '
+          f'{"train":>8} {"val":>8} {"test":>8}')
+    print(f'    {n:>10,} {d:>6} {d_eff:>8} {d_eff_z:>8} {d_eff_w:>8} '
           f'{fixed_train_mask.sum():>8} {fixed_val_mask.sum():>8} '
-          f'{fixed_test_mask.sum():>8}  {ortho_err:.2e}')
-    print(f'    D-orthonormality: PASS (< 1e-6)')
+          f'{fixed_test_mask.sum():>8}')
+    print(f'    ortho Y={ortho_err:.2e} [PASS]  '
+          f'Z={ortho_err_z:.2e} [PASS]  W={ortho_err_w:.2e} [PASS]')
 
     return {
-        'dataset': dataset_name,
-        'n': n, 'd': d, 'd_eff': d_eff,
-        'ortho_err': float(ortho_err),
+        'dataset':    dataset_name,
+        'n': n, 'd': d,
+        'd_eff_y':    d_eff,
+        'd_eff_z':    d_eff_z,
+        'd_eff_w':    d_eff_w,
+        'ortho_err_y': float(ortho_err),
+        'ortho_err_z': float(ortho_err_z),
+        'ortho_err_w': float(ortho_err_w),
         'train': int(fixed_train_mask.sum()),
         'val':   int(fixed_val_mask.sum()),
         'test':  int(fixed_test_mask.sum()),
@@ -254,9 +374,75 @@ if __name__ == '__main__':
         help='Dataset names to process (default: all 9). '
              'Use hyphens, e.g. --datasets cora ogbn-arxiv amazon-photo'
     )
+    parser.add_argument(
+        '--zw-only', action='store_true',
+        help='Only compute and save Z.npy and W.npy. Skip recomputing X, Y, '
+             'labels, and split masks (uses cached values). Requires that '
+             'save_data.py has been run before for each dataset.'
+    )
     args = parser.parse_args()
 
     datasets = args.datasets if args.datasets else _DATASET_LOAD_NAMES
+    zw_only  = args.zw_only
+
+    if zw_only:
+        # Fast path: only compute Z and W, skip everything else.
+        # Requires X.npy and split masks to already exist.
+        print('SpectralGeometryMisalignment — save_data.py  [--zw-only mode]')
+        print(f'Output root: {DATA_OUT_ROOT}')
+        print(f'Processing {len(datasets)} dataset(s): {datasets}')
+        for ds in datasets:
+            folder  = _folder_name(ds)
+            out_dir = os.path.join(DATA_OUT_ROOT, folder)
+            x_path  = os.path.join(out_dir, 'X.npy')
+            if not os.path.isfile(x_path):
+                print(f'ERROR: {x_path} not found. Run save_data.py (without '
+                      f'--zw-only) for "{ds}" first.')
+                sys.exit(1)
+            print(f'\n{"="*60}\nDataset: {ds}  [zw-only]\n{"="*60}')
+            X_dense = np.load(x_path).astype(np.float64)
+            n, d    = X_dense.shape
+            # Rebuild L, D — needed for W
+            # Load full graph to get edge_index for LCC
+            (edge_index, X_raw, labels, num_nodes, num_classes,
+             train_idx_orig, val_idx_orig, test_idx_orig) = load_dataset(
+                ds, root=DATASET_ROOT
+            )
+            adj_full, _, _ = build_graph_matrices(edge_index, num_nodes)
+            lcc_mask = get_largest_connected_component_nx(adj_full)
+            split_idx_orig = {
+                'train_idx': train_idx_orig,
+                'val_idx':   val_idx_orig,
+                'test_idx':  test_idx_orig,
+            }
+            adj_lcc, _, _, _ = extract_subgraph(
+                adj_full, X_raw, labels, lcc_mask, split_idx_orig
+            )
+            adj_lcc_csr  = adj_lcc.tocsr()
+            adj_no_loops = adj_lcc_csr - sp.diags(adj_lcc_csr.diagonal())
+            adj_nl_coo   = adj_no_loops.tocoo()
+            edge_idx_lcc = np.vstack([adj_nl_coo.row, adj_nl_coo.col])
+            L, D = build_no_selfloop_matrices(edge_idx_lcc, n)
+            # Compute Z
+            z_path = os.path.join(out_dir, 'Z.npy')
+            if os.path.isfile(z_path):
+                print(f'  Z already exists, skipping.')
+            else:
+                print('  Computing Z = Standard ZCA whitening...')
+                Z, d_eff_z, ortho_err_z = compute_standard_zca(X_dense)
+                np.save(z_path, Z.astype(np.float32))
+                print(f'  d_eff_z={d_eff_z}, ortho_err={ortho_err_z:.2e}  [PASS]  Saved.')
+            # Compute W
+            w_path = os.path.join(out_dir, 'W.npy')
+            if os.path.isfile(w_path):
+                print(f'  W already exists, skipping.')
+            else:
+                print('  Computing W = D-ZCA whitening...')
+                W_feat, d_eff_w, ortho_err_w = compute_d_zca_whitening(X_dense, D)
+                np.save(w_path, W_feat.astype(np.float32))
+                print(f'  d_eff_w={d_eff_w}, ortho_err={ortho_err_w:.2e}  [PASS]  Saved.')
+        print('\nDone (zw-only).')
+        sys.exit(0)
 
     print('SpectralGeometryMisalignment — save_data.py')
     print(f'Output root: {DATA_OUT_ROOT}')
@@ -270,13 +456,15 @@ if __name__ == '__main__':
     print('\n' + '=' * 80)
     print('FINAL SUMMARY')
     print('=' * 80)
-    header = (f'  {"Dataset":<22} {"n":>8} {"d":>6} {"d_eff":>6} '
-              f'{"train":>8} {"val":>8} {"test":>8}  {"ortho_err":>12}')
+    header = (f'  {"Dataset":<22} {"n":>8} {"d":>6} {"d_eff_y":>8} '
+              f'{"d_eff_z":>8} {"d_eff_w":>8} '
+              f'{"train":>8} {"val":>8} {"test":>8}')
     print(header)
     print('  ' + '-' * (len(header) - 2))
     for s in summaries:
-        print(f'  {s["dataset"]:<22} {s["n"]:>8,} {s["d"]:>6} {s["d_eff"]:>6} '
-              f'{s["train"]:>8} {s["val"]:>8} {s["test"]:>8}  {s["ortho_err"]:.2e}')
+        print(f'  {s["dataset"]:<22} {s["n"]:>8,} {s["d"]:>6} {s["d_eff_y"]:>8} '
+              f'{s["d_eff_z"]:>8} {s["d_eff_w"]:>8} '
+              f'{s["train"]:>8} {s["val"]:>8} {s["test"]:>8}')
 
     print('\nAll datasets saved successfully.')
     print(f'Data directory: {DATA_OUT_ROOT}/')
