@@ -843,7 +843,7 @@ geometry. It should not be reported as a finding about the spectral basis.
 
 
 ════════════════════════════════════════════════════════════════════════════════
-SECTION 10: OPEN QUESTIONS FOR YIANNIS
+SECTION 10: OPEN QUESTIONS
 ════════════════════════════════════════════════════════════════════════════════
 
 Q1: Coordinate-dependent optimization mediates the basis-change effect.
