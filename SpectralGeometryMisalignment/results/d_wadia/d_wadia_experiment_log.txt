@@ -4,7 +4,6 @@ SpectralGeometryMisalignment/results/d_wadia/d_wadia_experiment_log.txt
 ================================================================================
 
 Generated: 2026-03-21
-Author: Mohammad Wadia (NJIT, advisor: Prof. Ioannis Koutis)
 Code: SpectralGeometryMisalignment/d_wadia_experiment.py
 Data: SpectralGeometryMisalignment/data/{dataset}/
 Results: SpectralGeometryMisalignment/results/d_wadia/
@@ -726,7 +725,7 @@ Group C — Ambiguous: large gaps driven by scaling artifacts or lr-sensitive
                     evidence that D-ZCA > RR geometry on citeseer. It is
                     a StandardScaler/split interaction: on the random split
                     (~1272 training nodes), W reaches 65.71% while Y
-                    reaches only 44.23%. On the fixed split (~120 training
+                    reaches only 44.23%. On the fixed split (80 training
                     nodes), the same config gives W=27.03% vs Y=24.76%,
                     W-Y=+2.27pp. The +19pp jump from fixed to random
                     is entirely due to StandardScaler behaving differently
@@ -821,10 +820,10 @@ The +21.48pp is the largest W-Y value in the entire experiment. Context:
   - citeseer random SGD exceeds it by ~11pp — not a stronger geometric effect,
     but an artifact
 
-Mechanism: The Planetoid fixed split for citeseer uses ~120 training nodes
-(~20 per class × 6 classes). The random 60/20/20 split uses ~1272 training
-nodes. This 10× increase in training coverage has a dramatic effect on
-StandardScaler. With ~120 training nodes, StandardScaler computes noisy
+Mechanism: The Planetoid fixed split for citeseer uses 80 training nodes
+(verified from fixed_train_mask.npy). The random 60/20/20 split uses ~1272
+training nodes. This ~16× increase in training coverage has a dramatic effect on
+StandardScaler. With 80 training nodes, StandardScaler computes noisy
 column statistics for both W and Y, and both representations converge poorly.
 With ~1272 training nodes, StandardScaler's column-wise normalization is stable.
 W (in the original coordinate system, similar to X's basis) benefits strongly
