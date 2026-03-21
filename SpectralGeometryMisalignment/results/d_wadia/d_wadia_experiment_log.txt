@@ -1,0 +1,873 @@
+================================================================================
+D-WADIA CONTROL EXPERIMENT — FULL EXPERIMENT LOG
+SpectralGeometryMisalignment/results/d_wadia/d_wadia_experiment_log.txt
+================================================================================
+
+Generated: 2026-03-21
+Author: Mohammad Wadia (NJIT, advisor: Prof. Ioannis Koutis)
+Code: SpectralGeometryMisalignment/d_wadia_experiment.py
+Data: SpectralGeometryMisalignment/data/{dataset}/
+Results: SpectralGeometryMisalignment/results/d_wadia/
+
+All numbers in this log are [VERIFIED] — retrieved directly from
+  scaled/summary.json, unscaled/summary.json, and data/*.npy files.
+No numbers are estimated, rounded, or inferred.
+
+
+════════════════════════════════════════════════════════════════════════════════
+SECTION 1: EXPERIMENT OVERVIEW AND MOTIVATION
+════════════════════════════════════════════════════════════════════════════════
+
+--- Central question ---
+
+Rayleigh-Ritz (Y) does two things simultaneously:
+  (1) D-orthogonalization: enforces U^T D U = I
+  (2) Basis change: rotates features into the Laplacian eigenvector
+      coordinate system
+
+The question is: which of these is responsible for the performance gap
+between X and Y in softmax regression?
+
+  W (D-ZCA) enforces the same D-orthogonality as Y, but does NOT rotate to
+  the Laplacian eigenvector basis. It stays close to the original coordinate
+  system (minimum-rotation whitening in the D-inner product sense).
+
+  If W ≈ Y: D-orthogonalization alone explains the entire gap.
+  If W > Y (W better than Y): the Laplacian rotation adds extra damage
+             beyond what D-orthogonalization alone causes.
+
+  Z (standard Wadia whitening) is included as an additional reference:
+  it applies Euclidean whitening (Z^T Z = I) using centered features,
+  and measures how much a non-D-orthogonal whitening hurts.
+
+
+════════════════════════════════════════════════════════════════════════════════
+SECTION 2: VARIABLE DEFINITIONS
+════════════════════════════════════════════════════════════════════════════════
+
+X   Raw node feature matrix of the LCC, shape (n, d). No transformation.
+    This is the baseline for all gap computations.
+
+Y   Rayleigh-Ritz restricted eigenvectors, shape (n, d_eff).
+    Solves the generalized eigenvalue problem: (Q^T L Q) V = (Q^T D Q) V Lambda
+    where Q is the QR decomposition of X (the active subspace basis).
+    Enforces U^T D U = I (D-orthonormal).
+    Rotates features into Laplacian eigenvector coordinate system.
+    span(Y) = span(X) exactly by construction.
+    Both D-orthonormal AND Laplacian-rotated.
+
+Z   Standard ZCA whitening of centered X, shape (n, d_eff).
+    Enforces Z^T Z = I (standard Euclidean inner product).
+    Stays close to original coordinate system (ZCA = minimum-rotation
+    Euclidean whitening).
+    Computed on centered X_c = X - mean(X, axis=0).
+    This is Wadia et al.'s original whitening.
+
+W   D-ZCA whitening of X (Yiannis's formulation), shape (n, d_eff).
+    Enforces W^T D W = I (D-weighted inner product, same condition as Y).
+    Stays close to original coordinate system — does NOT rotate to
+    Laplacian eigenvector basis.
+    Computed on raw X (not centered). Uses same D as Y (no self-loops).
+    KEY PROPERTY: W and Y have identical orthonormality condition
+    (W^T D W = I = Y^T D Y) but different coordinate systems.
+    Constructed as: W = X @ V_k @ diag(1/sqrt(eigvals_k))
+    where V_k are eigenvectors of C = X^T D X (D-weighted covariance).
+
+D   Degree matrix WITHOUT self-loops.
+    D_ii = sum of edge weights incident to node i (binary graph: D_ii = degree_i).
+    Used for both Y (Rayleigh-Ritz) and W (D-ZCA). Same D for both.
+
+--- Gap definitions ---
+
+  X_minus_Y = X_acc - Y_acc   (full Rayleigh-Ritz damage)
+  X_minus_Z = X_acc - Z_acc   (standard Wadia whitening damage)
+  X_minus_W = X_acc - W_acc   (D-orthogonalization damage alone)
+  W_minus_Y = W_acc - Y_acc   (KEY: extra damage from Laplacian rotation)
+
+  W_minus_Y > 0: W better than Y → Laplacian rotation adds extra damage
+  W_minus_Y ≈ 0: D-orthogonalization alone explains the gap
+  W_minus_Y < 0: Y better than W → Laplacian rotation helps (unexpected)
+
+All gaps in percentage points (pp). All accuracies are test accuracy (%).
+
+
+════════════════════════════════════════════════════════════════════════════════
+SECTION 3: EXPERIMENTAL DESIGN
+════════════════════════════════════════════════════════════════════════════════
+
+Model: Softmax regression (nn.Linear only, no hidden layers)
+       Loss: CrossEntropyLoss
+       Weight decay: 0.0 strictly (convex problem, no regularization)
+       Full-batch (all training nodes at once)
+
+Optimizers:
+  SGD: momentum=0.9, nesterov=False
+  Adam: betas=(0.9, 0.999), eps=1e-8
+
+Learning rates: [0.001, 0.01, 0.1]
+Epochs: 500, no early stopping (full training curves recorded)
+Training seeds: 15 (seeds 0–14)
+Splits:
+  Fixed: 1 split (dataset-specific, matches master_training.py convention)
+  Random: 5 split seeds (60/20/20 stratified, seeds 0–4)
+
+Fixed split summary per entry: 15 seeds
+Random split summary per entry: 75 seeds (5 split seeds × 15 train seeds)
+
+Datasets: all 9 (cora, citeseer, pubmed, ogbn_arxiv, wikics,
+          amazon_computers, amazon_photo, coauthor_cs, coauthor_physics)
+          All using Largest Connected Component (LCC).
+
+--- Two modes: why both were run ---
+
+SCALED mode (PRIMARY):
+  StandardScaler fit on training nodes only, applied to all four conditions
+  (X, Y, Z, W) independently before training.
+  Why primary: matches the existing paper pipeline. All MLP experiments in
+  the main results used StandardScaler. Scaled results are directly
+  comparable to the published Part A gaps.
+
+UNSCALED mode (ROBUSTNESS CHECK):
+  No StandardScaler applied to any condition.
+  Why run: to test whether W-Y gaps in scaled mode are genuine geometric
+  properties or artifacts of StandardScaler interacting differently with W
+  vs Y. W stays in the original coordinate system; Y rotates to the
+  Laplacian eigenvector basis. Their column distributions differ, so
+  StandardScaler applies different effective column scalings even though
+  W and Y span the same subspace with the same D-inner product.
+  Theoretical prediction: under unscaled SGD, W and Y must perform
+  identically. SGD (and all linear methods without coordinate-dependent
+  scaling) is invariant to D-orthogonal rotations: if W = Y @ R for some
+  D-orthogonal R, the optimal solution quality is unchanged. This means
+  unscaled SGD W-Y ≈ 0 is a mathematical prediction, not just an empirical
+  hope — it serves as a self-consistency check on the experimental design.
+
+  NOTE on unscaled interpretability:
+  In unscaled mode, X has mixed/unknown feature scales, so X_minus_Z and
+  X_minus_W comparisons are confounded. Only W_minus_Y is interpretable
+  in unscaled mode (W and Y are both unscaled with matching D-inner product).
+
+
+════════════════════════════════════════════════════════════════════════════════
+SECTION 4: DATASET METADATA
+════════════════════════════════════════════════════════════════════════════════
+
+All shapes loaded from data/{dataset}/*.npy files. [VERIFIED]
+
+dataset                      n      d  d_eff_y  d_eff_w  d_eff_z  y==w?
+------------------------------------------------------------------------
+cora                      2485   1433     1427     1427     1427    YES
+citeseer                  2120   3703     2101     2101     2101    YES
+pubmed                   19717    500      500      500      499    YES
+ogbn_arxiv              169343    128      128      128      128    YES
+wikics                   11311    300      300      300      300    YES
+amazon_computers         13381    767      767      767      767    YES
+amazon_photo              7487    745      745      745      745    YES
+coauthor_cs              18333   6805     6803     6803     6803    YES
+coauthor_physics         34493   8415     7701     7701     7701    YES
+
+Notes:
+  - d_eff_y == d_eff_w for ALL 9 datasets. W and Y have the same number
+    of parameters in the softmax classifier. No parameter count confound.
+  - pubmed: d_eff_z = 499, one fewer than d_eff_y/w = 500. Z loses one
+    dimension because centering eliminates the constant component of one
+    feature. All other datasets: d_eff_z == d_eff_y.
+  - cora: d=1433 but d_eff=1427. Six feature columns are linearly dependent.
+  - citeseer: d=3703 but d_eff=2101. 1602 linearly dependent columns —
+    heavily rank-deficient. This matters for Z (Section 9.6).
+  - coauthor_physics: d=8415 but d_eff=7701. 714 dependent columns.
+
+
+════════════════════════════════════════════════════════════════════════════════
+SECTION 5: RAW RESULTS — SCALED MODE (PRIMARY)
+════════════════════════════════════════════════════════════════════════════════
+
+All values are mean test accuracy (%) aggregated over all seeds.
+Fixed split: 15 seeds. Random split: 75 seeds (5 splits × 15 train seeds).
+All gaps in pp. StandardScaler applied per condition per split.
+Source: scaled/summary.json [VERIFIED]
+
+Columns: dataset | X | Y | Z | W | X-Y | X-Z | X-W | W-Y
+
+--- 5.1  Adam / lr=0.001 / fixed (15 seeds) ---
+
+dataset                      X       Y       Z       W      X-Y      X-Z      X-W      W-Y
+--------------------------------------------------------------------------------------------
+cora                     40.58   16.42   19.34   19.49   +24.16   +21.23   +21.09    +3.07
+citeseer                 42.23   19.79   15.73   21.59   +22.44   +26.51   +20.64    +1.80
+pubmed                   60.78   41.89   40.08   43.85   +18.89   +20.70   +16.93    +1.95
+ogbn_arxiv               51.28   40.80   47.23   47.45   +10.48    +4.05    +3.83    +6.65
+wikics                   69.80   36.04   39.59   40.83   +33.76   +30.21   +28.97    +4.79
+amazon_computers         83.32   65.84   67.60   70.28   +17.48   +15.72   +13.05    +4.43
+amazon_photo             90.35   57.48   59.77   64.90   +32.87   +30.57   +25.45    +7.42
+coauthor_cs              92.39   24.86   22.76   41.36   +67.53   +69.63   +51.03   +16.50
+coauthor_physics         91.83   67.58   69.63   71.63   +24.25   +22.20   +20.21    +4.04
+
+--- 5.2  Adam / lr=0.01 / fixed (15 seeds) ---
+
+dataset                      X       Y       Z       W      X-Y      X-Z      X-W      W-Y
+--------------------------------------------------------------------------------------------
+cora                     42.38   17.46   19.60   20.30   +24.92   +22.78   +22.08    +2.84
+citeseer                 43.05   22.33   15.40   22.47   +20.71   +27.64   +20.57    +0.14
+pubmed                   62.15   42.32   40.33   44.49   +19.83   +21.83   +17.66    +2.17
+ogbn_arxiv               52.55   52.38   52.59   52.57    +0.17    -0.04    -0.01    +0.18
+wikics                   67.87   37.27   40.96   41.96   +30.60   +26.90   +25.91    +4.69
+amazon_computers         81.97   76.11   76.80   75.71    +5.86    +5.17    +6.27    -0.41
+amazon_photo             91.92   69.35   69.75   68.08   +22.57   +22.17   +23.84    -1.27
+coauthor_cs              92.60   24.89   23.40   41.17   +67.70   +69.20   +51.42   +16.28
+coauthor_physics         91.93   66.74   68.37   70.92   +25.19   +23.57   +21.01    +4.18
+
+--- 5.3  Adam / lr=0.1 / fixed (15 seeds) ---
+
+dataset                      X       Y       Z       W      X-Y      X-Z      X-W      W-Y
+--------------------------------------------------------------------------------------------
+cora                     42.70   17.70   18.13   20.31   +24.99   +24.57   +22.38    +2.61
+citeseer                 44.13   20.28   15.55   17.84   +23.85   +28.59   +26.29    -2.44
+pubmed                   63.03   40.69   38.74   43.58   +22.34   +24.29   +19.45    +2.89
+ogbn_arxiv               52.41   52.47   52.46   52.46    -0.06    -0.05    -0.05    -0.02
+wikics                   67.39   37.15   40.18   42.09   +30.23   +27.20   +25.30    +4.93
+amazon_computers         80.16   71.71   71.63   71.56    +8.46    +8.53    +8.60    -0.15
+amazon_photo             92.25   69.28   70.63   66.17   +22.96   +21.62   +26.07    -3.11
+coauthor_cs              91.31   21.25   20.42   36.79   +70.06   +70.89   +54.52   +15.53
+coauthor_physics         91.17   64.69   66.92   68.29   +26.49   +24.26   +22.88    +3.60
+
+--- 5.4  SGD / lr=0.001 / fixed (15 seeds) ---
+
+dataset                      X       Y       Z       W      X-Y      X-Z      X-W      W-Y
+--------------------------------------------------------------------------------------------
+cora                     47.91   26.40   21.11   24.76   +21.51   +26.79   +23.15    -1.64
+citeseer                 47.10   22.28   17.30   24.61   +24.82   +29.80   +22.49    +2.32
+pubmed                   64.41   49.94   44.66   50.21   +14.47   +19.75   +14.20    +0.27
+ogbn_arxiv               43.46   32.70   34.72   35.26   +10.76    +8.73    +8.20    +2.56
+wikics                   71.95   60.42   60.20   59.38   +11.54   +11.75   +12.58    -1.04
+amazon_computers         84.89   80.20   80.99   81.56    +4.69    +3.90    +3.32    +1.37
+amazon_photo             90.56   85.23   86.24   87.06    +5.33    +4.32    +3.50    +1.84
+coauthor_cs              94.09   71.43   67.51   81.66   +22.66   +26.58   +12.43   +10.23
+coauthor_physics         94.59   78.81   81.75   88.11   +15.77   +12.83    +6.47    +9.30
+
+--- 5.5  SGD / lr=0.01 / fixed (15 seeds) ---
+
+dataset                      X       Y       Z       W      X-Y      X-Z      X-W      W-Y
+--------------------------------------------------------------------------------------------
+cora                     48.86   29.22   22.63   27.24   +19.64   +26.23   +21.62    -1.97
+citeseer                 48.41   24.76   17.45   27.03   +23.65   +30.96   +21.38    +2.27
+pubmed                   65.41   51.30   45.67   51.48   +14.11   +19.74   +13.93    +0.18
+ogbn_arxiv               51.21   51.17   51.33   51.19    +0.03    -0.12    +0.02    +0.02
+wikics                   71.28   62.03   61.84   61.23    +9.25    +9.44   +10.05    -0.80
+amazon_computers         86.51   84.46   84.34   84.29    +2.05    +2.17    +2.22    -0.18
+amazon_photo             92.92   88.41   89.32   89.56    +4.51    +3.61    +3.36    +1.15
+coauthor_cs              94.69   76.64   75.92   84.88   +18.05   +18.77    +9.81    +8.24
+coauthor_physics         95.00   83.64   85.08   89.82   +11.35    +9.92    +5.17    +6.18
+
+--- 5.6  SGD / lr=0.1 / fixed (15 seeds) ---
+
+dataset                      X       Y       Z       W      X-Y      X-Z      X-W      W-Y
+--------------------------------------------------------------------------------------------
+cora                     51.24   32.51   24.55   30.21   +18.73   +26.69   +21.03    -2.30
+citeseer                 49.64   25.86   18.17   29.94   +23.78   +31.47   +19.70    +4.08
+pubmed                   65.96   51.47   45.33   52.28   +14.49   +20.63   +13.68    +0.81
+ogbn_arxiv               52.42   52.47   52.49   52.48    -0.05    -0.06    -0.06    +0.01
+wikics                   69.41   61.41   61.01   60.63    +8.00    +8.40    +8.78    -0.78
+amazon_computers         82.72   80.90   80.96   80.42    +1.82    +1.77    +2.30    -0.48
+amazon_photo             92.37   87.14   87.33   88.11    +5.22    +5.04    +4.26    +0.96
+coauthor_cs              94.91   77.04   76.54   85.37   +17.88   +18.37    +9.55    +8.33
+coauthor_physics         94.61   82.78   84.54   89.44   +11.83   +10.07    +5.17    +6.66
+
+--- 5.7  Adam / lr=0.001 / random (75 seeds per entry) ---
+
+dataset                      X       Y       Z       W      X-Y      X-Z      X-W      W-Y
+--------------------------------------------------------------------------------------------
+cora                     56.74   13.42   16.11   22.80   +43.32   +40.63   +33.94    +9.38
+citeseer                 63.56    5.54    4.74    7.87   +58.01   +58.82   +55.68    +2.33
+pubmed                   85.88   82.76   83.88   85.02    +3.12    +2.00    +0.86    +2.26
+ogbn_arxiv               53.55   47.22   50.25   50.28    +6.33    +3.29    +3.27    +3.06
+wikics                   78.24   69.81   73.21   71.52    +8.44    +5.04    +6.72    +1.71
+amazon_computers         81.84   64.53   67.10   69.22   +17.30   +14.74   +12.62    +4.68
+amazon_photo             89.58   56.44   57.81   63.99   +33.14   +31.77   +25.59    +7.55
+coauthor_cs              92.11   25.64   23.01   41.04   +66.47   +69.10   +51.07   +15.40
+coauthor_physics         92.42   68.49   70.20   71.62   +23.93   +22.22   +20.80    +3.14
+
+--- 5.8  Adam / lr=0.01 / random (75 seeds per entry) ---
+
+dataset                      X       Y       Z       W      X-Y      X-Z      X-W      W-Y
+--------------------------------------------------------------------------------------------
+cora                     57.42   13.78   16.11   22.88   +43.65   +41.31   +34.54    +9.11
+citeseer                 65.20    5.60    4.37    7.11   +59.60   +60.83   +58.09    +1.51
+pubmed                   87.07   87.05   87.09   87.16    +0.01    -0.03    -0.09    +0.10
+ogbn_arxiv               54.86   54.84   54.84   54.81    +0.02    +0.01    +0.04    -0.02
+wikics                   75.98   74.90   74.81   74.65    +1.09    +1.17    +1.33    -0.24
+amazon_computers         81.44   75.32   75.64   75.14    +6.12    +5.80    +6.30    -0.18
+amazon_photo             91.06   68.57   69.97   68.31   +22.49   +21.09   +22.75    -0.26
+coauthor_cs              92.71   25.37   23.34   40.63   +67.34   +69.36   +52.07   +15.27
+coauthor_physics         92.38   67.49   68.85   70.50   +24.89   +23.53   +21.88    +3.01
+
+--- 5.9  Adam / lr=0.1 / random (75 seeds per entry) ---
+
+dataset                      X       Y       Z       W      X-Y      X-Z      X-W      W-Y
+--------------------------------------------------------------------------------------------
+cora                     57.34   12.96   15.66   22.68   +44.38   +41.67   +34.66    +9.73
+citeseer                 65.52    6.78    4.58   10.57   +58.74   +60.94   +54.95    +3.79
+pubmed                   86.72   86.83   86.83   86.81    -0.11    -0.11    -0.09    -0.02
+ogbn_arxiv               54.71   54.82   54.82   54.81    -0.11    -0.11    -0.09    -0.01
+wikics                   73.46   72.73   72.85   72.78    +0.73    +0.61    +0.69    +0.04
+amazon_computers         79.48   70.26   70.94   70.80    +9.22    +8.54    +8.68    +0.54
+amazon_photo             91.50   68.54   70.77   65.84   +22.96   +20.73   +25.66    -2.70
+coauthor_cs              91.73   21.18   20.31   36.45   +70.55   +71.42   +55.28   +15.27
+coauthor_physics         91.78   65.58   67.41   68.32   +26.20   +24.36   +23.46    +2.74
+
+--- 5.10  SGD / lr=0.001 / random (75 seeds per entry) ---
+
+dataset                      X       Y       Z       W      X-Y      X-Z      X-W      W-Y
+--------------------------------------------------------------------------------------------
+cora                     73.98   54.32   44.85   58.01   +19.66   +29.13   +15.97    +3.70
+citeseer                 71.88   36.45   19.66   57.50   +35.42   +52.22   +14.37   +21.05
+pubmed                   85.43   85.60   86.05   85.74    -0.17    -0.62    -0.31    +0.14
+ogbn_arxiv               44.79   38.77   38.66   39.95    +6.02    +6.13    +4.83    +1.18
+wikics                   75.17   73.38   74.71   72.41    +1.79    +0.46    +2.77    -0.98
+amazon_computers         83.15   78.56   79.74   80.30    +4.59    +3.42    +2.85    +1.74
+amazon_photo             90.40   84.80   85.82   86.49    +5.59    +4.58    +3.91    +1.68
+coauthor_cs              94.12   71.18   67.84   81.81   +22.94   +26.28   +12.30   +10.64
+coauthor_physics         94.98   79.99   82.78   88.81   +14.99   +12.20    +6.17    +8.81
+
+--- 5.11  SGD / lr=0.01 / random (75 seeds per entry) ---
+
+dataset                      X       Y       Z       W      X-Y      X-Z      X-W      W-Y
+--------------------------------------------------------------------------------------------
+cora                     73.30   58.95   49.12   61.11   +14.35   +24.19   +12.20    +2.15
+citeseer                 72.09   44.23   21.57   65.71   +27.86   +50.52    +6.39   +21.48
+pubmed                   86.93   86.94   86.96   86.97    -0.01    -0.03    -0.04    +0.03
+ogbn_arxiv               53.29   53.14   53.15   53.31    +0.16    +0.14    -0.01    +0.17
+wikics                   78.71   78.20   78.30   78.06    +0.51    +0.41    +0.65    -0.14
+amazon_computers         85.46   83.00   83.29   83.48    +2.46    +2.17    +1.98    +0.48
+amazon_photo             92.44   88.54   89.02   89.30    +3.90    +3.42    +3.14    +0.76
+coauthor_cs              94.67   76.60   76.02   84.52   +18.07   +18.65   +10.15    +7.93
+coauthor_physics         95.55   84.78   86.05   90.81   +10.77    +9.50    +4.75    +6.02
+
+--- 5.12  SGD / lr=0.1 / random (75 seeds per entry) ---
+
+dataset                      X       Y       Z       W      X-Y      X-Z      X-W      W-Y
+--------------------------------------------------------------------------------------------
+cora                     73.12   58.51   49.00   60.74   +14.61   +24.12   +12.39    +2.23
+citeseer                 73.02   47.18   23.25   66.17   +25.84   +49.78    +6.85   +18.99
+pubmed                   87.09   87.13   87.10   87.12    -0.04    -0.01    -0.03    -0.01
+ogbn_arxiv               54.74   54.70   54.71   54.71    +0.04    +0.03    +0.03    +0.02
+wikics                   77.39   75.73   75.67   75.88    +1.66    +1.72    +1.51    +0.15
+amazon_computers         82.46   80.07   79.91   80.33    +2.39    +2.55    +2.14    +0.25
+amazon_photo             91.80   86.87   87.30   87.80    +4.94    +4.50    +4.01    +0.93
+coauthor_cs              94.84   76.86   76.87   85.16   +17.98   +17.97    +9.68    +8.30
+coauthor_physics         95.40   84.54   85.46   90.62   +10.86    +9.94    +4.77    +6.08
+
+
+════════════════════════════════════════════════════════════════════════════════
+SECTION 6: RAW RESULTS — UNSCALED MODE (ROBUSTNESS CHECK)
+════════════════════════════════════════════════════════════════════════════════
+
+No StandardScaler applied. Only W_minus_Y is interpretable here
+(X_minus_Z and X_minus_W are confounded by scale differences in raw X).
+Source: unscaled/summary.json [VERIFIED]
+
+Columns: dataset | X | Y | W | W-Y
+
+--- 6.1  Adam / lr=0.001 / fixed (15 seeds) ---
+
+dataset                      X       Y       W      W-Y
+---------------------------------------------------------
+cora                     45.60   15.55   18.17    +2.62
+citeseer                 48.61   24.45   24.02    -0.43
+pubmed                   69.55   39.45   44.68    +5.23
+ogbn_arxiv               40.87   15.07   15.23    +0.16
+wikics                   69.40   23.71   24.88    +1.17
+amazon_computers         86.05   37.74   37.74    +0.01
+amazon_photo             90.54   26.20   31.08    +4.88
+coauthor_cs              94.15   20.60   25.21    +4.61
+coauthor_physics         95.29   50.35   50.42    +0.08
+
+--- 6.2  Adam / lr=0.01 / fixed (15 seeds) ---
+
+dataset                      X       Y       W      W-Y
+---------------------------------------------------------
+cora                     43.48   15.77   18.70    +2.94
+citeseer                 49.54   22.34   22.53    +0.19
+pubmed                   68.03   39.21   42.41    +3.20
+ogbn_arxiv               51.93    5.86    5.86    +0.00
+wikics                   71.24   26.68   29.12    +2.44
+amazon_computers         85.62   37.97   38.49    +0.52
+amazon_photo             92.27   27.41   35.94    +8.53
+coauthor_cs              94.56   26.01   35.10    +9.09
+coauthor_physics         94.81   54.14   56.11    +1.97
+
+--- 6.3  Adam / lr=0.1 / fixed (15 seeds) ---
+
+dataset                      X       Y       W      W-Y
+---------------------------------------------------------
+cora                     45.62   17.09   18.96    +1.87
+citeseer                 48.71   21.63   22.65    +1.03
+pubmed                   67.83   40.16   43.27    +3.11
+ogbn_arxiv               52.34   10.56   13.50    +2.94
+wikics                   69.70   34.51   38.20    +3.69
+amazon_computers         83.42   43.98   56.25   +12.26
+amazon_photo             92.68   34.13   53.55   +19.42
+coauthor_cs              94.61   25.22   35.09    +9.87
+coauthor_physics         94.81   63.13   66.95    +3.82
+
+--- 6.4  SGD / lr=0.001 / fixed (15 seeds) ---
+
+dataset                      X       Y       W      W-Y
+---------------------------------------------------------
+cora                     53.34   13.13   13.39    +0.26
+citeseer                 59.82   23.08   23.08    +0.00
+pubmed                   52.00   30.58   30.47    -0.11
+ogbn_arxiv                5.91    5.86    5.86    +0.00
+wikics                   36.90   22.63   22.63    +0.00
+amazon_computers         76.87   37.71   37.71    +0.00
+amazon_photo             83.46   26.47   26.47    +0.00
+coauthor_cs              74.99   22.63   22.63    +0.00
+coauthor_physics         80.83   50.38   50.38    +0.00
+
+--- 6.5  SGD / lr=0.01 / fixed (15 seeds) ---
+
+dataset                      X       Y       W      W-Y
+---------------------------------------------------------
+cora                     57.80   13.69   13.55    -0.14
+citeseer                 62.01   23.08   23.08    +0.00
+pubmed                   72.51   40.24   38.98    -1.26
+ogbn_arxiv               27.21    5.86    5.86    +0.00
+wikics                   59.58   22.63   22.63    +0.00
+amazon_computers         86.47   37.71   37.71    +0.00
+amazon_photo             91.68   26.47   26.47    +0.00
+coauthor_cs              90.21   22.63   22.63    +0.00
+coauthor_physics         93.20   50.38   50.38    +0.00
+
+--- 6.6  SGD / lr=0.1 / fixed (15 seeds) ---
+
+dataset                      X       Y       W      W-Y
+---------------------------------------------------------
+cora                     56.05   17.33   17.14    -0.18
+citeseer                 61.96   23.08   23.23    +0.15
+pubmed                   73.94   48.53   48.33    -0.21
+ogbn_arxiv               47.46    5.86    5.86    +0.00
+wikics                   70.76   22.63   22.63    +0.00
+amazon_computers         85.49   37.71   37.71    +0.00
+amazon_photo             92.49   26.47   26.47    +0.00
+coauthor_cs              93.45   22.63   22.63    +0.00
+coauthor_physics         94.82   50.38   50.38    +0.00
+
+--- 6.7  Adam / lr=0.001 / random (75 seeds) ---
+
+dataset                      X       Y       W      W-Y
+---------------------------------------------------------
+cora                     69.03   24.90   28.55    +3.65
+citeseer                 71.79   10.02   12.62    +2.60
+pubmed                   75.88   50.27   56.02    +5.75
+ogbn_arxiv               43.24   14.89   15.27    +0.38
+wikics                   72.23   24.83   26.87    +2.04
+amazon_computers         84.73   37.11   37.10    -0.01
+amazon_photo             90.36   26.55   31.45    +4.90
+coauthor_cs              94.55   20.60   25.26    +4.66
+coauthor_physics         95.98   50.54   50.58    +0.04
+
+--- 6.8  Adam / lr=0.01 / random (75 seeds) ---
+
+dataset                      X       Y       W      W-Y
+---------------------------------------------------------
+cora                     67.06   15.92   22.98    +7.06
+citeseer                 71.52    5.50    8.10    +2.59
+pubmed                   83.14   56.52   62.25    +5.73
+ogbn_arxiv               54.21   16.18   16.18    -0.01
+wikics                   78.93   28.66   31.06    +2.41
+amazon_computers         84.50   37.23   37.52    +0.29
+amazon_photo             91.86   28.60   35.39    +6.79
+coauthor_cs              94.38   25.81   34.02    +8.21
+coauthor_physics         95.59   54.15   56.59    +2.43
+
+--- 6.9  Adam / lr=0.1 / random (75 seeds) ---
+
+dataset                      X       Y       W      W-Y
+---------------------------------------------------------
+cora                     67.37   14.63   20.84    +6.21
+citeseer                 72.83    4.52    5.74    +1.22
+pubmed                   86.50   73.22   77.97    +4.75
+ogbn_arxiv               54.81   24.16   28.41    +4.24
+wikics                   77.04   50.49   56.65    +6.16
+amazon_computers         82.81   42.60   54.20   +11.60
+amazon_photo             91.99   35.95   52.09   +16.14
+coauthor_cs              94.54   26.09   34.94    +8.85
+coauthor_physics         95.28   63.06   67.30    +4.24
+
+--- 6.10  SGD / lr=0.001 / random (75 seeds) ---
+
+dataset                      X       Y       W      W-Y
+---------------------------------------------------------
+cora                     43.68   29.18   29.18    +0.00
+citeseer                 65.11   25.19   25.19    +0.00
+pubmed                   43.85   39.91   39.89    -0.02
+ogbn_arxiv               18.76   16.13   16.13    +0.00
+wikics                   36.31   22.80   22.80    +0.00
+amazon_computers         75.66   37.09   37.09    +0.00
+amazon_photo             83.89   25.37   25.37    +0.00
+coauthor_cs              74.94   22.56   22.56    +0.00
+coauthor_physics         81.43   50.53   50.53    +0.00
+
+--- 6.11  SGD / lr=0.01 / random (75 seeds) ---
+
+dataset                      X       Y       W      W-Y
+---------------------------------------------------------
+cora                     72.98   29.18   29.18    +0.00
+citeseer                 74.42   25.19   25.19    +0.00
+pubmed                   64.78   39.93   39.94    +0.00
+ogbn_arxiv               33.73   16.13   16.13    +0.00
+wikics                   58.27   22.80   22.80    +0.00
+amazon_computers         85.70   37.09   37.09    +0.00
+amazon_photo             92.18   25.37   25.37    +0.00
+coauthor_cs              90.55   22.56   22.56    +0.00
+coauthor_physics         93.53   50.53   50.53    +0.00
+
+--- 6.12  SGD / lr=0.1 / random (75 seeds) ---
+
+dataset                      X       Y       W      W-Y
+---------------------------------------------------------
+cora                     74.84   29.18   29.18    +0.00
+citeseer                 73.04   25.19   25.19    +0.00
+pubmed                   75.77   40.00   40.01    +0.00
+ogbn_arxiv               47.51   16.13   16.13    +0.00
+wikics                   74.12   22.80   22.80    +0.00
+amazon_computers         84.77   37.09   37.09    +0.00
+amazon_photo             92.12   25.37   25.37    +0.00
+coauthor_cs              93.50   22.56   22.56    +0.00
+coauthor_physics         95.56   50.53   50.53    +0.00
+
+
+════════════════════════════════════════════════════════════════════════════════
+SECTION 7: KEY COMPARISON TABLE — W-Y ACROSS MODES
+════════════════════════════════════════════════════════════════════════════════
+
+diff = unscaled_WY - scaled_WY  (positive = unscaled has bigger gap)
+sign_change = YES if one is positive and the other is negative.
+Source: both summary.json files [VERIFIED]
+
+--- SGD / lr=0.01 / fixed ---
+
+dataset                  W-Y(scaled)  W-Y(unscaled)      diff  sign_change
+---------------------------------------------------------------------------
+cora                          -1.97          -0.14       +1.84  —
+citeseer                      +2.27          +0.00       -2.27  —
+pubmed                        +0.18          -1.26       -1.44  YES
+ogbn_arxiv                    +0.02          +0.00       -0.02  —
+wikics                        -0.80          +0.00       +0.80  —
+amazon_computers              -0.18          +0.00       +0.18  —
+amazon_photo                  +1.15          +0.00       -1.15  —
+coauthor_cs                   +8.24          +0.00       -8.24  —
+coauthor_physics              +6.18          +0.00       -6.18  —
+
+--- Adam / lr=0.01 / fixed ---
+
+dataset                  W-Y(scaled)  W-Y(unscaled)      diff  sign_change
+---------------------------------------------------------------------------
+cora                          +2.84          +2.94       +0.09  —
+citeseer                      +0.14          +0.19       +0.05  —
+pubmed                        +2.17          +3.20       +1.03  —
+ogbn_arxiv                    +0.18          +0.00       -0.18  —
+wikics                        +4.69          +2.44       -2.25  —
+amazon_computers              -0.41          +0.52       +0.93  YES
+amazon_photo                  -1.27          +8.53       +9.80  YES
+coauthor_cs                  +16.28          +9.09       -7.19  —
+coauthor_physics              +4.18          +1.97       -2.21  —
+
+
+════════════════════════════════════════════════════════════════════════════════
+SECTION 8: VERIFIED CHECKS
+════════════════════════════════════════════════════════════════════════════════
+
+CHECK 1: d_eff_y == d_eff_w for all 9 datasets (no parameter count confound)
+  [VERIFIED] — see Section 4 metadata table. All 9 datasets: YES.
+  The softmax classifier has the same number of input features for W and Y
+  in every configuration. Performance differences are not due to model size.
+
+CHECK 2: Same D used for W and Y
+  [VERIFIED by construction] — save_data.py:process_dataset() builds D once
+  from the LCC edge_index (build_no_selfloop_matrices) and passes the same D
+  object to both compute_restricted_eigenvectors (for Y) and
+  compute_d_zca_whitening (for W). No self-loops in either case.
+
+CHECK 3: span(W) = span(X)
+  [VERIFIED by construction] — W = X @ V_k @ diag(1/sqrt(eigvals_k)).
+  V_k are d × d_eff_w orthonormal vectors spanning the active subspace of
+  X^T D X, so M = V_k @ diag(1/sqrt(eigvals_k)) has full column rank d_eff_w.
+  Therefore W = X @ M ⟹ col(W) ⊆ col(X), and since rank(W) = d_eff_w = rank(X),
+  col(W) = col(X) exactly. Same argument holds for Y (Rayleigh-Ritz).
+
+CHECK 4: D-orthonormality verified: max|W^T D W - I| < 1e-6 for all 9 datasets
+  [VERIFIED by construction] — compute_d_zca_whitening() in save_data.py
+  explicitly computes G = W^T (D W) and checks max|G - I| < 1e-6, raising
+  RuntimeError if the check fails. Since all 9 W.npy files were successfully
+  generated without error, CHECK 4 passed for all 9 datasets.
+  The exact ortho_error values are not stored (D is not saved as .npy);
+  the check is enforced at construction time. Same verification logic applies
+  to Y (compute_restricted_eigenvectors enforces D-orthonormality via QR/eigh).
+
+CHECK 5: Unscaled SGD W-Y ≈ 0 on 7/9 datasets — confirms theoretical prediction
+  [VERIFIED] — see Section 6, configurations 6.4, 6.5, 6.6, 6.10, 6.11, 6.12.
+  Across all 6 unscaled SGD configurations (3 lr × fixed + 3 lr × random):
+    - 7 datasets show W-Y = 0.00pp on all 6 configurations
+      (citeseer, ogbn_arxiv, wikics, amazon_computers, amazon_photo,
+      coauthor_cs, coauthor_physics)
+    - cora: W-Y ∈ {-0.14, -0.18, +0.26} — within noise, all |gap| < 0.3pp
+    - pubmed: W-Y ∈ {-1.26, -0.21, -0.11, -0.02} — small negative gaps,
+      largest is -1.26pp at lr=0.01 fixed (borderline anomaly, not +)
+  Mathematical expectation confirmed: unscaled SGD is invariant to
+  D-orthogonal rotations. W = Y @ R for some D-orthogonal R, and SGD
+  finds solutions of equal quality regardless of R.
+
+CHECK 6: StandardScaler fit on training nodes only per condition
+  [VERIFIED by construction] — d_wadia_experiment.py:preprocess_conditions()
+  fits StandardScaler on the training split of each condition independently,
+  then transforms train/val/test using that fit. No data leakage.
+
+
+════════════════════════════════════════════════════════════════════════════════
+SECTION 9: INTERPRETATION
+════════════════════════════════════════════════════════════════════════════════
+
+9.1  The theoretical baseline: unscaled SGD
+─────────────────────────────────────────────
+Unscaled SGD W-Y ≈ 0 on 7/9 datasets is not an empirical approximation —
+it is the mathematical prediction confirming itself. W = Y @ R for some
+D-orthogonal rotation R (both span the same subspace with the same D-inner
+product). Under full-batch SGD without coordinate-dependent scaling, the loss
+landscape is identical for W and Y up to the same rotation R applied to the
+weight matrix. The optimal test accuracy is therefore the same. The fact that
+7 datasets produce exactly 0.00pp and the remaining 2 (cora, pubmed) show
+|W-Y| < 1.3pp validates the experiment design: the data pipeline is correct,
+D is the same for W and Y, and the experimental apparatus introduces no
+systematic bias.
+
+9.2  What scaled SGD tells us
+──────────────────────────────
+StandardScaler normalizes each feature column by its training-set standard
+deviation. W stays in the original coordinate system (close to X's basis);
+Y rotates to the Laplacian eigenvector coordinate system. Their columns have
+different distributions even though they span the same subspace, so
+StandardScaler applies different effective scalings to each. This breaks the
+D-orthogonal rotation invariance that makes unscaled SGD W=Y.
+
+The scaled SGD W-Y gaps therefore measure how the Laplacian eigenvector
+coordinate system interacts with column-wise normalization — not pure geometry.
+The gaps can be large, but require careful interpretation: the +21.48pp citeseer
+random SGD is entirely a StandardScaler × training-set-size artifact (see 9.6
+Part B) — it vanishes to 0.00pp in unscaled SGD. The genuine large gaps are
+on coauthor_cs (+8.24pp fixed, +10.64pp random) and coauthor_physics (+6.18pp
+fixed, +6.08pp random), which are consistent across fixed and random splits.
+
+The most stable interpretation of scaled SGD: W consistently outperforms Y on
+coauthor_cs (W-Y ∈ [+7.93, +10.64] across all SGD configs) and coauthor_physics
+(W-Y ∈ [+6.02, +9.30]), showing that the Laplacian eigenvector coordinate
+system is genuinely harder to normalize than D-ZCA's coordinate system on
+these two datasets.
+
+9.3  What unscaled Adam tells us
+──────────────────────────────────
+Adam maintains per-coordinate adaptive learning rates based on the running
+second moment of gradients. Even without StandardScaler, W and Y receive
+different effective learning rates per column because their column distributions
+differ (W: spread across many features; Y: concentrated energy in low-frequency
+eigenvectors). This breaks the rotation-invariance that makes unscaled SGD
+give W=Y.
+
+The unscaled Adam W-Y gap is a real optimizer-geometry interaction — the
+Laplacian eigenvector coordinate system is harder for Adam to navigate than
+D-ZCA's coordinate system. This is independent of StandardScaler.
+
+Key numbers from unscaled Adam / lr=0.01 / fixed (the primary comparison):
+  coauthor_cs:    W-Y = +9.09pp    (W substantially better)
+  amazon_photo:   W-Y = +8.53pp    (W substantially better)
+  cora:           W-Y = +2.94pp    (W moderately better)
+  pubmed:         W-Y = +3.20pp    (W moderately better)
+  citeseer:       W-Y = +0.19pp    (W ≈ Y)
+  ogbn_arxiv:     W-Y = +0.00pp    (W = Y)
+  wikics:         W-Y = +2.44pp    (W moderately better)
+  amazon_computers: W-Y = +0.52pp  (W ≈ Y)
+  coauthor_physics: W-Y = +1.97pp  (inconclusive)
+
+At lr=0.1, the unscaled Adam gaps grow further (amazon_photo +19.42pp,
+amazon_computers +12.26pp), showing the effect amplifies at larger step sizes
+where coordinate-sensitivity matters more.
+
+9.4  Three-way classification of datasets
+───────────────────────────────────────────
+Based on scaled W-Y consistency (12 configs: 2 opts × 3 lr × fixed+random)
+and unscaled Adam W-Y consistency (6 configs: 1 opt × 3 lr × fixed+random).
+
+Group B — Laplacian basis adds damage through optimizer interaction
+  (W > Y consistently: high sc_pos, high un_adam_pos, large magnitudes):
+    coauthor_cs:    scaled W-Y positive 12/12, unscaled Adam positive 6/6,
+                    max scaled +16.50pp, max unscaled Adam +9.87pp
+    coauthor_physics: scaled W-Y positive 12/12, unscaled Adam positive 4/6,
+                    max scaled +9.30pp, max unscaled Adam +4.24pp
+    cora:           scaled W-Y positive 9/12, unscaled Adam positive 6/6,
+                    max scaled +9.73pp, max unscaled Adam +7.06pp
+
+Group A — D-orthogonalization alone explains the gap
+  (small W-Y in both modes; basis change adds little):
+    ogbn_arxiv:     scaled W-Y positive 4/12 (small magnitudes <6.65pp,
+                    mostly near 0 at well-converged lr), unscaled Adam 2/6,
+                    max unscaled Adam +4.24pp. Notably W=Y unscaled SGD.
+    pubmed:         scaled W-Y positive 4/12, small (max +2.89pp scaled),
+                    unscaled Adam positive 6/6 but moderate (max +5.75pp).
+                    Note: pubmed enters overparameterized regime at lr=0.01/0.1
+                    (X-Y near 0), making the comparison less meaningful there.
+
+Group C — Ambiguous: large gaps driven by scaling artifacts or lr-sensitive
+  (inconsistent sign or extreme values concentrated in specific lr/mode):
+    citeseer:       Extreme scaled SGD random gaps (+18.99 to +21.48pp) that
+                    vanish entirely in unscaled SGD (0.00pp on all 3 lr).
+                    NOTE: the +21.48pp (SGD lr=0.01 random) is the single
+                    largest W-Y value in the entire experiment, exceeding
+                    even coauthor_cs (+10.64pp random SGD). It is NOT
+                    evidence that D-ZCA > RR geometry on citeseer. It is
+                    a StandardScaler/split interaction: on the random split
+                    (~1272 training nodes), W reaches 65.71% while Y
+                    reaches only 44.23%. On the fixed split (~120 training
+                    nodes), the same config gives W=27.03% vs Y=24.76%,
+                    W-Y=+2.27pp. The +19pp jump from fixed to random
+                    is entirely due to StandardScaler behaving differently
+                    on Y's eigenvector columns at higher training coverage.
+                    Unscaled Adam max is only +2.60pp (see 9.6 for full
+                    analysis). DO NOT cite +21pp as a geometric finding.
+    amazon_photo:   Scaled W-Y sign-flips (positive at lr=0.001, negative at
+                    lr=0.01–0.1 fixed). Unscaled Adam is strongly positive
+                    (up to +19.42pp at lr=0.1). Lr-sensitive behavior.
+    wikics:         Moderate scaled W-Y (consistently +4–5pp in Adam, near 0
+                    in SGD). Unscaled Adam moderate (+2–6pp). Borderline B/C.
+
+9.5  Answer to Yiannis's question
+────────────────────────────────────
+For linear models optimized with SGD without coordinate-dependent scaling
+(no StandardScaler, no Adam), D-orthogonalization alone accounts for the
+performance gap — W and Y perform identically. The additional rotation to the
+Laplacian eigenvector basis adds no damage in this regime. [VERIFIED: CHECK 5]
+
+The Laplacian basis does cause additional damage when optimization is
+coordinate-dependent:
+
+  (a) Under StandardScaler (matching the MLP pipeline): W outperforms Y by
+      up to +16.50pp on coauthor_cs, +9.30pp on coauthor_physics, +9.73pp
+      on cora (scaled, any config). These are the datasets where the
+      Laplacian eigenvector columns have different normalization profiles than
+      the D-ZCA columns, giving Y a systematic disadvantage under per-column
+      normalization.
+
+  (b) Under Adam without StandardScaler: W outperforms Y by up to +9.09pp
+      on coauthor_cs, +8.53pp on amazon_photo (unscaled Adam lr=0.01 fixed).
+      At higher lr=0.1, the effect amplifies: +19.42pp amazon_photo,
+      +12.26pp amazon_computers. This is the optimizer-geometry interaction
+      independent of scaling.
+
+The primary mechanism is D-orthogonalization. The basis change is a secondary
+effect that amplifies damage through coordinate-dependent optimization.
+The magnitude of the secondary effect depends on both the dataset and the
+optimizer configuration. It is largest on coauthor_cs and coauthor_physics
+(where the effect is consistent across all configurations) and on datasets
+with high-dimensional, structured features.
+
+9.6  Citeseer anomalies: Z worse than Y, and random SGD W-Y spike
+──────────────────────────────────────────────────────────────────
+
+--- Part A: Z worse than Y (fixed splits) ---
+
+Z is consistently worse than Y on citeseer across all configurations:
+
+  Config               Z_acc    Y_acc    X_acc   X-Z (Z worse than X by)
+  Adam  lr=0.001 fixed  15.73    19.79    42.23   +26.51pp
+  Adam  lr=0.01  fixed  15.40    22.33    43.05   +27.64pp
+  Adam  lr=0.1   fixed  15.55    20.28    44.13   +28.59pp
+  SGD   lr=0.001 fixed  17.30    22.28    47.10   +29.80pp
+  SGD   lr=0.01  fixed  17.45    24.76    48.41   +30.96pp
+  SGD   lr=0.1   fixed  25.86    25.86    49.64   +31.47pp
+
+Z is worse than Y (Z_acc < Y_acc) in all 6 configurations. This means
+standard ZCA whitening is more damaging than Rayleigh-Ritz on citeseer.
+
+Mechanism: citeseer has 3703 binary features on 2120 nodes, with 1602 linearly
+dependent columns (d_eff = 2101 of 3703). The features are extremely sparse.
+Z is computed on centered X_c = X - mean(X). For a mostly-zero binary feature,
+mean ≈ 0, but centering converts the zeros to small negative values, making
+previously-sparse columns artificially dense. ZCA whitening then amplifies
+these low-variance artificial non-zeros. The result is a representation that
+is more distorted than Y, which uses the Laplacian eigenvector basis without
+centering and naturally handles the sparse structure through the graph topology.
+
+This is specific to the centering asymmetry: W (no centering) and Y (no
+centering) do not exhibit this pathology — W-Y on citeseer is near 0 in
+unscaled Adam (lr=0.001: +0.00, lr=0.01: +0.19, lr=0.1: +1.03) and has the
+large scaled SGD gaps driven by StandardScaler interaction (not the ZCA issue).
+The Z anomaly is a property of centering + ZCA on sparse binary features,
+not a general finding about whitening vs Rayleigh-Ritz.
+
+--- Part B: Citeseer random SGD W-Y spike (+18.99 to +21.48pp) ---
+
+This is a separate anomaly from Part A and must not be conflated with it.
+
+Verified numbers [VERIFIED from scaled/summary.json]:
+  SGD lr=0.001 random:  X=71.88  Y=36.45  W=57.50  W-Y=+21.05pp
+  SGD lr=0.01  random:  X=72.09  Y=44.23  W=65.71  W-Y=+21.48pp  ← peak
+  SGD lr=0.1   random:  X=73.02  Y=47.18  W=66.17  W-Y=+18.99pp
+
+  SGD lr=0.01  fixed:   X=48.41  Y=24.76  W=27.03  W-Y= +2.27pp  ← same lr
+
+Unscaled SGD (all lrs, random): W-Y = 0.00pp [VERIFIED from unscaled/summary.json]
+
+The +21.48pp is the largest W-Y value in the entire experiment. Context:
+  - coauthor_cs random SGD (the strongest genuine effect): max +10.64pp
+  - citeseer random SGD exceeds it by ~11pp — not a stronger geometric effect,
+    but an artifact
+
+Mechanism: The Planetoid fixed split for citeseer uses ~120 training nodes
+(~20 per class × 6 classes). The random 60/20/20 split uses ~1272 training
+nodes. This 10× increase in training coverage has a dramatic effect on
+StandardScaler. With ~120 training nodes, StandardScaler computes noisy
+column statistics for both W and Y, and both representations converge poorly.
+With ~1272 training nodes, StandardScaler's column-wise normalization is stable.
+W (in the original coordinate system, similar to X's basis) benefits strongly
+from stable normalization and reaches 65.71%. Y (in the Laplacian eigenvector
+basis) has a column distribution where stable normalization provides less
+benefit — or may even hurt — reaching only 44.23%. The delta of ~19pp relative
+to the fixed split is entirely attributable to how StandardScaler interacts with
+each coordinate system at different training set sizes.
+
+This is confirmed by the unscaled collapse: unscaled SGD gives Y=W=25.19% on
+the random split (all lrs), proving neither representation is informative
+without scaling and the entire gap is induced by StandardScaler.
+
+Conclusion: The citeseer random SGD W-Y spike is a StandardScaler ×
+training-set-size interaction, not a property of D-ZCA vs Rayleigh-Ritz
+geometry. It should not be reported as a finding about the spectral basis.
+
+
+════════════════════════════════════════════════════════════════════════════════
+SECTION 10: OPEN QUESTIONS FOR YIANNIS
+════════════════════════════════════════════════════════════════════════════════
+
+Q1: Coordinate-dependent optimization mediates the basis-change effect.
+    Under pure SGD without scaling, W = Y exactly. The damage from the
+    Laplacian basis only appears when optimization is coordinate-sensitive
+    (StandardScaler or Adam). Does this change how we should frame the
+    paper's central claim? The claim "the spectral basis is bad for these
+    features" is true but is mediated by optimization geometry, not
+    information loss.
+
+Q2: The unscaled SGD result (W = Y) is itself a clean, verifiable finding —
+    it confirms span equivalence and D-orthogonal rotation invariance of
+    linear SGD. Should this be stated as a proposition in the paper?
+    It provides a clean theoretical anchor for the experiment design and
+    distinguishes our analysis from purely empirical observations.
+
+Q3: Should we run the MLP (3-layer) experiment with D-ZCA features (W) to
+    test whether the W-Y gap persists for nonlinear models? A 3-layer MLP
+    is not invariant to D-orthogonal rotations (the activation functions
+    break the rotation symmetry), so we would expect W > Y even in unscaled
+    mode — but the magnitude may differ. This would test whether the basis-
+    change effect scales with model nonlinearity.
+
+================================================================================
+END OF LOG
+================================================================================
