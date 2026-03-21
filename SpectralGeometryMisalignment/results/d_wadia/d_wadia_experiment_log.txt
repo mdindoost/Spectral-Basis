@@ -10,14 +10,11 @@ Results: SpectralGeometryMisalignment/results/d_wadia/
 
 All numbers in this log are [VERIFIED] — retrieved directly from
   scaled/summary.json, unscaled/summary.json, and data/*.npy files.
-No numbers are estimated, rounded, or inferred.
 
 
 ════════════════════════════════════════════════════════════════════════════════
 SECTION 1: EXPERIMENT OVERVIEW AND MOTIVATION
 ════════════════════════════════════════════════════════════════════════════════
-
---- Central question ---
 
 Rayleigh-Ritz (Y) does two things simultaneously:
   (1) D-orthogonalization: enforces U^T D U = I
