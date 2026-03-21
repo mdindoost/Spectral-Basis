@@ -232,60 +232,9 @@ def check_span_alignment(X_diff, U):
 # ============================================================================
 
 print('\n' + '=' * 70)
-print('[Step 1] Computing and saving data arrays...')
+print('[Step 1+2] Computing arrays and running experiments (one k at a time).')
+print('           Arrays are freed after each k to avoid OOM on large datasets.')
 print('=' * 70)
-
-# Cache arrays for use in Step 2 (avoids recomputing diffusion twice)
-arrays_by_k = {}
-
-for k in K_VALUES:
-    print(f'\n  k = {k}')
-
-    X_diff = sgc_precompute(features_dense.copy(), A_sgc, k)
-
-    # Rayleigh-Ritz: compute restricted eigenvectors on X_diff
-    # Signature: compute_restricted_eigenvectors(X, L, D, num_components)
-    # L=Laplacian, D=degree — order matches CLAUDE.md convention and graph_utils.py
-    U, eigenvalues, d_eff, ortho_err = compute_restricted_eigenvectors(
-        X_diff, L, D, num_components
-    )
-
-    print(f'    d_eff = {d_eff}, X_diff.shape = {X_diff.shape}, U.shape = {U.shape}')
-
-    # Verification 1: D-orthonormality — U^T D U should be identity (< 1e-6)
-    print(f'    ortho_error = {ortho_err:.2e}', end='')
-    if ortho_err >= 1e-6:
-        raise ValueError(
-            f'D-orthonormality check FAILED at k={k}: ortho_err={ortho_err:.2e}. '
-            f'Check that L and D were not swapped in compute_restricted_eigenvectors call.'
-        )
-    print('  [PASS]')
-
-    # Verification 2: span alignment — mean canonical correlation > 0.99
-    mean_cc, all_cc = check_span_alignment(X_diff, U)
-    print(f'    mean canonical correlation = {mean_cc:.6f}', end='')
-    if mean_cc < 0.99:
-        raise ValueError(
-            f'Span check FAILED at k={k}: mean_cc={mean_cc:.6f}. '
-            f'span(U) and span(X_diff) are not aligned — check Rayleigh-Ritz implementation.'
-        )
-    print('  [PASS]')
-
-    if SAVE_ARRAYS:
-        np.save(os.path.join(DATA_DIR, f'X_diff_k{k}.npy'), X_diff)
-        np.save(os.path.join(DATA_DIR, f'Y_k{k}.npy'),      U)
-        print(f'    Saved X_diff_k{k}.npy and Y_k{k}.npy')
-
-    arrays_by_k[k] = {
-        'X_diff':      X_diff,
-        'U':           U,
-        'eigenvalues': eigenvalues,
-        'd_eff':       d_eff,
-        'ortho_err':   ortho_err,
-        'mean_cc':     mean_cc,
-    }
-
-print('\n[Step 1] All verifications passed.' + (' Data saved.' if SAVE_ARRAYS else ' (--save-arrays not set, skipping file writes.)'))
 
 
 # ============================================================================
@@ -398,10 +347,43 @@ print('[Step 2] Running softmax regression experiment...')
 print('=' * 70)
 
 for k in K_VALUES:
-    arr   = arrays_by_k[k]
-    X_diff = arr['X_diff']
-    U      = arr['U']
-    d_eff  = arr['d_eff']
+    print(f'\n  k = {k}')
+
+    # ── Compute arrays for this k (Step 1 inline) ────────────────────────
+    X_diff = sgc_precompute(features_dense.copy(), A_sgc, k)
+
+    U, eigenvalues, d_eff, ortho_err = compute_restricted_eigenvectors(
+        X_diff, L, D, num_components
+    )
+
+    print(f'    d_eff = {d_eff}, X_diff.shape = {X_diff.shape}, U.shape = {U.shape}')
+
+    print(f'    ortho_error = {ortho_err:.2e}', end='')
+    if ortho_err >= 1e-6:
+        raise ValueError(
+            f'D-orthonormality check FAILED at k={k}: ortho_err={ortho_err:.2e}. '
+            f'Check that L and D were not swapped in compute_restricted_eigenvectors call.'
+        )
+    print('  [PASS]')
+
+    mean_cc, all_cc = check_span_alignment(X_diff, U)
+    print(f'    mean canonical correlation = {mean_cc:.6f}', end='')
+    if mean_cc < 0.99:
+        raise ValueError(
+            f'Span check FAILED at k={k}: mean_cc={mean_cc:.6f}. '
+            f'span(U) and span(X_diff) are not aligned — check Rayleigh-Ritz implementation.'
+        )
+    print('  [PASS]')
+
+    if SAVE_ARRAYS:
+        np.save(os.path.join(DATA_DIR, f'X_diff_k{k}.npy'), X_diff)
+        np.save(os.path.join(DATA_DIR, f'Y_k{k}.npy'),      U)
+        print(f'    Saved X_diff_k{k}.npy and Y_k{k}.npy')
+
+    arr = {
+        'ortho_err': ortho_err,
+        'mean_cc':   mean_cc,
+    }
 
     # Raw features — NO StandardScaler.
     # master_training.py scales X_diff and U for SGC+MLP / StandardMLP experiments
@@ -580,6 +562,9 @@ for k in K_VALUES:
             print(f'  *** UNEXPECTED (>1pp) — span identity says these should be equal ***')
         else:
             print(f'  (within 1pp — consistent with span identity)')
+
+    # Free large arrays before next k to avoid OOM on large datasets
+    del X_diff, U, eigenvalues
 
 print(f'\n{"=" * 70}')
 print('EXP 9 COMPLETE')
