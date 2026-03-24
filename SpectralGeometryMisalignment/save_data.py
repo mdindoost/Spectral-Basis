@@ -40,6 +40,7 @@ import sys
 import argparse
 import numpy as np
 import scipy.sparse as sp
+import scipy.linalg as la
 from sklearn.model_selection import train_test_split
 
 # ── Path setup ────────────────────────────────────────────────────────────────
@@ -186,6 +187,49 @@ def compute_d_zca_whitening(X: np.ndarray, D):
     return W, d_eff_w, ortho_error
 
 
+def compute_std_eigenvectors(X: np.ndarray, L):
+    """
+    Standard (non-generalized) eigenvectors of the restricted Laplacian.
+    Solves: (Q^T L Q) v = lambda v   (standard, not generalized)
+    Result: U_std^T U_std = I  (Euclidean orthonormal, NOT D-orthonormal)
+    span(U_std) = span(X) exactly.
+
+    L may be sparse (scipy) or dense. Both are supported via L @ Q.
+
+    Returns: (U_std float64, eigenvalues, d_eff, ortho_error)
+    Raises RuntimeError if ortho_error >= 1e-6.
+    """
+    # Step 1: QR decomposition of X to get orthonormal basis Q
+    rank_X = np.linalg.matrix_rank(X, tol=1e-10)
+    Q, _ = np.linalg.qr(X)
+    Q = Q[:, :rank_X]           # (n, d_eff)
+    d_eff = rank_X
+
+    # Step 2: Restrict L to the subspace spanned by X
+    # L @ Q: sparse @ dense → dense (scipy sparse supports this natively)
+    # Parentheses are required: Q.T @ (L @ Q), NOT (Q.T @ L) @ Q,
+    # because numpy dense @ scipy sparse is not directly supported.
+    L_r = Q.T @ (L @ Q)         # (d_eff, d_eff), dense
+    L_r = 0.5 * (L_r + L_r.T)  # symmetrize for numerical stability
+
+    # Step 3: Standard eigendecomposition (NOT generalized)
+    # eigh returns eigenvalues in ascending order (smallest first)
+    # Smallest eigenvalues = lowest frequency = class-aligned
+    eigenvalues, V = la.eigh(L_r)
+
+    # Step 4: Map back to node space
+    U_std = Q @ V               # (n, d_eff)
+
+    # Step 5: Verify standard orthonormality: U_std^T U_std should be I
+    ortho_error = float(np.max(np.abs(U_std.T @ U_std - np.eye(d_eff))))
+    if ortho_error >= 1e-6:
+        raise RuntimeError(
+            f'Standard eigenvector ortho check FAILED: '
+            f'max|U_std^T U_std - I| = {ortho_error:.2e}'
+        )
+    return U_std, eigenvalues, d_eff, ortho_error
+
+
 # ── Per-dataset processing ────────────────────────────────────────────────────
 
 def process_dataset(dataset_name: str) -> dict:
@@ -280,7 +324,40 @@ def process_dataset(dataset_name: str) -> dict:
         W_feat, d_eff_w, ortho_err_w = compute_d_zca_whitening(X_dense, D)
         print(f'  d_eff_w={d_eff_w}, ortho_error={ortho_err_w:.2e}  [PASS]')
 
-    # ── 8. Fixed split masks ──────────────────────────────────────────────────
+    # ── 8. Compute U_std = standard (Euclidean) eigenvectors of X ────────────
+    ustd_path = os.path.join(DATA_OUT_ROOT, _folder_name(dataset_name), 'U_std.npy')
+    if os.path.isfile(ustd_path):
+        print(f'Loading U_std from cache: {ustd_path}')
+        U_std_loaded = np.load(ustd_path).astype(np.float64)
+        d_eff_ustd   = U_std_loaded.shape[1]
+        G_std        = U_std_loaded.T @ U_std_loaded
+        ortho_err_ustd = float(np.max(np.abs(G_std - np.eye(d_eff_ustd))))
+        U_std = U_std_loaded
+        # D-orthonormality check (intentionally NOT near zero)
+        G_D_std       = U_std.T @ (D @ U_std)
+        d_ortho_ustd  = float(np.max(np.abs(G_D_std - np.eye(d_eff_ustd))))
+        print(f'  d_eff_ustd={d_eff_ustd}, '
+              f'max|U_std^T U_std - I|={ortho_err_ustd:.2e} [CACHED]  '
+              f'max|U_std^T D U_std - I|={d_ortho_ustd:.2e} (expected non-zero)')
+    else:
+        print('Computing U_std = standard eigenvectors (unnormalized Laplacian, '
+              'no self-loops, standard eigh)...')
+        U_std, _, d_eff_ustd, ortho_err_ustd = compute_std_eigenvectors(X_dense, L)
+        # D-orthonormality check (intentionally NOT near zero)
+        G_D_std      = U_std.T @ (D @ U_std)
+        d_ortho_ustd = float(np.max(np.abs(G_D_std - np.eye(d_eff_ustd))))
+        print(f'  d_eff_ustd={d_eff_ustd}, '
+              f'max|U_std^T U_std - I|={ortho_err_ustd:.2e} [PASS]  '
+              f'max|U_std^T D U_std - I|={d_ortho_ustd:.2e} (expected non-zero)')
+
+    # Confirm d_eff matches Y (both use QR on same X)
+    if d_eff_ustd != d_eff:
+        raise RuntimeError(
+            f'd_eff mismatch: Y has d_eff={d_eff}, U_std has d_eff={d_eff_ustd}. '
+            f'Both should use the same QR decomposition of X.'
+        )
+
+    # ── 9. Fixed split masks ──────────────────────────────────────────────────
     # split_idx_lcc holds remapped LCC indices (integer arrays)
     tr_idx_fixed = split_idx_lcc['train_idx'] if split_idx_lcc else np.array([], dtype=int)
     va_idx_fixed = split_idx_lcc['val_idx']   if split_idx_lcc else np.array([], dtype=int)
@@ -298,7 +375,7 @@ def process_dataset(dataset_name: str) -> dict:
     assert not np.any(fixed_train_mask & fixed_test_mask), 'Train/Test overlap!'
     assert not np.any(fixed_val_mask & fixed_test_mask),   'Val/Test overlap!'
 
-    # ── 9. Random split masks (stratified 60/20/20 on LCC nodes) ─────────────
+    # ── 10. Random split masks (stratified 60/20/20 on LCC nodes) ────────────
     all_indices   = np.arange(n)
     random_masks  = {}
     for seed in RANDOM_SEEDS:
@@ -317,7 +394,7 @@ def process_dataset(dataset_name: str) -> dict:
         te_m = np.zeros(n, dtype=bool); te_m[te] = True
         random_masks[seed] = (tr_m, va_m, te_m)
 
-    # ── 10. Save all files ────────────────────────────────────────────────────
+    # ── 11. Save all files ───────────────────────────────────────────────────
     folder    = _folder_name(dataset_name)
     out_dir   = os.path.join(DATA_OUT_ROOT, folder)
     os.makedirs(out_dir, exist_ok=True)
@@ -326,6 +403,7 @@ def process_dataset(dataset_name: str) -> dict:
     np.save(os.path.join(out_dir, 'Y.npy'),              Y.astype(np.float32))
     np.save(os.path.join(out_dir, 'Z.npy'),              Z.astype(np.float32))
     np.save(os.path.join(out_dir, 'W.npy'),              W_feat.astype(np.float32))
+    np.save(os.path.join(out_dir, 'U_std.npy'),          U_std.astype(np.float32))
     np.save(os.path.join(out_dir, 'labels.npy'),          labels_arr)
     np.save(os.path.join(out_dir, 'fixed_train_mask.npy'), fixed_train_mask)
     np.save(os.path.join(out_dir, 'fixed_val_mask.npy'),   fixed_val_mask)
@@ -338,25 +416,34 @@ def process_dataset(dataset_name: str) -> dict:
 
     print(f'  Saved to: {out_dir}/')
 
-    # ── 11. Verification summary ──────────────────────────────────────────────
+    # ── 12. Verification summary ──────────────────────────────────────────────
     print(f'\n  Summary:')
-    print(f'    {"n":>10} {"d":>6} {"d_eff_y":>8} {"d_eff_z":>8} {"d_eff_w":>8} '
+    print(f'    {"n":>10} {"d":>6} {"d_eff_y":>8} {"d_eff_z":>8} '
+          f'{"d_eff_w":>8} {"d_eff_us":>9} '
           f'{"train":>8} {"val":>8} {"test":>8}')
     print(f'    {n:>10,} {d:>6} {d_eff:>8} {d_eff_z:>8} {d_eff_w:>8} '
+          f'{d_eff_ustd:>9} '
           f'{fixed_train_mask.sum():>8} {fixed_val_mask.sum():>8} '
           f'{fixed_test_mask.sum():>8}')
     print(f'    ortho Y={ortho_err:.2e} [PASS]  '
-          f'Z={ortho_err_z:.2e} [PASS]  W={ortho_err_w:.2e} [PASS]')
+          f'Z={ortho_err_z:.2e} [PASS]  '
+          f'W={ortho_err_w:.2e} [PASS]  '
+          f'U_std={ortho_err_ustd:.2e} [PASS]')
+    print(f'    D-ortho check (NOT expected to be near zero):  '
+          f'max|U_std^T D U_std - I|={d_ortho_ustd:.2e}')
 
     return {
-        'dataset':    dataset_name,
+        'dataset':      dataset_name,
         'n': n, 'd': d,
-        'd_eff_y':    d_eff,
-        'd_eff_z':    d_eff_z,
-        'd_eff_w':    d_eff_w,
-        'ortho_err_y': float(ortho_err),
-        'ortho_err_z': float(ortho_err_z),
-        'ortho_err_w': float(ortho_err_w),
+        'd_eff_y':      d_eff,
+        'd_eff_z':      d_eff_z,
+        'd_eff_w':      d_eff_w,
+        'd_eff_ustd':   d_eff_ustd,
+        'ortho_err_y':  float(ortho_err),
+        'ortho_err_z':  float(ortho_err_z),
+        'ortho_err_w':  float(ortho_err_w),
+        'ortho_err_ustd': float(ortho_err_ustd),
+        'd_ortho_ustd': float(d_ortho_ustd),
         'train': int(fixed_train_mask.sum()),
         'val':   int(fixed_val_mask.sum()),
         'test':  int(fixed_test_mask.sum()),
@@ -441,6 +528,22 @@ if __name__ == '__main__':
                 W_feat, d_eff_w, ortho_err_w = compute_d_zca_whitening(X_dense, D)
                 np.save(w_path, W_feat.astype(np.float32))
                 print(f'  d_eff_w={d_eff_w}, ortho_err={ortho_err_w:.2e}  [PASS]  Saved.')
+            # Compute U_std
+            ustd_path = os.path.join(out_dir, 'U_std.npy')
+            if os.path.isfile(ustd_path):
+                print(f'  U_std already exists, skipping.')
+            else:
+                print('  Computing U_std = standard eigenvectors (standard eigh)...')
+                U_std, _, d_eff_ustd, ortho_err_ustd = compute_std_eigenvectors(
+                    X_dense, L
+                )
+                G_D_std      = U_std.T @ (D @ U_std)
+                d_ortho_ustd = float(np.max(np.abs(G_D_std - np.eye(d_eff_ustd))))
+                np.save(ustd_path, U_std.astype(np.float32))
+                print(f'  d_eff_ustd={d_eff_ustd}, '
+                      f'max|U_std^T U_std - I|={ortho_err_ustd:.2e} [PASS]  '
+                      f'max|U_std^T D U_std - I|={d_ortho_ustd:.2e} (expected non-zero)  '
+                      f'Saved.')
         print('\nDone (zw-only).')
         sys.exit(0)
 
@@ -457,13 +560,13 @@ if __name__ == '__main__':
     print('FINAL SUMMARY')
     print('=' * 80)
     header = (f'  {"Dataset":<22} {"n":>8} {"d":>6} {"d_eff_y":>8} '
-              f'{"d_eff_z":>8} {"d_eff_w":>8} '
+              f'{"d_eff_z":>8} {"d_eff_w":>8} {"d_eff_us":>9} '
               f'{"train":>8} {"val":>8} {"test":>8}')
     print(header)
     print('  ' + '-' * (len(header) - 2))
     for s in summaries:
         print(f'  {s["dataset"]:<22} {s["n"]:>8,} {s["d"]:>6} {s["d_eff_y"]:>8} '
-              f'{s["d_eff_z"]:>8} {s["d_eff_w"]:>8} '
+              f'{s["d_eff_z"]:>8} {s["d_eff_w"]:>8} {s["d_eff_ustd"]:>9} '
               f'{s["train"]:>8} {s["val"]:>8} {s["test"]:>8}')
 
     print('\nAll datasets saved successfully.')
