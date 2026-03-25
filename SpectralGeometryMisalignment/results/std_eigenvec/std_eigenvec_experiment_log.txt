@@ -1,21 +1,3 @@
-================================================================================
-STANDARD EIGENVECTORS CONTROL EXPERIMENT — FULL EXPERIMENT LOG
-SpectralGeometryMisalignment/results/std_eigenvec/std_eigenvec_experiment_log.txt
-================================================================================
-
-Generated: 2026-03-25
-Code: SpectralGeometryMisalignment/std_eigenvec_experiment.py
-Data: SpectralGeometryMisalignment/data/{dataset}/
-Results: SpectralGeometryMisalignment/results/std_eigenvec/
-
-All numbers in this log are [VERIFIED] — retrieved directly from
-  results/std_eigenvec/linear/summary.json,
-  results/std_eigenvec/mlp/summary.json,
-  results/std_eigenvec/mlp/{dataset}/*.json (per-run files),
-  and data/{dataset}/*.npy files.
-[COMPUTED] tags mark values derived arithmetically from [VERIFIED] numbers.
-
-
 ════════════════════════════════════════════════════════════════════════════════
 SECTION 1: EXPERIMENT OVERVIEW AND MOTIVATION
 ════════════════════════════════════════════════════════════════════════════════
