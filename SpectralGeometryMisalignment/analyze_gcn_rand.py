@@ -826,10 +826,17 @@ def report_findings(xrand_records, gcnx_records, line):
             line(f'    {ds:<22}: GCN_rand={f2(gcnr)}%  GCN_X={f2(gcnx)}%  '
                  f'Topo%={tv:.1f}%  Gap A={f2(gapA)} pp')
     line('')
-    line('  Conclusion: In amazon/coauthor co-purchase and co-authorship networks,')
-    line('  graph topology alone (zero class information in features) achieves 93–98%')
-    line('  of what real features achieve. Features add only 2–5 pp. In citation')
-    line('  networks and ogbn-arxiv, features carry substantially more class signal.')
+    topo_dominated   = {ds: v for ds, v in topo_vals.items() if v >= 93}
+    topo_feature_dep = {ds: v for ds, v in topo_vals.items() if v <  93}
+    topo_fd_min = min(topo_feature_dep.values())
+    topo_fd_max = max(topo_feature_dep.values())
+    line(f'  Conclusion: In amazon/coauthor co-purchase and co-authorship networks,')
+    line(f'  graph topology alone (zero class information in features) achieves')
+    line(f'  {min(topo_dominated.values()):.1f}–{max(topo_dominated.values()):.1f}% of what real features achieve.')
+    line(f'  Features add only {min(r2[ds]["means"]["GCN_X"]-r2[ds]["means"]["GCN_rand"] for ds in topo_dominated):.1f}–'
+         f'{max(r2[ds]["means"]["GCN_X"]-r2[ds]["means"]["GCN_rand"] for ds in topo_dominated):.1f} pp.')
+    line(f'  In citation networks, wikics, and ogbn-arxiv, topology explains only')
+    line(f'  {topo_fd_min:.1f}–{topo_fd_max:.1f}% of feature-based accuracy — features carry substantially more class signal.')
 
     # ── Finding 2: Gap B — message passing vs spectral projection ─────────────
     line('')
@@ -897,10 +904,13 @@ def report_findings(xrand_records, gcnx_records, line):
              f'{f2(sgd_mlpy):>10} {f2(sgd_mlprn):>12}')
     line('')
     line('  Conclusion: Under adam lr=0.01, Gap C is small (0–3 pp) and appears')
-    line('  unimportant. Under SGD best-LR, Gap C is large on amazon/coauthor')
-    line('  networks (+8 to +11 pp), revealing that row normalization substantially')
-    line('  helps MLP on Y_rand when the optimizer does not overfit. The adam canonical')
-    line('  config suppresses this signal. SGD numbers are more informative for Gap C.')
+    line('  unimportant. Under SGD best-LR, Gap C is large and positive on')
+    line('  amazon/coauthor networks (+8 to +11 pp), and moderately positive on wikics.')
+    line('  However, row-norm HURTS on citation networks under SGD: cora (−0.77 pp),')
+    line('  citeseer (−3.85 pp). The effect of row normalization on MLP_Y is thus')
+    line('  dataset-dependent — beneficial where topology dominates, harmful on citation')
+    line('  networks. The adam canonical config suppresses the entire Gap C signal.')
+    line('  SGD numbers are required to see this heterogeneity.')
 
     # ── Finding 5: Cora Gap D anomaly ─────────────────────────────────────────
     line('')
@@ -943,7 +953,8 @@ def report_findings(xrand_records, gcnx_records, line):
             line(f'    {mk}: {vals}')
     line(f'    Random baseline: {base_ax:.2f}%')
     line('')
-    line('  GCN_rand converges quickly (~ep100) and plateaus at 26.49%.')
+    line('  GCN_rand gains +2.42 pp from ep100 to ep500 (not fully converged, but the')
+    line('  rate of gain slows substantially after ep200; plateau near ep300–400).')
     line('  GCN_rowNorm_Y is still rising at ep500 (32.00%), having started below random.')
     line('  Gap D at ep500 = +5.51 pp — largest positive Gap D across all datasets.')
     line('  The reported GCN_rowNorm_Y accuracy for ogbn-arxiv is a lower bound.')
@@ -971,15 +982,20 @@ def report_findings(xrand_records, gcnx_records, line):
                                       optimizer='adam', lr=blr_adam), 'MLP_Y'))
         rs = sgd_val  / base if base > 0 else float('nan')
         ra = adam_val / base if base > 0 else float('nan')
-        flag = '  ***' if ra < 1.0 else ''
-        line(f'  {ds:<22} {base:>6.2f} {f2(sgd_val):>10} {f2(adam_val):>11} '
-             f'{rs:>9.3f}x {ra:>10.3f}x{flag}')
+        flag_adam = '  ***' if ra < 1.0 else ''
+        flag_sgd  = ' ***' if rs < 1.0 else '    '
+        line(f'  {ds:<22} {base:>6.2f} {f2(sgd_val):>10}{flag_sgd} {f2(adam_val):>11} '
+             f'{rs:>9.3f}x {ra:>10.3f}x{flag_adam}')
     line('')
     line('  Conclusion: Adam is a poor optimizer for MLP on Y_rand. It memorizes')
     line('  spurious random feature-label associations, becomes overconfident, and')
     line('  collapses below random on test. SGD is more conservative and gives the')
     line('  meaningful baseline. Never average Adam and SGD for MLP_Y — report separately.')
-    line('  *** = below random baseline (ratio < 1.0).')
+    line('  *** (Adam col) = below random baseline (ratio < 1.0).')
+    line('  *** (SGD col)  = below random under SGD (special case).')
+    line('  PubMed (3-class) is anomalous: MLP_Y falls below random under BOTH optimizers,')
+    line('  indicating Y_rand carries essentially no class signal for pubmed at this config.')
+    line('  This is distinct from the pure Adam artifact seen on cora and coauthor_cs.')
 
     # ── Finding 8: PubMed draw instability ────────────────────────────────────
     line('')
@@ -1017,17 +1033,18 @@ def report_findings(xrand_records, gcnx_records, line):
     line('─' * 78)
     line('SUMMARY — KEY NUMBERS PER FINDING')
     line('─' * 78)
-    line('  F1 Topology ratio (GCN_rand/GCN_X): amazon/coauthor 93–98%, others 38–82%')
+    line('  F1 Topology ratio (GCN_rand/GCN_X): amazon/coauthor 93–98%, others 38–73%')
     line('  F2 Gap B range (MP vs spectral): '
          f'{min(r2[ds]["means"]["GCN_rand"]-r2[ds]["means"]["MLP_Y"] for ds in ALL_DATASETS):.1f}'
          f' to '
          f'{max(r2[ds]["means"]["GCN_rand"]-r2[ds]["means"]["MLP_Y"] for ds in ALL_DATASETS):.1f}'
          ' pp across 9 datasets')
     line('  F3 GCN_rand fixed→random Δ: near 0 on amazon/coauthor, +17 to +39 pp on citation/wikics')
-    line('  F4 Gap C SGD best-LR: up to +11.46 pp (coauthor_physics); adam suppresses to <3 pp')
+    line('  F4 Gap C: SGD +8 to +11 pp on amazon/coauthor; NEGATIVE on cora (−0.77), citeseer (−3.85)')
     line('  F5 Gap D negative only on Cora: −8.76 pp; all others 0 to +5.51 pp')
-    line('  F6 GCN_rowNorm_Y ogbn-arxiv: still rising at ep500 (32.00%), not converged')
-    line('  F7 Adam artifact: MLP_Y below random on cora, pubmed, coauthor_cs under adam')
+    line('  F6 GCN_rand: +2.42 pp gain ep100→ep500; GCN_rowNorm_Y still rising at ep500 (32.00%)')
+    line('  F7 Adam artifact: MLP_Y below random on cora, pubmed, coauthor_cs under adam;')
+    line('       pubmed also below random under SGD (3-class near-random regime)')
     line('  F8 PubMed MLP_Y draw_std/seed_std ratio: 3.2× — unreliable, report with caveat')
 
 

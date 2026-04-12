@@ -461,9 +461,11 @@ Metric: Topo% = GCN_rand / GCN_X × 100 at canonical config.
     wikics                : GCN_rand=56.83%  GCN_X=78.54%  Topo%=72.4%  Gap A=21.71 pp
 
   Conclusion: In amazon/coauthor co-purchase and co-authorship networks,
-  graph topology alone (zero class information in features) achieves 93–98%
-  of what real features achieve. Features add only 2–5 pp. In citation
-  networks and ogbn-arxiv, features carry substantially more class signal.
+  graph topology alone (zero class information in features) achieves
+  94.7–97.9% of what real features achieve.
+  Features add only 2.0–4.9 pp.
+  In citation networks, wikics, and ogbn-arxiv, topology explains only
+  37.9–72.7% of feature-based accuracy — features carry substantially more class signal.
 
 ──────────────────────────────────────────────────────────────────────────────
 FINDING 2: Message passing vastly outperforms spectral projection (Gap B)
@@ -528,10 +530,13 @@ Left: canonical config (adam lr=0.01).  Right: SGD best-LR.
   coauthor_physics              +3.27           +11.46       38.92        50.38
 
   Conclusion: Under adam lr=0.01, Gap C is small (0–3 pp) and appears
-  unimportant. Under SGD best-LR, Gap C is large on amazon/coauthor
-  networks (+8 to +11 pp), revealing that row normalization substantially
-  helps MLP on Y_rand when the optimizer does not overfit. The adam canonical
-  config suppresses this signal. SGD numbers are more informative for Gap C.
+  unimportant. Under SGD best-LR, Gap C is large and positive on
+  amazon/coauthor networks (+8 to +11 pp), and moderately positive on wikics.
+  However, row-norm HURTS on citation networks under SGD: cora (−0.77 pp),
+  citeseer (−3.85 pp). The effect of row normalization on MLP_Y is thus
+  dataset-dependent — beneficial where topology dominates, harmful on citation
+  networks. The adam canonical config suppresses the entire Gap C signal.
+  SGD numbers are required to see this heterogeneity.
 
 ──────────────────────────────────────────────────────────────────────────────
 FINDING 5: Cora is the only dataset where row-norm inside GCN hurts (Gap D < 0)
@@ -564,7 +569,8 @@ Training curve at canonical config (adam, lr=0.01, fixed split):
     GCN_rowNorm_Y: ep50=11.70%  ep100=22.24%  ep200=25.78%  ep300=28.16%  ep400=30.25%  ep500=32.00%
     Random baseline: 2.50%
 
-  GCN_rand converges quickly (~ep100) and plateaus at 26.49%.
+  GCN_rand gains +2.42 pp from ep100 to ep500 (not fully converged, but the
+  rate of gain slows substantially after ep200; plateau near ep300–400).
   GCN_rowNorm_Y is still rising at ep500 (32.00%), having started below random.
   Gap D at ep500 = +5.51 pp — largest positive Gap D across all datasets.
   The reported GCN_rowNorm_Y accuracy for ogbn-arxiv is a lower bound.
@@ -578,21 +584,25 @@ Comparison: MLP_Y SGD best-LR vs MLP_Y Adam best-LR (fixed split).
 
   Dataset                 base%  MLP_Y SGD  MLP_Y Adam  ratio SGD  ratio Adam
   --------------------------------------------------------------------------
-  cora                    14.29      15.77       13.87     1.104x      0.971x  ***
-  citeseer                16.67      26.93       21.43     1.616x      1.286x
-  pubmed                  33.33      32.49       32.71     0.975x      0.981x  ***
-  ogbn_arxiv               2.50       5.87       11.16     2.346x      4.463x
-  wikics                  10.00      15.68       14.23     1.568x      1.423x
-  amazon_computers        10.00      29.30       23.38     2.930x      2.338x
-  amazon_photo            12.50      18.30       15.37     1.464x      1.230x
-  coauthor_cs              6.67      14.82        5.86     2.223x      0.878x  ***
-  coauthor_physics        20.00      38.92       25.29     1.946x      1.264x
+  cora                    14.29      15.77           13.87     1.104x      0.971x  ***
+  citeseer                16.67      26.93           21.43     1.616x      1.286x
+  pubmed                  33.33      32.49 ***       32.71     0.975x      0.981x  ***
+  ogbn_arxiv               2.50       5.87           11.16     2.346x      4.463x
+  wikics                  10.00      15.68           14.23     1.568x      1.423x
+  amazon_computers        10.00      29.30           23.38     2.930x      2.338x
+  amazon_photo            12.50      18.30           15.37     1.464x      1.230x
+  coauthor_cs              6.67      14.82            5.86     2.223x      0.878x  ***
+  coauthor_physics        20.00      38.92           25.29     1.946x      1.264x
 
   Conclusion: Adam is a poor optimizer for MLP on Y_rand. It memorizes
   spurious random feature-label associations, becomes overconfident, and
   collapses below random on test. SGD is more conservative and gives the
   meaningful baseline. Never average Adam and SGD for MLP_Y — report separately.
-  *** = below random baseline (ratio < 1.0).
+  *** (Adam col) = below random baseline (ratio < 1.0).
+  *** (SGD col)  = below random under SGD (special case).
+  PubMed (3-class) is anomalous: MLP_Y falls below random under BOTH optimizers,
+  indicating Y_rand carries essentially no class signal for pubmed at this config.
+  This is distinct from the pure Adam artifact seen on cora and coauthor_cs.
 
 ──────────────────────────────────────────────────────────────────────────────
 FINDING 8: PubMed MLP draw instability — results near 3-class boundary are unreliable
@@ -614,13 +624,14 @@ MLP_Y per-draw means at canonical config (adam lr=0.01, fixed split):
 ──────────────────────────────────────────────────────────────────────────────
 SUMMARY — KEY NUMBERS PER FINDING
 ──────────────────────────────────────────────────────────────────────────────
-  F1 Topology ratio (GCN_rand/GCN_X): amazon/coauthor 93–98%, others 38–82%
+  F1 Topology ratio (GCN_rand/GCN_X): amazon/coauthor 93–98%, others 38–73%
   F2 Gap B range (MP vs spectral): 3.0 to 83.2 pp across 9 datasets
   F3 GCN_rand fixed→random Δ: near 0 on amazon/coauthor, +17 to +39 pp on citation/wikics
-  F4 Gap C SGD best-LR: up to +11.46 pp (coauthor_physics); adam suppresses to <3 pp
+  F4 Gap C: SGD +8 to +11 pp on amazon/coauthor; NEGATIVE on cora (−0.77), citeseer (−3.85)
   F5 Gap D negative only on Cora: −8.76 pp; all others 0 to +5.51 pp
-  F6 GCN_rowNorm_Y ogbn-arxiv: still rising at ep500 (32.00%), not converged
-  F7 Adam artifact: MLP_Y below random on cora, pubmed, coauthor_cs under adam
+  F6 GCN_rand: +2.42 pp gain ep100→ep500; GCN_rowNorm_Y still rising at ep500 (32.00%)
+  F7 Adam artifact: MLP_Y below random on cora, pubmed, coauthor_cs under adam;
+       pubmed also below random under SGD (3-class near-random regime)
   F8 PubMed MLP_Y draw_std/seed_std ratio: 3.2× — unreliable, report with caveat
 
 ================================================================================
