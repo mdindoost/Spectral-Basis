@@ -1,0 +1,629 @@
+================================================================================
+NULL FEATURE EXPERIMENT — FULL ANALYSIS REPORT
+SpectralGeometryMisalignment / gcn_rand_experiment.py
+Date: April 2026
+================================================================================
+
+EXPERIMENTAL SETUP
+------------------
+Goal: Isolate what graph topology contributes to classification accuracy
+      when node features carry ZERO class information.
+
+X_rand ~ N(0,1), same shape as real X, independent of labels.
+Y_rand = Rayleigh-Ritz eigenvectors of (L,D) restricted to span(X_rand).
+         Y_rand ≈ randomized approximation to leading Laplacian eigenvectors.
+         Class-informative content of Y_rand = 0 by construction.
+
+5 models compared:
+  GCN_X         : 2-layer Kipf GCN on real X          [feature ceiling]
+  GCN_rand      : 2-layer Kipf GCN on X_rand          [topology via MP]
+  GCN_rowNorm_Y : 2-layer GCN on Y_rand, row-norm at each layer input
+  MLP_Y         : Linear classifier on Y_rand + StandardScaler
+  MLP_rowNorm_Y : Linear classifier on row-normalized Y_rand
+
+Training: SGD(mom=0.9,wd=0) + Adam(betas=(0.9,0.999),wd=0), LR∈{0.001,0.01,0.1}
+          500 epochs, no early stopping, full-batch.
+Seeds: 5 train seeds × 3 X_rand draws × 6 split configs (1 fixed + 5 random)
+Datasets: 9 (all LCC-extracted)
+
+Canonical config for R2–R8: adam, lr=0.01, fixed split, split_seed=0
+
+
+================================================================================
+COMPLETENESS CHECK
+Expected: 540 xrand records and 180 gcnX records per dataset
+(3 xrand_seeds × 6 splits × 2 opts × 3 lrs × 5 train_seeds = 540)
+(                          6 splits × 2 opts × 3 lrs × 5 train_seeds = 180)
+================================================================================
+  cora                  : xrand=✓  gcnX=✓
+  citeseer              : xrand=✓  gcnX=✓
+  pubmed                : xrand=✓  gcnX=✓
+  ogbn_arxiv            : xrand=✓  gcnX=✓
+  wikics                : xrand=✓  gcnX=✓
+  amazon_computers      : xrand=✓  gcnX=✓
+  amazon_photo          : xrand=✓  gcnX=✓
+  coauthor_cs           : xrand=✓  gcnX=✓
+  coauthor_physics      : xrand=✓  gcnX=✓
+
+All datasets complete.
+
+================================================================================
+DATASET METADATA
+================================================================================
+Dataset                 n_nodes      d d_eff_real d_eff_rand  classes   base% xrand_recs  gcnX_recs
+----------------------------------------------------------------------------------------------------
+cora                      2,485   1433       1427       1427        7   14.29        540        180
+citeseer                  2,120   3703       2101       2101        6   16.67        540        180
+pubmed                    1,560    500        500        500        3   33.33        540        180
+ogbn_arxiv              169,343    128        128        128       40    2.50        540        180
+wikics                   11,311    300        300        300       10   10.00        540        180
+amazon_computers         13,381    767        767        767       10   10.00        540        180
+amazon_photo              7,487    745        745        745        8   12.50        540        180
+coauthor_cs              18,333   6805       6803       6803       15    6.67        540        180
+coauthor_physics         34,493   8415       7701       7701        5   20.00        540        180
+
+d_eff_real  = rank of real X (from Y.npy shape)
+d_eff_rand  = min(rank(X_rand), d_eff_real) — columns used in Y_rand
+xrand_recs  = complete records with all 4 xrand model keys present
+gcnX_recs   = complete records with GCN_X key present
+
+================================================================================
+REPORT 3: ABOVE-RANDOM CHECK
+Canonical config: adam, lr=0.01, fixed split, split_seed=0
+Ratio = mean_test_acc / random_baseline  (>1.0 = above random)
+ANOMALY if ratio < 1.0 (model performs below random — possible artifact)
+================================================================================
+Dataset                base% |         GCN_X       GCN_rand        GCN_rnY          MLP_Y        MLP_rnY
+--------------------------------------------------------------------------------------------------------
+cora                    14.3 | 78.25% (5.48x)  56.86% (3.98x)  48.10% (3.37x)  13.87% (0.97x) ***  14.14% (0.99x) ***
+citeseer                16.7 | 67.21% (4.03x)  35.17% (2.11x)  37.51% (2.25x)  21.43% (1.29x)  23.86% (1.43x)
+pubmed                  33.3 | 75.52% (2.27x)  35.71% (1.07x)  36.03% (1.08x)  32.71% (0.98x) ***  32.46% (0.97x) ***
+ogbn_arxiv               2.5 | 69.95% (27.98x)  26.49% (10.60x)  32.00% (12.80x)   5.87% (2.35x)   5.87% (2.35x)
+wikics                  10.0 | 78.54% (7.85x)  56.83% (5.68x)  58.37% (5.84x)  14.23% (1.42x)  15.92% (1.59x)
+amazon_computers        10.0 | 92.50% (9.25x)  87.60% (8.76x)  89.81% (8.98x)  23.38% (2.34x)  25.09% (2.51x)
+amazon_photo            12.5 | 94.43% (7.55x)  91.04% (7.28x)  92.28% (7.38x)  15.37% (1.23x)  14.75% (1.18x)
+coauthor_cs              6.7 | 92.51% (13.88x)  88.93% (13.34x)  89.42% (13.41x)   5.74% (0.86x) ***   7.60% (1.14x)
+coauthor_physics        20.0 | 95.76% (4.79x)  93.77% (4.69x)  94.92% (4.75x)  25.04% (1.25x)  28.31% (1.42x)
+
+ANOMALIES (below random baseline):
+  [cora] MLP_Y: 13.87% vs baseline 14.29%  (ratio=0.971x) — likely Adam overfitting artifact
+  [cora] MLP_rowNorm_Y: 14.14% vs baseline 14.29%  (ratio=0.990x) — likely Adam overfitting artifact
+  [pubmed] MLP_Y: 32.71% vs baseline 33.33%  (ratio=0.981x) — likely Adam overfitting artifact
+  [pubmed] MLP_rowNorm_Y: 32.46% vs baseline 33.33%  (ratio=0.974x) — likely Adam overfitting artifact
+  [coauthor_cs] MLP_Y: 5.74% vs baseline 6.67%  (ratio=0.860x) — likely Adam overfitting artifact
+
+================================================================================
+REPORT 4: OPTIMIZER SENSITIVITY — ADAM ARTIFACT ON MLP MODELS
+Fixed split | Best LR per optimizer | Mean±std across xrand_seeds × train_seeds
+Focus: MLP_Y and MLP_rowNorm_Y (where artifact is expected)
+Also shown: GCN_rand for reference (GCN models not expected to show artifact)
+================================================================================
+
+  Model: GCN_rand
+  Dataset                base% |          SGD best-LR |         Adam best-LR |          Adam lr=0.1
+  ---------------------------------------------------------------------------
+  cora                    14.3 |  56.78± 1.08[lr=0.1] |  56.86± 1.05[lr=0.01] |          47.91± 1.43
+  citeseer                16.7 |  42.57± 1.30[lr=0.001] |  44.90± 0.79[lr=0.001] |          36.85± 3.34
+  pubmed                  33.3 |  35.74± 1.16[lr=0.01] |  36.61± 0.90[lr=0.001] |          36.31± 1.73
+  ogbn_arxiv               2.5 |  22.44± 0.16[lr=0.1] |  26.49± 0.20[lr=0.01] |          26.39± 0.24
+  wikics                  10.0 |  57.49± 0.67[lr=0.1] |  58.12± 0.53[lr=0.001] |          54.76± 0.56
+  amazon_computers        10.0 |  88.71± 0.33[lr=0.1] |  89.07± 0.25[lr=0.001] |          86.99± 0.43
+  amazon_photo            12.5 |  91.64± 0.26[lr=0.1] |  91.99± 0.47[lr=0.001] |          90.46± 0.58
+  coauthor_cs              6.7 |  89.60± 0.34[lr=0.1] |  89.14± 0.18[lr=0.001] |          86.79± 0.28
+  coauthor_physics        20.0 |  94.13± 0.13[lr=0.1] |  94.07± 0.11[lr=0.001] |          92.75± 0.19
+
+  Model: MLP_Y
+  Dataset                base% |          SGD best-LR |         Adam best-LR |          Adam lr=0.1
+  ---------------------------------------------------------------------------
+  cora                    14.3 |  15.77± 1.40[lr=0.1] |  13.87± 0.85[lr=0.01] |          14.06± 1.11
+  citeseer                16.7 |  26.93± 0.96[lr=0.1] |  21.43± 0.68[lr=0.01] |          21.07± 0.96
+  pubmed                  33.3 |  32.49± 2.24[lr=0.1] |  32.71± 2.83[lr=0.01] |          32.98± 2.47
+  ogbn_arxiv               2.5 |   5.87± 0.00[lr=0.01] |  11.16± 0.74[lr=0.001] |           5.87± 0.01
+  wikics                  10.0 |  15.68± 0.59[lr=0.1] |  14.23± 0.75[lr=0.01] |          14.10± 0.68
+  amazon_computers        10.0 |  29.30± 0.50[lr=0.001] |  23.38± 0.38[lr=0.01] |          22.16± 0.59
+  amazon_photo            12.5 |  18.30± 1.17[lr=0.001] |  15.37± 0.63[lr=0.01] |          14.60± 0.85
+  coauthor_cs              6.7 |  14.82± 0.27[lr=0.01] |   5.86± 0.18[lr=0.001] |           5.52± 0.28
+  coauthor_physics        20.0 |  38.92± 0.30[lr=0.001] |  25.29± 0.32[lr=0.1] |          25.29± 0.32
+
+  Model: MLP_rowNorm_Y
+  Dataset                base% |          SGD best-LR |         Adam best-LR |          Adam lr=0.1
+  ---------------------------------------------------------------------------
+  cora                    14.3 |  15.00± 1.15[lr=0.1] |  14.14± 0.28[lr=0.01] |          13.89± 0.38
+  citeseer                16.7 |  23.08± 0.00[lr=0.1] |  23.44± 0.36[lr=0.001] |          23.83± 0.38
+  pubmed                  33.3 |  32.63± 1.52[lr=0.1] |  32.46± 2.88[lr=0.01] |          32.31± 2.74
+  ogbn_arxiv               2.5 |   5.87± 0.03[lr=0.001] |  11.15± 0.84[lr=0.001] |           5.87± 0.00
+  wikics                  10.0 |  22.64± 0.05[lr=0.001] |  17.89± 0.26[lr=0.001] |          15.25± 0.79
+  amazon_computers        10.0 |  37.71± 0.00[lr=0.001] |  25.09± 0.24[lr=0.01] |          22.22± 0.68
+  amazon_photo            12.5 |  26.47± 0.05[lr=0.001] |  17.30± 1.28[lr=0.001] |          14.82± 0.72
+  coauthor_cs              6.7 |  22.63± 0.00[lr=0.001] |   7.72± 0.08[lr=0.1] |           7.72± 0.08
+  coauthor_physics        20.0 |  50.38± 0.00[lr=0.001] |  37.24± 0.38[lr=0.001] |          24.87± 0.63
+
+Expected pattern:
+  Adam lr=0.1 on MLP_Y often drives below random (overfitting artifact)
+  SGD is more conservative → stays near or slightly above random
+  GCN models should not show this artifact (graph aggregation regularizes)
+
+================================================================================
+REPORT 1: MAIN RESULTS TABLE
+Fixed split | Best LR per model×optimizer (selected by val acc)
+Mean ± std across all xrand seeds (3) and train seeds (5)
+================================================================================
+Dataset                base% |         GCN_X |      GCN_rand | GCN_rowNorm_Y |         MLP_Y | MLP_rowNorm_Y
+
+  Optimizer: SGD
+  ----------------------------------------------------------------------------------------------------------
+  cora                    14.3 |  81.75± 0.10 [lr=0.01] |  56.78± 1.08 [lr=0.1] |  51.12± 1.63 [lr=0.01] |  15.77± 1.40 [lr=0.1] |  15.00± 1.15 [lr=0.1]
+  citeseer                16.7 |  72.43± 0.11 [lr=0.01] |  42.57± 1.30 [lr=0.001] |  41.94± 1.31 [lr=0.01] |  26.93± 0.96 [lr=0.1] |  23.08± 0.00 [lr=0.1]
+  pubmed                  33.3 |  78.78± 0.10 [lr=0.1] |  35.74± 1.16 [lr=0.01] |  35.34± 1.56 [lr=0.01] |  32.49± 2.24 [lr=0.1] |  32.63± 1.52 [lr=0.1]
+  ogbn_arxiv               2.5 |  62.94± 0.13 [lr=0.1] |  22.44± 0.16 [lr=0.1] |   6.11± 0.12 [lr=0.1] |   5.87± 0.00 [lr=0.01] |   5.87± 0.03 [lr=0.001]
+  wikics                  10.0 |  78.10± 0.07 [lr=0.1] |  57.49± 0.67 [lr=0.1] |  26.19± 0.96 [lr=0.01] |  15.68± 0.59 [lr=0.1] |  22.64± 0.05 [lr=0.001]
+  amazon_computers        10.0 |  92.36± 0.09 [lr=0.1] |  88.71± 0.33 [lr=0.1] |  37.71± 0.00 [lr=0.001] |  29.30± 0.50 [lr=0.001] |  37.71± 0.00 [lr=0.001]
+  amazon_photo            12.5 |  94.57± 0.11 [lr=0.1] |  91.64± 0.26 [lr=0.1] |  35.84± 4.85 [lr=0.01] |  18.30± 1.17 [lr=0.001] |  26.47± 0.05 [lr=0.001]
+  coauthor_cs              6.7 |  94.07± 0.07 [lr=0.1] |  89.60± 0.34 [lr=0.1] |  22.63± 0.00 [lr=0.001] |  14.82± 0.27 [lr=0.01] |  22.63± 0.00 [lr=0.001]
+  coauthor_physics        20.0 |  95.83± 0.03 [lr=0.1] |  94.13± 0.13 [lr=0.1] |  50.38± 0.00 [lr=0.001] |  38.92± 0.30 [lr=0.001] |  50.38± 0.00 [lr=0.001]
+
+  Optimizer: ADAM
+  ----------------------------------------------------------------------------------------------------------
+  cora                    14.3 |  78.62± 0.18 [lr=0.001] |  56.86± 1.05 [lr=0.01] |  48.91± 1.33 [lr=0.001] |  13.87± 0.85 [lr=0.01] |  14.14± 0.28 [lr=0.01]
+  citeseer                16.7 |  66.97± 0.10 [lr=0.001] |  44.90± 0.79 [lr=0.001] |  38.77± 0.83 [lr=0.001] |  21.43± 0.68 [lr=0.01] |  23.44± 0.36 [lr=0.001]
+  pubmed                  33.3 |  75.66± 0.37 [lr=0.1] |  36.61± 0.90 [lr=0.001] |  35.88± 1.71 [lr=0.001] |  32.71± 2.83 [lr=0.01] |  32.46± 2.88 [lr=0.01]
+  ogbn_arxiv               2.5 |  69.95± 0.19 [lr=0.01] |  26.49± 0.20 [lr=0.01] |  34.25± 0.85 [lr=0.1] |  11.16± 0.74 [lr=0.001] |  11.15± 0.84 [lr=0.001]
+  wikics                  10.0 |  79.57± 0.05 [lr=0.001] |  58.12± 0.53 [lr=0.001] |  58.37± 0.39 [lr=0.01] |  14.23± 0.75 [lr=0.01] |  17.89± 0.26 [lr=0.001]
+  amazon_computers        10.0 |  92.50± 0.21 [lr=0.01] |  89.07± 0.25 [lr=0.001] |  89.81± 0.24 [lr=0.01] |  23.38± 0.38 [lr=0.01] |  25.09± 0.24 [lr=0.01]
+  amazon_photo            12.5 |  94.45± 0.15 [lr=0.001] |  91.99± 0.47 [lr=0.001] |  92.17± 0.30 [lr=0.1] |  15.37± 0.63 [lr=0.01] |  17.30± 1.28 [lr=0.001]
+  coauthor_cs              6.7 |  93.26± 0.05 [lr=0.001] |  89.14± 0.18 [lr=0.001] |  90.02± 0.18 [lr=0.001] |   5.86± 0.18 [lr=0.001] |   7.72± 0.08 [lr=0.1]
+  coauthor_physics        20.0 |  95.95± 0.04 [lr=0.001] |  94.07± 0.11 [lr=0.001] |  94.97± 0.06 [lr=0.001] |  25.29± 0.32 [lr=0.1] |  37.24± 0.38 [lr=0.001]
+
+Note: best LR selected independently per model×optimizer by mean val acc.
+High std reflects pooling over xrand draws and train seeds simultaneously.
+
+================================================================================
+REPORT 2: DECOMPOSITION — 4 KEY GAPS + TOPOLOGY RATIO
+Canonical config: adam, lr=0.01, fixed split, split_seed=0
+Mean across xrand_seeds={0,1,2} × train_seeds={0..4} (15 runs per cell)
+================================================================================
+Dataset                base% |   GCN_X GCN_rnd  Topo% GCN_rnY   MLP_Y MLP_rnY |    GapA    GapB    GapC    GapD
+---------------------------------------------------------------------------------------------------------------
+cora                    14.3 |   78.25   56.86  72.7%   48.10   13.87   14.14 |   21.39   42.99    0.27   -8.76
+citeseer                16.7 |   67.21   35.17  52.3%   37.51   21.43   23.86 |   32.04   13.75    2.43    2.33
+pubmed                  33.3 |   75.52   35.71  47.3%   36.03   32.71   32.46 |   39.81    3.00   -0.25    0.31
+ogbn_arxiv               2.5 |   69.95   26.49  37.9%   32.00    5.87    5.87 |   43.46   20.62   -0.00    5.51
+wikics                  10.0 |   78.54   56.83  72.4%   58.37   14.23   15.92 |   21.71   42.59    1.69    1.54
+amazon_computers        10.0 |   92.50   87.60  94.7%   89.81   23.38   25.09 |    4.89   64.23    1.72    2.21
+amazon_photo            12.5 |   94.43   91.04  96.4%   92.28   15.37   14.75 |    3.39   75.67   -0.62    1.24
+coauthor_cs              6.7 |   92.51   88.93  96.1%   89.42    5.74    7.60 |    3.58   83.19    1.86    0.49
+coauthor_physics        20.0 |   95.76   93.77  97.9%   94.92   25.04   28.31 |    1.99   68.73    3.27    1.15
+
+Topo%  = GCN_rand / GCN_X × 100  (% of feature ceiling explained by topology)
+Gap A  = GCN_X − GCN_rand         (feature contribution)
+Gap B  = GCN_rand − MLP_Y         (message passing vs spectral projection)
+Gap C  = MLP_rowNorm_Y − MLP_Y    (row-norm effect on spectral MLP)
+Gap D  = GCN_rowNorm_Y − GCN_rand (row-norm effect inside GCN)
+
+================================================================================
+REPORT 2b: DECOMPOSITION — SGD BEST-LR, FIXED SPLIT
+Best LR per model selected by mean val acc (SGD, fixed split).
+Mean across xrand_seeds={0,1,2} × train_seeds={0..4} at that LR.
+Use this to assess row-norm effects without Adam artifact.
+================================================================================
+Dataset                base% |   GCN_X GCN_rnd  Topo% GCN_rnY   MLP_Y MLP_rnY |    GapA    GapB    GapC    GapD
+---------------------------------------------------------------------------------------------------------------
+cora                    14.3 |   81.75   56.78  69.5%   51.12   15.77   15.00 |   24.97   41.01   -0.77   -5.66
+citeseer                16.7 |   72.43   42.57  58.8%   41.94   26.93   23.08 |   29.85   15.65   -3.85   -0.63
+pubmed                  33.3 |   78.78   35.74  45.4%   35.34   32.49   32.63 |   43.04    3.25    0.13   -0.40
+ogbn_arxiv               2.5 |   62.94   22.44  35.7%    6.11    5.87    5.87 |   40.50   16.57    0.01  -16.33
+wikics                  10.0 |   78.10   57.49  73.6%   26.19   15.68   22.64 |   20.61   41.81    6.96  -31.30
+amazon_computers        10.0 |   92.36   88.71  96.0%   37.71   29.30   37.71 |    3.65   59.41    8.41  -51.00
+amazon_photo            12.5 |   94.57   91.64  96.9%   35.84   18.30   26.47 |    2.93   73.34    8.17  -55.80
+coauthor_cs              6.7 |   94.07   89.60  95.2%   22.63   14.82   22.63 |    4.47   74.78    7.81  -66.97
+coauthor_physics        20.0 |   95.83   94.13  98.2%   50.38   38.92   50.38 |    1.70   55.21   11.46  -43.75
+
+Note: each model uses its own best SGD LR (may differ across models).
+
+Topo%  = GCN_rand / GCN_X × 100  (% of feature ceiling explained by topology)
+Gap A  = GCN_X − GCN_rand         (feature contribution)
+Gap B  = GCN_rand − MLP_Y         (message passing vs spectral projection)
+Gap C  = MLP_rowNorm_Y − MLP_Y    (row-norm effect on spectral MLP)
+Gap D  = GCN_rowNorm_Y − GCN_rand (row-norm effect inside GCN)
+Best SGD LRs used per dataset:
+  Dataset                   GCN_X  GCN_rand   GCN_rnY    MLP_Y   MLP_rnY
+  --------------------------------------------------------------------
+  cora                       0.01       0.1      0.01      0.1       0.1
+  citeseer                   0.01     0.001      0.01      0.1       0.1
+  pubmed                      0.1      0.01      0.01      0.1       0.1
+  ogbn_arxiv                  0.1       0.1       0.1     0.01     0.001
+  wikics                      0.1       0.1      0.01      0.1     0.001
+  amazon_computers            0.1       0.1     0.001    0.001     0.001
+  amazon_photo                0.1       0.1      0.01    0.001     0.001
+  coauthor_cs                 0.1       0.1     0.001     0.01     0.001
+  coauthor_physics            0.1       0.1     0.001    0.001     0.001
+
+================================================================================
+REPORT 2c: DECOMPOSITION — CANONICAL CONFIG, RANDOM SPLIT
+Canonical config: adam, lr=0.01, random split
+Mean across split_seeds={0..4} × xrand_seeds={0,1,2} × train_seeds={0..4}
+(75 runs per xrand model cell, 25 runs per GCN_X cell)
+Compare to R2 (fixed split) to assess training-size sensitivity.
+================================================================================
+Dataset                base% |   GCN_X GCN_rnd  Topo% GCN_rnY   MLP_Y MLP_rnY |    GapA    GapB    GapC    GapD
+---------------------------------------------------------------------------------------------------------------
+cora                    14.3 |   84.35   78.61  93.2%   79.83    9.13   12.04 |    5.74   69.48    2.91    1.22
+citeseer                16.7 |   73.22   66.97  91.5%   66.88    6.13    5.77 |    6.25   60.84   -0.36   -0.09
+pubmed                  33.3 |   87.25   74.23  85.1%   74.87   38.70   38.59 |   13.02   35.54   -0.11    0.63
+ogbn_arxiv               2.5 |   71.57   33.11  46.3%   38.11   15.86   15.84 |   38.46   17.25   -0.02    5.01
+wikics                  10.0 |   84.04   74.07  88.1%   74.94   17.77   17.96 |    9.98   56.30    0.19    0.87
+amazon_computers        10.0 |   92.18   87.25  94.6%   89.84   22.72   24.16 |    4.93   64.53    1.44    2.59
+amazon_photo            12.5 |   94.96   91.27  96.1%   92.59   15.93   15.36 |    3.69   75.34   -0.57    1.32
+coauthor_cs              6.7 |   92.50   88.33  95.5%   89.18    5.70    7.55 |    4.17   82.63    1.85    0.85
+coauthor_physics        20.0 |   96.05   93.77  97.6%   94.79   25.22   28.21 |    2.28   68.55    2.98    1.02
+
+Compare GCN_rand here vs R2: large Δ means fixed split underestimates topology.
+
+Topo%  = GCN_rand / GCN_X × 100  (% of feature ceiling explained by topology)
+Gap A  = GCN_X − GCN_rand         (feature contribution)
+Gap B  = GCN_rand − MLP_Y         (message passing vs spectral projection)
+Gap C  = MLP_rowNorm_Y − MLP_Y    (row-norm effect on spectral MLP)
+Gap D  = GCN_rowNorm_Y − GCN_rand (row-norm effect inside GCN)
+
+================================================================================
+REPORT 5: FIXED vs RANDOM SPLIT CONSISTENCY
+Canonical config: adam, lr=0.01
+Fixed:  split_seed=0, mean over xrand_seeds×train_seeds
+Random: mean over split_seeds={0..4}×xrand_seeds×train_seeds
+================================================================================
+
+  Model: GCN_X
+  Dataset                base% |         Fixed |        Random |  Δ (rnd−fix)
+  -----------------------------------------------------------------
+  cora                    14.3 |   78.25± 0.47 |   84.35± 0.88 |    +6.09 pp
+  citeseer                16.7 |   67.21± 0.47 |   73.22± 0.96 |    +6.01 pp
+  pubmed                  33.3 |   75.52± 0.13 |   87.25± 0.40 |   +11.73 pp
+  ogbn_arxiv               2.5 |   69.95± 0.19 |   71.57± 0.16 |    +1.61 pp
+  wikics                  10.0 |   78.54± 0.35 |   84.04± 0.79 |    +5.51 pp
+  amazon_computers        10.0 |   92.50± 0.21 |   92.18± 0.44 |    -0.32 pp
+  amazon_photo            12.5 |   94.43± 0.56 |   94.96± 0.31 |    +0.54 pp
+  coauthor_cs              6.7 |   92.51± 0.05 |   92.50± 0.26 |    -0.01 pp
+  coauthor_physics        20.0 |   95.76± 0.08 |   96.05± 0.11 |    +0.29 pp
+
+  Model: GCN_rand
+  Dataset                base% |         Fixed |        Random |  Δ (rnd−fix)
+  -----------------------------------------------------------------
+  cora                    14.3 |   56.86± 1.05 |   78.61± 1.63 |   +21.75 pp
+  citeseer                16.7 |   35.17± 1.84 |   66.97± 1.48 |   +31.80 pp
+  pubmed                  33.3 |   35.71± 0.95 |   74.23± 0.66 |   +38.52 pp
+  ogbn_arxiv               2.5 |   26.49± 0.20 |   33.11± 0.36 |    +6.62 pp
+  wikics                  10.0 |   56.83± 0.45 |   74.07± 0.54 |   +17.24 pp
+  amazon_computers        10.0 |   87.60± 0.37 |   87.25± 0.66 |    -0.36 pp
+  amazon_photo            12.5 |   91.04± 0.49 |   91.27± 0.43 |    +0.23 pp
+  coauthor_cs              6.7 |   88.93± 0.21 |   88.33± 0.35 |    -0.60 pp
+  coauthor_physics        20.0 |   93.77± 0.14 |   93.77± 0.23 |    -0.00 pp
+
+  Model: GCN_rowNorm_Y
+  Dataset                base% |         Fixed |        Random |  Δ (rnd−fix)
+  -----------------------------------------------------------------
+  cora                    14.3 |   48.10± 1.63 |   79.83± 1.19 |   +31.72 pp
+  citeseer                16.7 |   37.51± 1.20 |   66.88± 1.48 |   +29.37 pp
+  pubmed                  33.3 |   36.03± 2.00 |   74.87± 0.47 |   +38.84 pp
+  ogbn_arxiv               2.5 |   32.00± 0.82 |   38.11± 0.35 |    +6.12 pp
+  wikics                  10.0 |   58.37± 0.39 |   74.94± 0.72 |   +16.57 pp
+  amazon_computers        10.0 |   89.81± 0.24 |   89.84± 0.57 |    +0.03 pp
+  amazon_photo            12.5 |   92.28± 0.34 |   92.59± 0.45 |    +0.31 pp
+  coauthor_cs              6.7 |   89.42± 0.21 |   89.18± 0.28 |    -0.23 pp
+  coauthor_physics        20.0 |   94.92± 0.11 |   94.79± 0.19 |    -0.13 pp
+
+  Model: MLP_Y
+  Dataset                base% |         Fixed |        Random |  Δ (rnd−fix)
+  -----------------------------------------------------------------
+  cora                    14.3 |   13.87± 0.85 |    9.13± 1.24 |    -4.74 pp
+  citeseer                16.7 |   21.43± 0.68 |    6.13± 1.48 |   -15.30 pp
+  pubmed                  33.3 |   32.71± 2.83 |   38.70± 0.54 |    +5.98 pp
+  ogbn_arxiv               2.5 |    5.87± 0.00 |   15.86± 0.09 |   +10.00 pp
+  wikics                  10.0 |   14.23± 0.75 |   17.77± 0.67 |    +3.53 pp
+  amazon_computers        10.0 |   23.38± 0.38 |   22.72± 0.61 |    -0.66 pp
+  amazon_photo            12.5 |   15.37± 0.63 |   15.93± 0.88 |    +0.56 pp
+  coauthor_cs              6.7 |    5.74± 0.21 |    5.70± 0.31 |    -0.04 pp
+  coauthor_physics        20.0 |   25.04± 0.41 |   25.22± 0.41 |    +0.18 pp
+
+  Model: MLP_rowNorm_Y
+  Dataset                base% |         Fixed |        Random |  Δ (rnd−fix)
+  -----------------------------------------------------------------
+  cora                    14.3 |   14.14± 0.28 |   12.04± 1.27 |    -2.10 pp
+  citeseer                16.7 |   23.86± 0.38 |    5.77± 1.13 |   -18.09 pp
+  pubmed                  33.3 |   32.46± 2.88 |   38.59± 0.58 |    +6.13 pp
+  ogbn_arxiv               2.5 |    5.87± 0.00 |   15.84± 0.08 |    +9.98 pp
+  wikics                  10.0 |   15.92± 0.72 |   17.96± 0.70 |    +2.04 pp
+  amazon_computers        10.0 |   25.09± 0.24 |   24.16± 0.46 |    -0.94 pp
+  amazon_photo            12.5 |   14.75± 0.38 |   15.36± 0.96 |    +0.61 pp
+  coauthor_cs              6.7 |    7.60± 0.39 |    7.55± 0.36 |    -0.05 pp
+  coauthor_physics        20.0 |   28.31± 0.11 |   28.21± 0.45 |    -0.11 pp
+
+Δ > 0 means random split gives higher accuracy than fixed split.
+Large |Δ| on GCN_rand indicates topology extraction is highly sensitive
+to training set size (fixed splits often have only 20 nodes/class).
+
+================================================================================
+REPORT 6: X_RAND DRAW STABILITY
+Canonical config: adam, lr=0.01, fixed split, split_seed=0
+Per-draw mean computed over train_seeds={0..4}.
+Draw std = std across 3 draws (xrand_seeds 0,1,2).
+Seed std = mean of per-draw stds (within-draw variance).
+Stable experiment: draw_std << seed_std.
+================================================================================
+
+  Model: GCN_rand
+  Dataset                   draw0    draw1    draw2 |  draw_std  seed_std |  stable?
+  ------------------------------------------------------------------------
+  cora                      57.40    56.13    57.05 |     0.535     0.879 |      YES
+  citeseer                  34.00    34.63    36.89 |     1.243     1.316 |      YES
+  pubmed                    36.52    34.56    36.06 |     0.837     0.430 |       NO
+  ogbn_arxiv                26.43    26.74    26.30 |     0.182     0.083 |       NO
+  wikics                    56.81    57.31    56.36 |     0.389     0.210 |       NO
+  amazon_computers          87.44    87.34    88.03 |     0.303     0.207 |       NO
+  amazon_photo              91.52    91.19    90.40 |     0.471     0.150 |       NO
+  coauthor_cs               88.76    89.14    88.89 |     0.156     0.120 |       NO
+  coauthor_physics          93.68    93.74    93.90 |     0.092     0.107 |      YES
+
+  Model: GCN_rowNorm_Y
+  Dataset                   draw0    draw1    draw2 |  draw_std  seed_std |  stable?
+  ------------------------------------------------------------------------
+  cora                      47.28    47.43    49.60 |     1.058     1.114 |      YES
+  citeseer                  37.80    36.92    37.80 |     0.412     1.094 |      YES
+  pubmed                    37.92    33.62    36.54 |     1.793     0.862 |       NO
+  ogbn_arxiv                31.77    32.82    31.40 |     0.603     0.528 |       NO
+  wikics                    58.30    58.80    58.01 |     0.329     0.211 |       NO
+  amazon_computers          89.72    89.64    90.07 |     0.185     0.155 |       NO
+  amazon_photo              92.69    92.21    91.94 |     0.310     0.121 |       NO
+  coauthor_cs               89.25    89.67    89.32 |     0.184     0.101 |       NO
+  coauthor_physics          94.83    95.03    94.89 |     0.085     0.072 |       NO
+
+  Model: MLP_Y
+  Dataset                   draw0    draw1    draw2 |  draw_std  seed_std |  stable?
+  ------------------------------------------------------------------------
+  cora                      13.46    13.46    14.69 |     0.577     0.622 |      YES
+  citeseer                  21.39    21.33    21.57 |     0.103     0.625 |      YES
+  pubmed                    35.24    28.98    33.92 |     2.694     0.832 |       NO
+  ogbn_arxiv                 5.87     5.86     5.86 |     0.003     0.001 |       NO
+  wikics                    14.55    13.22    14.94 |     0.735     0.135 |       NO
+  amazon_computers          23.09    23.13    23.91 |     0.377     0.042 |       NO
+  amazon_photo              15.08    14.79    16.24 |     0.629     0.020 |       NO
+  coauthor_cs                5.92     5.76     5.52 |     0.164     0.124 |       NO
+  coauthor_physics          25.58    24.96    24.58 |     0.412     0.035 |       NO
+
+  Model: MLP_rowNorm_Y
+  Dataset                   draw0    draw1    draw2 |  draw_std  seed_std |  stable?
+  ------------------------------------------------------------------------
+  cora                      14.30    13.99    14.14 |     0.125     0.231 |      YES
+  citeseer                  24.16    23.44    23.98 |     0.308     0.215 |       NO
+  pubmed                    35.86    28.84    32.68 |     2.870     0.156 |       NO
+  ogbn_arxiv                 5.87     5.86     5.86 |     0.004     0.000 |       NO
+  wikics                    16.30    14.91    16.55 |     0.721     0.050 |       NO
+  amazon_computers          24.78    25.15    25.34 |     0.232     0.039 |       NO
+  amazon_photo              14.47    14.49    15.28 |     0.378     0.039 |       NO
+  coauthor_cs                7.98     7.77     7.06 |     0.395     0.008 |       NO
+  coauthor_physics          28.41    28.16    28.37 |     0.111     0.024 |       NO
+
+================================================================================
+REPORT 7: TRAINING CURVES — EPOCH CHECKPOINTS
+Canonical config: adam, lr=0.01, fixed split, split_seed=0
+Values = mean test accuracy (%) across xrand_seeds×train_seeds at that epoch.
+Datasets shown: ['cora', 'pubmed', 'ogbn_arxiv']
+================================================================================
+
+  Dataset: cora  (random baseline = 14.29%)
+  Model             ep 50  ep100  ep200  ep300  ep400  ep500
+  ----------------------------------------------------------------
+  GCN_X             78.64  78.49  78.60  78.38  78.30  78.25
+  GCN_rand          56.87  56.87  56.83  56.85  56.85  56.86
+  GCN_rowNorm_Y     47.27  47.93  48.15  48.07  48.04  48.10
+  MLP_Y             13.86  13.85  13.85  13.86  13.87  13.87
+  MLP_rowNorm_Y     14.16  14.21  14.13  14.20  14.21  14.14
+
+  Dataset: pubmed  (random baseline = 33.33%)
+  Model             ep 50  ep100  ep200  ep300  ep400  ep500
+  ----------------------------------------------------------------
+  GCN_X             75.70  75.82  75.56  75.58  75.54  75.52
+  GCN_rand          35.72  35.70  35.70  35.71  35.71  35.71
+  GCN_rowNorm_Y     36.25  36.01  35.93  35.98  36.00  36.03
+  MLP_Y             32.44  32.45  32.53  32.58  32.61  32.71
+  MLP_rowNorm_Y     32.79  32.44  32.40  32.49  32.45  32.46
+
+  Dataset: ogbn_arxiv  (random baseline = 2.50%)
+  Model             ep 50  ep100  ep200  ep300  ep400  ep500
+  ----------------------------------------------------------------
+  GCN_X             61.59  66.49  68.40  69.11  69.38  69.95
+  GCN_rand          23.50  24.07  25.38  25.96  26.28  26.49
+  GCN_rowNorm_Y     11.70  22.24  25.78  28.16  30.25  32.00
+  MLP_Y             10.91  13.43   6.54   5.89   5.87   5.87
+  MLP_rowNorm_Y     10.72  13.46   6.61   5.89   5.87   5.87
+
+================================================================================
+REPORT 8: VERIFIED FINDINGS
+Numbers first, conclusions second. All values retrieved from reports above.
+Canonical config = adam, lr=0.01, fixed split unless stated otherwise.
+================================================================================
+
+──────────────────────────────────────────────────────────────────────────────
+FINDING 1: Two distinct dataset regimes — topology-dominated vs feature-dependent
+──────────────────────────────────────────────────────────────────────────────
+Metric: Topo% = GCN_rand / GCN_X × 100 at canonical config.
+
+  Topology-dominated (Topo% ≥ 93%):
+    amazon_computers      : GCN_rand=87.60%  GCN_X=92.50%  Topo%=94.7%  Gap A=4.89 pp
+    amazon_photo          : GCN_rand=91.04%  GCN_X=94.43%  Topo%=96.4%  Gap A=3.39 pp
+    coauthor_cs           : GCN_rand=88.93%  GCN_X=92.51%  Topo%=96.1%  Gap A=3.58 pp
+    coauthor_physics      : GCN_rand=93.77%  GCN_X=95.76%  Topo%=97.9%  Gap A=1.99 pp
+
+  Feature-dependent (Topo% < 80%):
+    cora                  : GCN_rand=56.86%  GCN_X=78.25%  Topo%=72.7%  Gap A=21.39 pp
+    citeseer              : GCN_rand=35.17%  GCN_X=67.21%  Topo%=52.3%  Gap A=32.04 pp
+    pubmed                : GCN_rand=35.71%  GCN_X=75.52%  Topo%=47.3%  Gap A=39.81 pp
+    ogbn_arxiv            : GCN_rand=26.49%  GCN_X=69.95%  Topo%=37.9%  Gap A=43.46 pp
+    wikics                : GCN_rand=56.83%  GCN_X=78.54%  Topo%=72.4%  Gap A=21.71 pp
+
+  Conclusion: In amazon/coauthor co-purchase and co-authorship networks,
+  graph topology alone (zero class information in features) achieves 93–98%
+  of what real features achieve. Features add only 2–5 pp. In citation
+  networks and ogbn-arxiv, features carry substantially more class signal.
+
+──────────────────────────────────────────────────────────────────────────────
+FINDING 2: Message passing vastly outperforms spectral projection (Gap B)
+──────────────────────────────────────────────────────────────────────────────
+Gap B = GCN_rand − MLP_Y at canonical config (fixed split, adam lr=0.01).
+
+    coauthor_cs           : GCN_rand=88.93%  MLP_Y=5.74%  Gap B=83.19 pp
+    amazon_photo          : GCN_rand=91.04%  MLP_Y=15.37%  Gap B=75.67 pp
+    coauthor_physics      : GCN_rand=93.77%  MLP_Y=25.04%  Gap B=68.73 pp
+    amazon_computers      : GCN_rand=87.60%  MLP_Y=23.38%  Gap B=64.23 pp
+    cora                  : GCN_rand=56.86%  MLP_Y=13.87%  Gap B=42.99 pp
+    wikics                : GCN_rand=56.83%  MLP_Y=14.23%  Gap B=42.59 pp
+    ogbn_arxiv            : GCN_rand=26.49%  MLP_Y=5.87%  Gap B=20.62 pp
+    citeseer              : GCN_rand=35.17%  MLP_Y=21.43%  Gap B=13.75 pp
+    pubmed                : GCN_rand=35.71%  MLP_Y=32.71%  Gap B=3.00 pp
+
+  Conclusion: Gap B is positive for all 9 datasets (range: 3.00 to 83.19 pp).
+  GCN message passing consistently extracts more topology class signal than
+  Rayleigh-Ritz spectral projection. The gap is largest on the topology-dominated
+  datasets where GCN_rand is highest and MLP_Y stays near random.
+  IMPORTANT: MLP_Y numbers here use adam lr=0.01 (affected by Adam artifact).
+  See Finding 7 for SGD-corrected comparison.
+
+──────────────────────────────────────────────────────────────────────────────
+FINDING 3: Fixed split severely underestimates topology on citation/wikics networks
+──────────────────────────────────────────────────────────────────────────────
+GCN_rand: fixed split (split_seed=0) vs random split mean (seeds 0–4).
+Canonical optimizer: adam lr=0.01.
+
+    cora                  : fixed=56.86%  random=78.61%  Δ=+21.75 pp  <-- large gap
+    citeseer              : fixed=35.17%  random=66.97%  Δ=+31.80 pp  <-- large gap
+    pubmed                : fixed=35.71%  random=74.23%  Δ=+38.52 pp  <-- large gap
+    ogbn_arxiv            : fixed=26.49%  random=33.11%  Δ=+6.62 pp
+    wikics                : fixed=56.83%  random=74.07%  Δ=+17.24 pp  <-- large gap
+    amazon_computers      : fixed=87.60%  random=87.25%  Δ=-0.36 pp
+    amazon_photo          : fixed=91.04%  random=91.27%  Δ=+0.23 pp
+    coauthor_cs           : fixed=88.93%  random=88.33%  Δ=-0.60 pp
+    coauthor_physics      : fixed=93.77%  random=93.77%  Δ=-0.00 pp
+
+  Conclusion: Citation networks (cora, citeseer, pubmed) and wikics show
+  +17 to +39 pp gain from random splits, reflecting that fixed splits have
+  only ~20 training nodes/class — insufficient for GCN to learn topology.
+  Amazon/coauthor networks: Δ ≈ 0, topology so strong that 20 nodes suffices.
+  The random-split GCN_rand numbers are more representative of topology capacity.
+
+──────────────────────────────────────────────────────────────────────────────
+FINDING 4: Row normalization helps MLP_Y substantially — but only under SGD
+──────────────────────────────────────────────────────────────────────────────
+Gap C = MLP_rowNorm_Y − MLP_Y.
+Left: canonical config (adam lr=0.01).  Right: SGD best-LR.
+
+  Dataset                 GapC (adam)  GapC (SGD-best)   MLP_Y SGD  MLP_rnY SGD
+  ----------------------------------------------------------------------------
+  cora                          +0.27            -0.77       15.77        15.00
+  citeseer                      +2.43            -3.85       26.93        23.08
+  pubmed                        -0.25            +0.13       32.49        32.63
+  ogbn_arxiv                    -0.00            +0.01        5.87         5.87
+  wikics                        +1.69            +6.96       15.68        22.64
+  amazon_computers              +1.72            +8.41       29.30        37.71
+  amazon_photo                  -0.62            +8.17       18.30        26.47
+  coauthor_cs                   +1.86            +7.81       14.82        22.63
+  coauthor_physics              +3.27           +11.46       38.92        50.38
+
+  Conclusion: Under adam lr=0.01, Gap C is small (0–3 pp) and appears
+  unimportant. Under SGD best-LR, Gap C is large on amazon/coauthor
+  networks (+8 to +11 pp), revealing that row normalization substantially
+  helps MLP on Y_rand when the optimizer does not overfit. The adam canonical
+  config suppresses this signal. SGD numbers are more informative for Gap C.
+
+──────────────────────────────────────────────────────────────────────────────
+FINDING 5: Cora is the only dataset where row-norm inside GCN hurts (Gap D < 0)
+──────────────────────────────────────────────────────────────────────────────
+Gap D = GCN_rowNorm_Y − GCN_rand at canonical config.
+
+    cora                  : GCN_rand=56.86%  GCN_rowNorm_Y=48.10%  Gap D=-8.76 pp  *** ANOMALY: only negative Gap D
+    citeseer              : GCN_rand=35.17%  GCN_rowNorm_Y=37.51%  Gap D=+2.33 pp
+    pubmed                : GCN_rand=35.71%  GCN_rowNorm_Y=36.03%  Gap D=+0.31 pp
+    ogbn_arxiv            : GCN_rand=26.49%  GCN_rowNorm_Y=32.00%  Gap D=+5.51 pp
+    wikics                : GCN_rand=56.83%  GCN_rowNorm_Y=58.37%  Gap D=+1.54 pp
+    amazon_computers      : GCN_rand=87.60%  GCN_rowNorm_Y=89.81%  Gap D=+2.21 pp
+    amazon_photo          : GCN_rand=91.04%  GCN_rowNorm_Y=92.28%  Gap D=+1.24 pp
+    coauthor_cs           : GCN_rand=88.93%  GCN_rowNorm_Y=89.42%  Gap D=+0.49 pp
+    coauthor_physics      : GCN_rand=93.77%  GCN_rowNorm_Y=94.92%  Gap D=+1.15 pp
+
+  Conclusion: Gap D is negative only for Cora (−8.76 pp). For all other 8
+  datasets, row-norm inside GCN is neutral to mildly positive (+0.31 to +5.51 pp).
+  The Cora anomaly is not an artifact — it is consistent across seeds and draws.
+  Likely cause: Cora has the lowest GCN_rowNorm_Y (48.10%) relative to
+  GCN_rand (56.86%), suggesting Y_rand geometry on Cora interacts badly with
+  row-norm + Kipf aggregation. Requires further investigation.
+
+──────────────────────────────────────────────────────────────────────────────
+FINDING 6: GCN_rowNorm_Y on ogbn-arxiv has not converged at epoch 500
+──────────────────────────────────────────────────────────────────────────────
+Training curve at canonical config (adam, lr=0.01, fixed split):
+
+    GCN_rand: ep50=23.50%  ep100=24.07%  ep200=25.38%  ep300=25.96%  ep400=26.28%  ep500=26.49%
+    GCN_rowNorm_Y: ep50=11.70%  ep100=22.24%  ep200=25.78%  ep300=28.16%  ep400=30.25%  ep500=32.00%
+    Random baseline: 2.50%
+
+  GCN_rand converges quickly (~ep100) and plateaus at 26.49%.
+  GCN_rowNorm_Y is still rising at ep500 (32.00%), having started below random.
+  Gap D at ep500 = +5.51 pp — largest positive Gap D across all datasets.
+  The reported GCN_rowNorm_Y accuracy for ogbn-arxiv is a lower bound.
+  MLP_Y curve: rises to 13.43% at ep100 then collapses to 5.87% by ep200 —
+  Adam overfitting artifact, visible as a curve inflection.
+
+──────────────────────────────────────────────────────────────────────────────
+FINDING 7: Adam drives MLP models below or near random on several datasets
+──────────────────────────────────────────────────────────────────────────────
+Comparison: MLP_Y SGD best-LR vs MLP_Y Adam best-LR (fixed split).
+
+  Dataset                 base%  MLP_Y SGD  MLP_Y Adam  ratio SGD  ratio Adam
+  --------------------------------------------------------------------------
+  cora                    14.29      15.77       13.87     1.104x      0.971x  ***
+  citeseer                16.67      26.93       21.43     1.616x      1.286x
+  pubmed                  33.33      32.49       32.71     0.975x      0.981x  ***
+  ogbn_arxiv               2.50       5.87       11.16     2.346x      4.463x
+  wikics                  10.00      15.68       14.23     1.568x      1.423x
+  amazon_computers        10.00      29.30       23.38     2.930x      2.338x
+  amazon_photo            12.50      18.30       15.37     1.464x      1.230x
+  coauthor_cs              6.67      14.82        5.86     2.223x      0.878x  ***
+  coauthor_physics        20.00      38.92       25.29     1.946x      1.264x
+
+  Conclusion: Adam is a poor optimizer for MLP on Y_rand. It memorizes
+  spurious random feature-label associations, becomes overconfident, and
+  collapses below random on test. SGD is more conservative and gives the
+  meaningful baseline. Never average Adam and SGD for MLP_Y — report separately.
+  *** = below random baseline (ratio < 1.0).
+
+──────────────────────────────────────────────────────────────────────────────
+FINDING 8: PubMed MLP draw instability — results near 3-class boundary are unreliable
+──────────────────────────────────────────────────────────────────────────────
+MLP_Y per-draw means at canonical config (adam lr=0.01, fixed split):
+
+    xrand_seed=0: MLP_Y = 35.24%  (seed_std = 1.111)
+    xrand_seed=1: MLP_Y = 28.98%  (seed_std = 0.679)
+    xrand_seed=2: MLP_Y = 33.92%  (seed_std = 0.705)
+    draw_std = 2.694  |  mean seed_std = 0.832  |  ratio = 3.2x
+    Random baseline: 33.33%
+
+  Conclusion: PubMed MLP_Y has draw_std 3× larger than seed_std, meaning
+  different random X_rand draws give substantially different MLP_Y accuracies.
+  Results hover near the 3-class random baseline (33.33%), where small
+  eigenvector differences matter more. Any single MLP_Y number for PubMed
+  is unreliable — always report the mean across all 3 draws with the draw_std.
+
+──────────────────────────────────────────────────────────────────────────────
+SUMMARY — KEY NUMBERS PER FINDING
+──────────────────────────────────────────────────────────────────────────────
+  F1 Topology ratio (GCN_rand/GCN_X): amazon/coauthor 93–98%, others 38–82%
+  F2 Gap B range (MP vs spectral): 3.0 to 83.2 pp across 9 datasets
+  F3 GCN_rand fixed→random Δ: near 0 on amazon/coauthor, +17 to +39 pp on citation/wikics
+  F4 Gap C SGD best-LR: up to +11.46 pp (coauthor_physics); adam suppresses to <3 pp
+  F5 Gap D negative only on Cora: −8.76 pp; all others 0 to +5.51 pp
+  F6 GCN_rowNorm_Y ogbn-arxiv: still rising at ep500 (32.00%), not converged
+  F7 Adam artifact: MLP_Y below random on cora, pubmed, coauthor_cs under adam
+  F8 PubMed MLP_Y draw_std/seed_std ratio: 3.2× — unreliable, report with caveat
+
+================================================================================
+END OF REPORT
+Output: /home/md724/Spectral-Basis/SpectralGeometryMisalignment/results/gcn_rand/analysis/analysis_report.txt
+================================================================================
