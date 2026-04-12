@@ -618,7 +618,3 @@ SUMMARY — KEY NUMBERS PER FINDING
        pubmed also below random under SGD (3-class near-random regime)
   F8 PubMed MLP_Y draw_std/seed_std ratio: 3.2× — unreliable, report with caveat
 
-================================================================================
-END OF REPORT
-Output: /home/md724/Spectral-Basis/SpectralGeometryMisalignment/results/gcn_rand/analysis/analysis_report.txt
-================================================================================
