@@ -30,24 +30,6 @@ Canonical config for R2–R8: adam, lr=0.01, fixed split, split_seed=0
 
 
 ================================================================================
-COMPLETENESS CHECK
-Expected: 540 xrand records and 180 gcnX records per dataset
-(3 xrand_seeds × 6 splits × 2 opts × 3 lrs × 5 train_seeds = 540)
-(                          6 splits × 2 opts × 3 lrs × 5 train_seeds = 180)
-================================================================================
-  cora                  : xrand=✓  gcnX=✓
-  citeseer              : xrand=✓  gcnX=✓
-  pubmed                : xrand=✓  gcnX=✓
-  ogbn_arxiv            : xrand=✓  gcnX=✓
-  wikics                : xrand=✓  gcnX=✓
-  amazon_computers      : xrand=✓  gcnX=✓
-  amazon_photo          : xrand=✓  gcnX=✓
-  coauthor_cs           : xrand=✓  gcnX=✓
-  coauthor_physics      : xrand=✓  gcnX=✓
-
-All datasets complete.
-
-================================================================================
 DATASET METADATA
 ================================================================================
 Dataset                 n_nodes      d d_eff_real d_eff_rand  classes   base% xrand_recs  gcnX_recs
@@ -176,6 +158,8 @@ Dataset                base% |         GCN_X |      GCN_rand | GCN_rowNorm_Y |  
 
 Note: best LR selected independently per model×optimizer by mean val acc.
 High std reflects pooling over xrand draws and train seeds simultaneously.
+base% = 100 / num_classes — accuracy of uniform random guessing. A model at or
+below base% carries no class information above chance.
 
 ================================================================================
 REPORT 2: DECOMPOSITION — 4 KEY GAPS + TOPOLOGY RATIO
