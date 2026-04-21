@@ -1,0 +1,288 @@
+================================================================================
+COMBINED INFORMATION-LADDER ANALYSIS
+SpectralGeometryMisalignment — gcn_rand / label_rand (v1+v2) / label_label (v1+v2)
+Date: April 2026
+================================================================================
+
+INFORMATION LADDER
+------------------
+  Level 0 — gcn_rand    : X_rand ~ N(0,1)            Zero class info
+  Level 1 — label_rand  : train→1-hot, val/test→rand  Partial class info
+  Level 2 — label_label : all nodes→1-hot (ceiling)   Full class info
+
+  Levels 1 & 2: span(X) = span(U) → Gap_U is optimization geometry, not info loss.
+  Level 0: GCN_rand vs GCN_X — NOT span-equivalent; topology signal comparison.
+  3 models: GCN_X | GCN_U (StandardScaler) | GCN_rowNorm_U (row-norm Option B)
+
+CANONICAL CONFIGS
+  Level 0: adam, lr=0.01, fixed split, split_seed=0  (gcn_rand convention)
+  Level 1: adam, lr=0.01, random split, split_seed=0 (label_rand convention)
+  Level 2: adam, lr=0.01, all 5 random split seeds   (label_label convention)
+
+
+Level 0 (gcn_rand):        loaded (summary.json)
+Level 1 v1 (label_rand):   9/9 datasets — Gaussian features
+Level 1 v2 (label_rand_v2):9/9 datasets — Simplex features
+Level 2 v1 (label_label):  9/9 datasets — GCN only
+Level 2 v2 (label_label_v2):9/9 datasets — GCN + Transformer
+
+================================================================================
+LEVEL 0: ZERO CLASS INFORMATION — gcn_rand canonical results
+  X_rand ~ N(0,1), zero class info, labels and topology unchanged.
+  Canonical: adam, lr=0.01, fixed split, split_seed=0
+  Source: gcn_rand/summary.json
+================================================================================
+
+  Dataset                base% |          GCN_X |       GCN_rand |  GCN_rowNorm_Y |          MLP_Y
+  ---------------------------------------------------------------------------------------------------
+  cora                    14.3 |     78.25±0.47 |     56.86±1.05 |     48.10±1.63 |     13.87±0.85
+  citeseer                16.7 |     67.21±0.47 |     35.17±1.84 |     37.51±1.20 |     21.43±0.68
+  pubmed                  33.3 |     75.52±0.13 |     35.71±0.95 |     36.03±2.00 |     32.71±2.83
+  ogbn_arxiv               2.5 |     69.95±0.19 |     26.49±0.20 |     32.00±0.82 |      5.87±0.00
+  wikics                  10.0 |     78.54±0.35 |     56.83±0.45 |     58.37±0.39 |     14.23±0.75
+  amazon_computers        10.0 |     92.50±0.21 |     87.60±0.37 |     89.81±0.24 |     23.38±0.38
+  amazon_photo            12.5 |     94.43±0.56 |     91.04±0.49 |     92.28±0.34 |     15.37±0.63
+  coauthor_cs              6.7 |     92.51±0.05 |     88.93±0.21 |     89.42±0.21 |      5.74±0.21
+  coauthor_physics        20.0 |     95.76±0.08 |     93.77±0.14 |     94.92±0.11 |     25.04±0.41
+
+  GCN_X        = GCN on real features X (feature ceiling at Level 0)
+  GCN_rand     = GCN on X_rand — class info from topology only
+  GCN_rowNorm_Y= GCN on Y_rand with row-norm at each layer input (Option B)
+  MLP_Y        = linear classifier on Y_rand + StandardScaler
+
+================================================================================
+LEVEL 1: PARTIAL CLASS INFORMATION — label_rand canonical results
+  X_label_rand: train → one-hot, val/test → N(0,1).
+  Canonical: adam, lr=0.01, random split, split_seed=0
+  Mean over xrand_seeds={0,1,2} × train_seeds={0..4} (up to 15 runs)
+================================================================================
+
+  Dataset                base% |         GCN_X |         GCN_U | GCN_rowNorm_U
+  ------------------------------------------------------------------------
+  cora                    14.3 |    59.85±0.64 |    59.49±0.78 |    73.71±0.93
+  citeseer                16.7 |    49.29±0.89 |    48.55±0.99 |    56.48±1.21
+  pubmed                  33.3 |    61.24±0.47 |    60.83±0.30 |    63.07±0.63
+  ogbn_arxiv               2.5 |    49.07±0.12 |    49.05±0.13 |    68.02±0.11
+  wikics                  10.0 |    67.81±0.26 |    68.08±0.31 |    72.74±0.31
+  amazon_computers        10.0 |    84.58±0.22 |    84.80±0.23 |    88.61±0.14
+  amazon_photo            12.5 |    87.75±0.59 |    87.96±0.44 |    91.63±0.34
+  coauthor_cs              6.7 |    69.65±0.38 |    70.02±0.36 |    87.13±0.40
+  coauthor_physics        20.0 |    86.03±0.33 |    85.90±0.44 |    92.20±0.30
+
+================================================================================
+LEVEL 2: FULL CLASS INFORMATION (CEILING) — label_label canonical results
+  X_label_label: ALL nodes → true one-hot label (deterministic).
+  *** Scientific probe — test labels in features. NOT predictive. ***
+  Canonical: adam, lr=0.01, all 5 split seeds pooled
+  Mean over split_seeds={0..4} × train_seeds={0..4} (up to 25 runs)
+================================================================================
+
+  Dataset                base% |         GCN_X |         GCN_U | GCN_rowNorm_U
+  ------------------------------------------------------------------------
+  cora                    14.3 |    95.68±0.67 |    94.74±0.84 |    93.92±0.95
+  citeseer                16.7 |    91.52±0.74 |    91.08±0.71 |    90.20±0.90
+  pubmed                  33.3 |    97.90±0.29 |    96.40±0.13 |    97.22±0.21
+  ogbn_arxiv               2.5 |    90.42±0.11 |    89.73±0.13 |    88.77±0.10
+  wikics                  10.0 |    92.26±0.53 |    91.06±0.59 |    90.97±0.73
+  amazon_computers        10.0 |    95.07±0.34 |    94.52±0.28 |    94.40±0.45
+  amazon_photo            12.5 |    96.76±0.11 |    96.60±0.19 |    96.31±0.31
+  coauthor_cs              6.7 |    97.58±0.16 |    97.21±0.14 |    96.94±0.19
+  coauthor_physics        20.0 |    98.84±0.12 |    98.39±0.11 |    98.14±0.17
+
+================================================================================
+LADDER TABLE: Gap_U = GCN_U − GCN_X across information levels
+─────────────────────────────────────────────────────────────
+  Level 0 (gcn_rand):    GCN_rand − GCN_X  (topology vs real features)
+  Level 1 (label_rand):  GCN_U   − GCN_X  (partial label info)
+  Level 2 (label_label): GCN_U   − GCN_X  (full label info / ceiling)
+  Positive = spectral / topology advantage. Negative = direct features win.
+NOTE: Level 0 compares GCN_rand (not GCN_U) to GCN_X — different model role.
+      Levels 1 and 2 are the clean span(X)=span(U) geometry comparison.
+================================================================================
+
+  Dataset                base% |    Gap L0    Gap L1    Gap L2 |        trend
+  ----------------------------------------------------------------------------
+  cora                    14.3 |    -21.39     -0.36     -0.93 |   L1→L2 decr
+  citeseer                16.7 |    -32.04     -0.74     -0.44 |   L1→L2 incr
+  pubmed                  33.3 |    -39.81     -0.41     -1.50 |   L1→L2 decr
+  ogbn_arxiv               2.5 |    -43.46     -0.02     -0.69 |   L1→L2 decr
+  wikics                  10.0 |    -21.71     +0.27     -1.20 |   L1→L2 decr
+  amazon_computers        10.0 |     -4.89     +0.22     -0.55 |   L1→L2 decr
+  amazon_photo            12.5 |     -3.39     +0.21     -0.16 |   L1→L2 decr
+  coauthor_cs              6.7 |     -3.58     +0.37     -0.38 |   L1→L2 decr
+  coauthor_physics        20.0 |     -1.99     -0.12     -0.45 |   L1→L2 decr
+
+  Interpretation guide (L1→L2 trend only; L0 uses a different model — GCN_rand):
+  L1→L2 incr → spectral projection advantage grows with more label info.
+  L1→L2 decr → spectral advantage erodes as direct features improve.
+  L1→L2 flat → no change between partial and full label information.
+
+================================================================================
+ROW-NORM EVOLUTION: Gap_RN = GCN_rowNorm_U − GCN_U across levels
+  Level 0: GCN_rowNorm_Y − GCN_rand  (row-norm on Y_rand vs plain X_rand GCN)
+  Level 1: GCN_rowNorm_U − GCN_U     (partial label info)
+  Level 2: GCN_rowNorm_U − GCN_U     (full label info / ceiling)
+  Positive = row-norm helps. Negative = row-norm hurts.
+================================================================================
+
+  Dataset                base% |     RN L0     RN L1     RN L2
+  ------------------------------------------------------------
+  cora                    14.3 |     -8.76    +14.22     -0.82
+  citeseer                16.7 |     +2.33     +7.92     -0.88
+  pubmed                  33.3 |     +0.31     +2.24     +0.82
+  ogbn_arxiv               2.5 |     +5.51    +18.97     -0.96
+  wikics                  10.0 |     +1.54     +4.66     -0.10
+  amazon_computers        10.0 |     +2.21     +3.80     -0.12
+  amazon_photo            12.5 |     +1.24     +3.67     -0.30
+  coauthor_cs              6.7 |     +0.49    +17.11     -0.27
+  coauthor_physics        20.0 |     +1.15     +6.30     -0.25
+
+  A consistent sign across all 3 levels = row-norm has a stable effect on
+  this dataset regardless of how much label info the features carry.
+  Sign flip = row-norm interaction depends on the label-feature geometry.
+
+================================================================================
+LEVEL 1 ROBUSTNESS: Gaussian (v1) vs Simplex (v2) Random Features
+─────────────────────────────────────────────────────────────────
+  v1: val/test ~ N(0,1) Gaussian — features not on simplex
+  v2: val/test ~ Uniform probability simplex — rows sum to 1, entries ≥ 0
+  Scientific question: is Gap_U stable across different uninformative
+  feature distributions? If yes → conclusion robust to feature geometry.
+  Canonical: adam, lr=0.01, random split, split_seed=0.
+  Gap_U = GCN_U − GCN_X  (span(X)=span(U) → geometry, not information).
+================================================================================
+
+  Dataset                base% |  GCN_X v1  GCN_U v1  Gap v1 |  GCN_X v2  GCN_U v2  Gap v2 |  Δ(v2−v1)  robust?
+  -------------------------------------------------------------------------------------------------------
+  cora                    14.3 |     59.85     59.49   -0.36 |     82.67     83.74   +1.07 |     +1.44      YES
+  citeseer                16.7 |     49.29     48.55   -0.74 |     66.26     68.32   +2.06 |     +2.80 NO (sign flip)
+  pubmed                  33.3 |     61.24     60.83   -0.41 |     67.53     74.27   +6.74 |     +7.15 NO (sign flip)
+  ogbn_arxiv               2.5 |     49.07     49.05   -0.02 |     70.14     70.15   +0.01 |     +0.03      YES
+  wikics                  10.0 |     67.81     68.08   +0.27 |     79.51     79.69   +0.18 |     -0.09      YES
+  amazon_computers        10.0 |     84.58     84.80   +0.22 |     90.33     90.07   -0.27 |     -0.49      YES
+  amazon_photo            12.5 |     87.75     87.96   +0.21 |     93.10     92.77   -0.33 |     -0.54      YES
+  coauthor_cs              6.7 |     69.65     70.02   +0.37 |     90.22     89.87   -0.35 |     -0.72      YES
+  coauthor_physics        20.0 |     86.03     85.90   -0.12 |     94.72     94.58   -0.13 |     -0.01      YES
+
+  robust? YES = Gap_U sign agrees between v1 and v2 (or both near-parity).
+  Δ(v2−v1): how much Gap_U shifts when switching from Gaussian to Simplex.
+  A large |Δ| with sign flip = Gap_U is sensitive to feature geometry.
+  A small |Δ| consistent sign = robust conclusion across feature distributions.
+
+================================================================================
+TRANSFORMER AT LEVEL 2 (label_label_v2)
+────────────────────────────────────────
+  Architecture comparison at the full-information ceiling.
+  GCN_U uses Rayleigh-Ritz U + message passing via Â.
+  Transformer_U uses Rayleigh-Ritz U + global self-attention (no graph Â).
+  span(X) = span(U) → any Gap_U is optimization geometry, not information.
+  skip = dataset too large for O(N²) attention (N > 25000).
+  Canonical: adam, lr=0.01, all 5 random split seeds pooled.
+================================================================================
+
+  Dataset                base% |    GCN_X    GCN_U  Gap_GCN |   Trans_X   Trans_U  Gap_Trans |  Δ(T−G)
+  -------------------------------------------------------------------------------------------------
+  cora                    14.3 |    95.52    94.57    -0.96 |     99.44    100.00      +0.56 |   +1.51
+  citeseer                16.7 |    91.48    91.08    -0.41 |    100.00    100.00      +0.00 |   +0.41
+  pubmed                  33.3 |    97.90    96.40    -1.50 |    100.00    100.00      +0.00 |   +1.50
+  ogbn_arxiv               2.5 |    90.42    89.73    -0.69 |      skip      skip       skip |    skip
+  wikics                  10.0 |    92.25    91.06    -1.19 |     98.90    100.00      +1.10 |   +2.28
+  amazon_computers        10.0 |    95.07    94.51    -0.55 |     96.06    100.00      +3.94 |   +4.49
+  amazon_photo            12.5 |    96.76    96.60    -0.16 |     99.26    100.00      +0.74 |   +0.90
+  coauthor_cs              6.7 |    97.59    97.21    -0.38 |     96.45    100.00      +3.55 |   +3.93
+  coauthor_physics        20.0 |    98.84    98.39    -0.45 |      skip      skip       skip |    skip
+
+  Gap_GCN   = GCN_U   − GCN_X      (spectral projection effect on GCN)
+  Gap_Trans = Trans_U  − Trans_X    (spectral projection effect on Transformer)
+  Δ(T−G)    = Gap_Trans − Gap_GCN   (does U help Transformer more/less than GCN?)
+
+  Datasets with both GCN and Transformer results: ['amazon_computers', 'amazon_photo', 'citeseer', 'coauthor_cs', 'cora', 'pubmed', 'wikics']
+  Gap_GCN   range (these datasets):  -1.50 to -0.16 pp
+  Gap_Trans range (non-ceiling):     +0.56 to +3.94 pp
+  Ceiling (Trans_X=Trans_U≈100%, gap=0 by saturation): ['citeseer', 'pubmed']
+    NOTE: gap_trans=0.00 here is a ceiling artifact, not genuine parity with GCN.
+  Different sign — architecture × spectral interaction: ['amazon_computers', 'wikics', 'cora', 'coauthor_cs', 'amazon_photo']
+
+================================================================================
+DATASET REGIME ANALYSIS
+  Classifying each dataset by Gap_U sign at Levels 1 and 2.
+  Gap_U > +2pp = "U helps";  Gap_U < −2pp = "X better";  else "near-parity".
+================================================================================
+
+  Dataset                     L1 regime      L2 regime    Consistency
+  --------------------------------------------------------------------
+  cora                      near-parity    near-parity     consistent
+  citeseer                  near-parity    near-parity     consistent
+  pubmed                    near-parity    near-parity     consistent
+  ogbn_arxiv                near-parity    near-parity     consistent
+  wikics                    near-parity    near-parity     consistent
+  amazon_computers          near-parity    near-parity     consistent
+  amazon_photo              near-parity    near-parity     consistent
+  coauthor_cs               near-parity    near-parity     consistent
+  coauthor_physics          near-parity    near-parity     consistent
+
+  L1 near-parity: ['cora', 'citeseer', 'pubmed', 'ogbn_arxiv', 'wikics', 'amazon_computers', 'amazon_photo', 'coauthor_cs', 'coauthor_physics']
+
+  Regime shift (L1 vs L2) highlights datasets where the advantage of spectral
+  projection changes qualitatively when features become fully label-informative.
+
+================================================================================
+VERIFIED FINDINGS — COMBINED LADDER ANALYSIS
+Numbers first, conclusions second.
+All numbers [VERIFIED] from canonical configs (see header for details).
+================================================================================
+
+──────────────────────────────────────────────────────────────────────────────
+FINDING 1: Gap_U distribution at Level 1 (partial) and Level 2 (ceiling)
+──────────────────────────────────────────────────────────────────────────────
+
+  Level 1  range: -0.74 to +0.37 pp
+  Level 2  range: -1.50 to -0.16 pp
+
+──────────────────────────────────────────────────────────────────────────────
+FINDING 2: Gap_U trend from Level 1 → Level 2
+  (L0 excluded: GCN_rand vs GCN_X is NOT a span(X)=span(U) comparison)
+──────────────────────────────────────────────────────────────────────────────
+
+  L1→L2 Decreasing — Gap_U more negative at ceiling (8/9):
+    ['cora', 'pubmed', 'ogbn_arxiv', 'wikics', 'amazon_computers', 'amazon_photo', 'coauthor_cs', 'coauthor_physics']
+  L1→L2 Increasing — Gap_U improves at ceiling (1/9):
+    ['citeseer']
+
+  Decreasing trend = spectral advantage (if any at L1) erodes under full info.
+  Interpretation: at ceiling GCN_X is harder to beat because direct features
+  perfectly encode class structure — U adds no new information but the geometry
+  of U still imposes optimization overhead.
+
+──────────────────────────────────────────────────────────────────────────────
+FINDING 3: Row-norm effect consistency across levels
+──────────────────────────────────────────────────────────────────────────────
+
+  Consistent sign (L1 & L2):  ['pubmed(L1=+2.2,L2=+0.8)']
+  Sign flip (L1→L2):          ['cora(L1=+14.2,L2=-0.8)', 'citeseer(L1=+7.9,L2=-0.9)', 'ogbn_arxiv(L1=+19.0,L2=-1.0)', 'wikics(L1=+4.7,L2=-0.1)', 'amazon_computers(L1=+3.8,L2=-0.1)', 'amazon_photo(L1=+3.7,L2=-0.3)', 'coauthor_cs(L1=+17.1,L2=-0.3)', 'coauthor_physics(L1=+6.3,L2=-0.2)']
+
+  Datasets where row-norm flips sign = the effect depends on how much label
+  information the spectral features carry, not just the spectral geometry.
+
+──────────────────────────────────────────────────────────────────────────────
+SUMMARY — CROSS-EXPERIMENT KEY NUMBERS
+──────────────────────────────────────────────────────────────────────────────
+  All values at canonical configs (see script header).
+  [VERIFIED] from raw per-run JSON files (L1, L2) and summary.json (L0).
+
+  Dataset                | L0 GCN_rand   L1 GCN_X   L2 GCN_X |  Gap L1  Gap L2
+  ------------------------------------------------------------------------------
+  cora                   |      56.86      59.85      95.68 |   -0.36   -0.93
+  citeseer               |      35.17      49.29      91.52 |   -0.74   -0.44
+  pubmed                 |      35.71      61.24      97.90 |   -0.41   -1.50
+  ogbn_arxiv             |      26.49      49.07      90.42 |   -0.02   -0.69
+  wikics                 |      56.83      67.81      92.26 |   +0.27   -1.20
+  amazon_computers       |      87.60      84.58      95.07 |   +0.22   -0.55
+  amazon_photo           |      91.04      87.75      96.76 |   +0.21   -0.16
+  coauthor_cs            |      88.93      69.65      97.58 |   +0.37   -0.38
+  coauthor_physics       |      93.77      86.03      98.84 |   -0.12   -0.45
+
+================================================================================
+END OF REPORT
+Output: /home/md724/Spectral-Basis/SpectralGeometryMisalignment/results/combined/analysis_report.txt
+================================================================================

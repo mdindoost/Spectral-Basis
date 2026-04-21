@@ -1,0 +1,364 @@
+================================================================================
+EXPERIMENT 2: FULL LABEL INFORMATION (CEILING) — FULL ANALYSIS REPORT
+SpectralGeometryMisalignment / label_label_experiment.py
+Date: April 2026
+================================================================================
+
+EXPERIMENTAL SETUP
+------------------
+X_label_label: ALL nodes → their true one-hot class label (deterministic).
+U_label_label: Rayleigh-Ritz of (L,D) on X_label_label. Computed once per dataset.
+span(X) = span(U) — gap between GCN(X) and GCN(U) is optimization geometry.
+
+*** Scientific probe — test labels appear in features. NOT a predictive model. ***
+GCN(X_label_label) = transductive label propagation via message passing.
+Upper bound: measures ceiling performance + geometry of spectral projection.
+
+3 models:  GCN_X | GCN_U (StandardScaler) | GCN_rowNorm_U (row-norm at layer input)
+Training:  SGD + Adam, LR∈{0.001,0.01,0.1}, 500 epochs, WD=0
+Seeds:     5 train × 5 random split seeds (60/20/20) = 25 runs per (opt,lr,model)
+Canonical: adam, lr=0.01, all 5 split seeds pooled
+
+
+================================================================================
+COMPLETENESS CHECK
+Expected: 150 records per dataset
+(5 split_seeds × 2 opts × 3 lrs × 5 train_seeds = 150)
+================================================================================
+  cora                  : ✓
+  citeseer              : ✓
+  pubmed                : ✓
+  ogbn_arxiv            : ✓
+  wikics                : ✓
+  amazon_computers      : ✓
+  amazon_photo          : ✓
+  coauthor_cs           : ✓
+  coauthor_physics      : ✓
+
+All datasets complete.
+
+================================================================================
+DATASET METADATA
+================================================================================
+Dataset                 n_nodes  num_cls  input_dim  d_eff  base%  n_train  records
+-------------------------------------------------------------------------------------
+cora                      2,485        7          7      7  14.29     1491      150
+citeseer                  2,120        6          6      6  16.67     1272      150
+pubmed                   19,717        3          3      3  33.33    11830      150
+ogbn_arxiv              169,343       40         40     40   2.50   101605      150
+wikics                   11,311       10         10     10  10.00     6786      150
+amazon_computers         13,381       10         10     10  10.00     8028      150
+amazon_photo              7,487        8          8      8  12.50     4492      150
+coauthor_cs              18,333       15         15     15   6.67    10999      150
+coauthor_physics         34,493        5          5      5  20.00    20695      150
+
+input_dim = num_classes (X_label_label has num_classes columns)
+d_eff     = number of Rayleigh-Ritz eigenvectors (≤ num_classes)
+n_train   = training nodes on a random 60/20/20 split (varies by split_seed)
+
+NOTE: X_label_label gives ALL nodes their true one-hot label.
+      This is a scientific probe — test labels appear in features.
+      GCN_X and GCN_U here are NOT valid predictive models.
+      High accuracy reflects label propagation, not generalisation.
+
+================================================================================
+REPORT 2: ABOVE-RANDOM CHECK
+Canonical: adam, lr=0.01, all split seeds pooled
+Ratio = mean_test_acc / random_baseline  (>1.0 = above random)
+ANOMALY if ratio < 1.0
+================================================================================
+Dataset                base% |           GCN_X            GCN_U    GCN_rowNorm_U
+--------------------------------------------------------------------------------
+cora                    14.3 |  95.68% (6.70x)   94.74% (6.63x)   93.92% (6.57x)
+citeseer                16.7 |  91.52% (5.49x)   91.08% (5.46x)   90.20% (5.41x)
+pubmed                  33.3 |  97.90% (2.94x)   96.40% (2.89x)   97.22% (2.92x)
+ogbn_arxiv               2.5 | 90.42% (36.17x)  89.73% (35.89x)  88.77% (35.51x)
+wikics                  10.0 |  92.26% (9.23x)   91.06% (9.11x)   90.97% (9.10x)
+amazon_computers        10.0 |  95.07% (9.51x)   94.52% (9.45x)   94.40% (9.44x)
+amazon_photo            12.5 |  96.76% (7.74x)   96.60% (7.73x)   96.31% (7.70x)
+coauthor_cs              6.7 | 97.58% (14.64x)  97.21% (14.58x)  96.94% (14.54x)
+coauthor_physics        20.0 |  98.84% (4.94x)   98.39% (4.92x)   98.14% (4.91x)
+
+No anomalies — all models at or above random baseline.
+
+REMINDER: High accuracy here (near 100%) is EXPECTED — X_label_label embeds
+  all true labels into features. This experiment measures the ceiling of what
+  GCN(X) vs GCN(U) can achieve given perfect label information.
+
+================================================================================
+REPORT 1: MAIN RESULTS TABLE
+Canonical: adam, lr=0.01, all 5 random split seeds pooled
+Mean ± std over split_seeds={0..4} × train_seeds={0..4} (up to 25 runs)
+================================================================================
+Dataset                base% |         GCN_X |         GCN_U | GCN_rowNorm_U
+
+  Optimizer: SGD
+  --------------------------------------------------------------------------
+  cora                    14.3 |  93.83±0.81 [lr=0.01] |  93.71±0.80 [lr=0.01] |  93.68±0.95 [lr=0.1]
+  citeseer                16.7 |  88.91±0.93 [lr=0.1] |  89.51±0.81 [lr=0.1] |  89.55±0.97 [lr=0.1]
+  pubmed                  33.3 |  96.43±0.12 [lr=0.1] |  95.99±0.10 [lr=0.1] |  96.22±0.12 [lr=0.1]
+  ogbn_arxiv               2.5 |  83.60±0.15 [lr=0.1] |  85.83±0.07 [lr=0.1] |  76.44±0.14 [lr=0.1]
+  wikics                  10.0 |  88.47±0.57 [lr=0.1] |  88.83±0.70 [lr=0.1] |  88.37±0.62 [lr=0.1]
+  amazon_computers        10.0 |  93.48±0.26 [lr=0.1] |  93.52±0.33 [lr=0.1] |  93.07±0.52 [lr=0.1]
+  amazon_photo            12.5 |  95.47±0.28 [lr=0.1] |  95.88±0.34 [lr=0.1] |  95.16±0.48 [lr=0.1]
+  coauthor_cs              6.7 |  96.23±0.21 [lr=0.1] |  96.24±0.21 [lr=0.1] |  94.99±0.30 [lr=0.1]
+  coauthor_physics        20.0 |  97.74±0.09 [lr=0.1] |  97.81±0.12 [lr=0.1] |  97.76±0.09 [lr=0.1]
+
+  Optimizer: ADAM
+  --------------------------------------------------------------------------
+  cora                    14.3 |  95.83±0.67 [lr=0.1] |  94.74±0.84 [lr=0.01] |  94.78±1.11 [lr=0.1]
+  citeseer                16.7 |  91.78±0.94 [lr=0.1] |  90.83±0.49 [lr=0.1] |  91.45±0.69 [lr=0.1]
+  pubmed                  33.3 |  98.24±0.28 [lr=0.1] |  96.46±0.15 [lr=0.1] |  97.90±0.20 [lr=0.1]
+  ogbn_arxiv               2.5 |  92.73±0.13 [lr=0.1] |  90.52±0.22 [lr=0.1] |  91.91±0.14 [lr=0.1]
+  wikics                  10.0 |  93.69±0.38 [lr=0.1] |  91.06±0.59 [lr=0.01] |  92.92±0.49 [lr=0.1]
+  amazon_computers        10.0 |  95.95±0.24 [lr=0.1] |  94.52±0.28 [lr=0.01] |  95.33±0.33 [lr=0.1]
+  amazon_photo            12.5 |  97.70±0.27 [lr=0.1] |  96.69±0.28 [lr=0.1] |  97.00±0.28 [lr=0.1]
+  coauthor_cs              6.7 |  98.32±0.11 [lr=0.1] |  97.72±0.15 [lr=0.1] |  97.97±0.18 [lr=0.1]
+  coauthor_physics        20.0 |  99.16±0.12 [lr=0.1] |  98.80±0.16 [lr=0.1] |  99.01±0.07 [lr=0.1]
+
+Best LR selected by mean val_acc_curve[-1] across all split × train seeds.
+
+================================================================================
+REPORT 3: CEILING GAP — Gap_U = GCN_U − GCN_X
+Interpretation: span(X_label_label) = span(U_label_label) — gap is geometric.
+  Gap_U > 0: Rayleigh-Ritz pre-spreads labels globally → GCN(U) easier to optimise.
+  Gap_U < 0: Direct one-hot features easier for GCN than spectral projection.
+  This is the CEILING — both models see perfect label information.
+Canonical: adam, lr=0.01, all 5 split seeds pooled.
+Mean over split_seeds × train_seeds.
+================================================================================
+
+Dataset                base% |   GCN_X   GCN_U   Gap_U |  GCN_rnU   Gap_RN
+------------------------------------------------------------------------
+cora                    14.3 |   95.68   94.74   -0.93 |   93.92    -0.82
+citeseer                16.7 |   91.52   91.08   -0.44 |   90.20    -0.88
+pubmed                  33.3 |   97.90   96.40   -1.50 |   97.22    +0.82
+ogbn_arxiv               2.5 |   90.42   89.73   -0.69 |   88.77    -0.96
+wikics                  10.0 |   92.26   91.06   -1.20 |   90.97    -0.10
+amazon_computers        10.0 |   95.07   94.52   -0.55 |   94.40    -0.12
+amazon_photo            12.5 |   96.76   96.60   -0.16 |   96.31    -0.30
+coauthor_cs              6.7 |   97.58   97.21   -0.38 |   96.94    -0.27
+coauthor_physics        20.0 |   98.84   98.39   -0.45 |   98.14    -0.25
+
+Gap_U  = GCN_U − GCN_X        (cost/benefit of spectral projection at ceiling)
+Gap_RN = GCN_rowNorm_U − GCN_U (additional effect of row-norm on spectral GCN)
+
+Compare Gap_U here to the same gap in label_rand (Exp 1) and gcn_rand (Exp 0)
+to trace how the spectral-projection advantage evolves with label information.
+
+================================================================================
+REPORT 4: OPTIMIZER SENSITIVITY
+Best LR per optimizer | Mean±std across all split_seeds × train_seeds
+================================================================================
+
+  Model: GCN_X
+  Dataset                base% |        SGD best-LR |       Adam best-LR |  Gap (Adam−SGD)
+  --------------------------------------------------------------------------------
+  cora                    14.3 |  93.83±0.81[lr=0.01] |  95.83±0.67[lr=0.1] |        +2.00 pp
+  citeseer                16.7 |  88.91±0.93[lr=0.1] |  91.78±0.94[lr=0.1] |        +2.88 pp
+  pubmed                  33.3 |  96.43±0.12[lr=0.1] |  98.24±0.28[lr=0.1] |        +1.81 pp
+  ogbn_arxiv               2.5 |  83.60±0.15[lr=0.1] |  92.73±0.13[lr=0.1] |        +9.13 pp
+  wikics                  10.0 |  88.47±0.57[lr=0.1] |  93.69±0.38[lr=0.1] |        +5.22 pp
+  amazon_computers        10.0 |  93.48±0.26[lr=0.1] |  95.95±0.24[lr=0.1] |        +2.47 pp
+  amazon_photo            12.5 |  95.47±0.28[lr=0.1] |  97.70±0.27[lr=0.1] |        +2.23 pp
+  coauthor_cs              6.7 |  96.23±0.21[lr=0.1] |  98.32±0.11[lr=0.1] |        +2.09 pp
+  coauthor_physics        20.0 |  97.74±0.09[lr=0.1] |  99.16±0.12[lr=0.1] |        +1.42 pp
+
+  Model: GCN_U
+  Dataset                base% |        SGD best-LR |       Adam best-LR |  Gap (Adam−SGD)
+  --------------------------------------------------------------------------------
+  cora                    14.3 |  93.71±0.80[lr=0.01] |  94.74±0.84[lr=0.01] |        +1.03 pp
+  citeseer                16.7 |  89.51±0.81[lr=0.1] |  90.83±0.49[lr=0.1] |        +1.32 pp
+  pubmed                  33.3 |  95.99±0.10[lr=0.1] |  96.46±0.15[lr=0.1] |        +0.47 pp
+  ogbn_arxiv               2.5 |  85.83±0.07[lr=0.1] |  90.52±0.22[lr=0.1] |        +4.69 pp
+  wikics                  10.0 |  88.83±0.70[lr=0.1] |  91.06±0.59[lr=0.01] |        +2.23 pp
+  amazon_computers        10.0 |  93.52±0.33[lr=0.1] |  94.52±0.28[lr=0.01] |        +1.01 pp
+  amazon_photo            12.5 |  95.88±0.34[lr=0.1] |  96.69±0.28[lr=0.1] |        +0.81 pp
+  coauthor_cs              6.7 |  96.24±0.21[lr=0.1] |  97.72±0.15[lr=0.1] |        +1.48 pp
+  coauthor_physics        20.0 |  97.81±0.12[lr=0.1] |  98.80±0.16[lr=0.1] |        +0.99 pp
+
+  Model: GCN_rowNorm_U
+  Dataset                base% |        SGD best-LR |       Adam best-LR |  Gap (Adam−SGD)
+  --------------------------------------------------------------------------------
+  cora                    14.3 |  93.68±0.95[lr=0.1] |  94.78±1.11[lr=0.1] |        +1.10 pp
+  citeseer                16.7 |  89.55±0.97[lr=0.1] |  91.45±0.69[lr=0.1] |        +1.91 pp
+  pubmed                  33.3 |  96.22±0.12[lr=0.1] |  97.90±0.20[lr=0.1] |        +1.68 pp
+  ogbn_arxiv               2.5 |  76.44±0.14[lr=0.1] |  91.91±0.14[lr=0.1] |       +15.47 pp
+  wikics                  10.0 |  88.37±0.62[lr=0.1] |  92.92±0.49[lr=0.1] |        +4.54 pp
+  amazon_computers        10.0 |  93.07±0.52[lr=0.1] |  95.33±0.33[lr=0.1] |        +2.26 pp
+  amazon_photo            12.5 |  95.16±0.48[lr=0.1] |  97.00±0.28[lr=0.1] |        +1.84 pp
+  coauthor_cs              6.7 |  94.99±0.30[lr=0.1] |  97.97±0.18[lr=0.1] |        +2.99 pp
+  coauthor_physics        20.0 |  97.76±0.09[lr=0.1] |  99.01±0.07[lr=0.1] |        +1.26 pp
+
+================================================================================
+REPORT 5: SPLIT SEED STABILITY
+Canonical: adam, lr=0.01
+Per-seed mean computed over train_seeds={0..4} (5 runs).
+split_std = std of per-seed means.  seed_std = mean of per-seed stds.
+Stable: split_std << seed_std  (split choice does not dominate variance).
+NOTE: U_label_label is fixed — only StandardScaler changes across splits.
+      X_label_label is also fixed (all labels). Variance comes from train nodes.
+================================================================================
+
+  Model: GCN_X
+  Dataset                     ss0      ss1      ss2      ss3      ss4 |  split_std   seed_std |  stable?
+  ------------------------------------------------------------------------------------------------------
+  cora                      96.34    95.53    94.73    95.98    95.81 |      0.541      0.399 |       NO
+  citeseer                  91.84    91.32    91.23    90.61    92.59 |      0.664      0.306 |       NO
+  pubmed                    98.07    98.05    97.32    98.00    98.06 |      0.289      0.053 |       NO
+  ogbn_arxiv                90.40    90.34    90.58    90.46    90.34 |      0.090      0.058 |       NO
+  wikics                    92.46    91.29    92.55    92.69    92.30 |      0.499      0.169 |       NO
+  amazon_computers          94.71    95.01    95.65    95.13    94.84 |      0.324      0.085 |       NO
+  amazon_photo              96.70    96.92    96.74    96.74    96.70 |      0.079      0.072 |       NO
+  coauthor_cs               97.81    97.46    97.65    97.57    97.41 |      0.141      0.077 |       NO
+  coauthor_physics          98.81    98.82    98.74    99.04    98.79 |      0.105      0.055 |       NO
+
+  Model: GCN_U
+  Dataset                     ss0      ss1      ss2      ss3      ss4 |  split_std   seed_std |  stable?
+  ------------------------------------------------------------------------------------------------------
+  cora                      95.49    94.93    93.44    95.53    94.33 |      0.786      0.286 |       NO
+  citeseer                  90.66    91.70    90.66    90.52    91.84 |      0.570      0.408 |       NO
+  pubmed                    96.44    96.40    96.26    96.33    96.60 |      0.114      0.049 |       NO
+  ogbn_arxiv                89.56    89.72    89.84    89.84    89.72 |      0.101      0.078 |       NO
+  wikics                    91.26    90.15    91.25    91.87    90.79 |      0.573      0.122 |       NO
+  amazon_computers          94.09    94.67    94.77    94.67    94.42 |      0.246      0.125 |       NO
+  amazon_photo              96.52    96.93    96.53    96.44    96.61 |      0.172      0.063 |       NO
+  coauthor_cs               97.31    97.23    97.19    97.26    97.04 |      0.092      0.094 |      YES
+  coauthor_physics          98.51    98.42    98.32    98.46    98.25 |      0.097      0.041 |       NO
+
+  Model: GCN_rowNorm_U
+  Dataset                     ss0      ss1      ss2      ss3      ss4 |  split_std   seed_std |  stable?
+  ------------------------------------------------------------------------------------------------------
+  cora                      94.97    94.45    92.80    94.61    92.80 |      0.935      0.167 |       NO
+  citeseer                  89.34    90.33    90.94    89.15    91.23 |      0.832      0.331 |       NO
+  pubmed                    97.50    97.05    96.95    97.30    97.30 |      0.196      0.063 |       NO
+  ogbn_arxiv                88.67    88.85    88.87    88.76    88.70 |      0.080      0.051 |       NO
+  wikics                    91.24    89.78    91.67    91.62    90.53 |      0.719      0.120 |       NO
+  amazon_computers          93.94    94.69    95.12    94.15    94.10 |      0.440      0.083 |       NO
+  amazon_photo              96.17    96.84    95.94    96.30    96.29 |      0.294      0.086 |       NO
+  coauthor_cs               97.07    96.85    96.80    97.21    96.77 |      0.172      0.069 |       NO
+  coauthor_physics          98.39    98.06    97.94    98.24    98.08 |      0.158      0.058 |       NO
+
+================================================================================
+REPORT 6: TRAINING CURVES — EPOCH CHECKPOINTS
+Canonical: adam, lr=0.01, all 5 split seeds pooled
+Values = mean test accuracy (%) across split_seeds × train_seeds.
+Datasets shown: ['cora', 'pubmed', 'ogbn_arxiv']
+================================================================================
+
+  Dataset: cora  (random baseline = 14.29%)
+  Model             ep 50  ep100  ep200  ep300  ep400  ep500
+  ----------------------------------------------------------------
+  GCN_X             93.78  93.87  94.47  95.21  95.61  95.68
+  GCN_U             93.80  93.84  94.20  94.53  94.69  94.74
+  GCN_rowNorm_U     93.86  93.57  93.51  93.74  93.88  93.92
+
+  Dataset: pubmed  (random baseline = 33.33%)
+  Model             ep 50  ep100  ep200  ep300  ep400  ep500
+  ----------------------------------------------------------------
+  GCN_X             95.14  96.50  97.37  97.66  97.79  97.90
+  GCN_U             94.62  95.81  96.19  96.31  96.36  96.40
+  GCN_rowNorm_U     96.11  96.25  96.50  96.92  97.11  97.22
+
+  Dataset: ogbn_arxiv  (random baseline = 2.50%)
+  Model             ep 50  ep100  ep200  ep300  ep400  ep500
+  ----------------------------------------------------------------
+  GCN_X             85.42  85.98  87.29  88.79  89.76  90.42
+  GCN_U             85.97  86.82  88.09  88.86  89.36  89.73
+  GCN_rowNorm_U     83.35  86.13  87.52  88.07  88.46  88.77
+
+================================================================================
+REPORT 9: VERIFIED FINDINGS
+Numbers first, conclusions second.
+Canonical = adam, lr=0.01, all 5 split seeds pooled.
+================================================================================
+
+──────────────────────────────────────────────────────────────────────────────
+FINDING 1: GCN_X ceiling accuracy (all nodes given true one-hot labels)
+──────────────────────────────────────────────────────────────────────────────
+GCN_X here is effectively transductive label propagation via message passing.
+Expected: near-perfect for datasets with high label homophily.
+
+  cora                  : 95.68%  (6.7× above random)
+  citeseer              : 91.52%  (5.5× above random)
+  pubmed                : 97.90%  (2.9× above random)
+  ogbn_arxiv            : 90.42%  (36.2× above random)
+  wikics                : 92.26%  (9.2× above random)
+  amazon_computers      : 95.07%  (9.5× above random)
+  amazon_photo          : 96.76%  (7.7× above random)
+  coauthor_cs           : 97.58%  (14.6× above random)
+  coauthor_physics      : 98.84%  (4.9× above random)
+  Range: 90.42% to 98.84%
+
+──────────────────────────────────────────────────────────────────────────────
+FINDING 2: Ceiling gap — Gap_U = GCN_U − GCN_X at full label information
+──────────────────────────────────────────────────────────────────────────────
+span(X_label_label) = span(U_label_label) → gap is geometric, not informational.
+Gap_U > 0: Rayleigh-Ritz globally pre-distributes label structure → GCN(U) easier.
+Gap_U < 0: Direct one-hot features more advantageous for local GCN aggregation.
+
+  cora                  : GCN_X=95.68%  GCN_U=94.74%  Gap_U=-0.93 pp (near-zero)
+  citeseer              : GCN_X=91.52%  GCN_U=91.08%  Gap_U=-0.44 pp (near-zero)
+  pubmed                : GCN_X=97.90%  GCN_U=96.40%  Gap_U=-1.50 pp (near-zero)
+  ogbn_arxiv            : GCN_X=90.42%  GCN_U=89.73%  Gap_U=-0.69 pp (near-zero)
+  wikics                : GCN_X=92.26%  GCN_U=91.06%  Gap_U=-1.20 pp (near-zero)
+  amazon_computers      : GCN_X=95.07%  GCN_U=94.52%  Gap_U=-0.55 pp (near-zero)
+  amazon_photo          : GCN_X=96.76%  GCN_U=96.60%  Gap_U=-0.16 pp (near-zero)
+  coauthor_cs           : GCN_X=97.58%  GCN_U=97.21%  Gap_U=-0.38 pp (near-zero)
+  coauthor_physics      : GCN_X=98.84%  GCN_U=98.39%  Gap_U=-0.45 pp (near-zero)
+
+  Range: -1.50 to -0.16 pp
+
+──────────────────────────────────────────────────────────────────────────────
+FINDING 3: Row-norm effect at ceiling (Gap_RN = GCN_rowNorm_U − GCN_U)
+──────────────────────────────────────────────────────────────────────────────
+
+  cora                  : GCN_U=94.74%  GCN_rowNorm_U=93.92%  Gap_RN=-0.82 pp
+  citeseer              : GCN_U=91.08%  GCN_rowNorm_U=90.20%  Gap_RN=-0.88 pp
+  pubmed                : GCN_U=96.40%  GCN_rowNorm_U=97.22%  Gap_RN=+0.82 pp
+  ogbn_arxiv            : GCN_U=89.73%  GCN_rowNorm_U=88.77%  Gap_RN=-0.96 pp
+  wikics                : GCN_U=91.06%  GCN_rowNorm_U=90.97%  Gap_RN=-0.10 pp
+  amazon_computers      : GCN_U=94.52%  GCN_rowNorm_U=94.40%  Gap_RN=-0.12 pp
+  amazon_photo          : GCN_U=96.60%  GCN_rowNorm_U=96.31%  Gap_RN=-0.30 pp
+  coauthor_cs           : GCN_U=97.21%  GCN_rowNorm_U=96.94%  Gap_RN=-0.27 pp
+  coauthor_physics      : GCN_U=98.39%  GCN_rowNorm_U=98.14%  Gap_RN=-0.25 pp
+  Range: -0.96 to +0.82 pp
+
+──────────────────────────────────────────────────────────────────────────────
+FINDING 4: Split seed stability — does which 60% we train on matter?
+──────────────────────────────────────────────────────────────────────────────
+NOTE: X_label_label and U_label_label are deterministic (do not change with split).
+  Variance across splits = which nodes are in train/val/test, not feature variance.
+
+  Dataset                 GCN_X split_std  GCN_U split_std  GCN_rnU split_std
+  ----------------------------------------------------------------------------
+  cora                              0.541            0.786              0.935
+  citeseer                          0.664            0.570              0.832
+  pubmed                            0.289            0.114              0.196
+  ogbn_arxiv                        0.090            0.101              0.080
+  wikics                            0.499            0.573              0.719
+  amazon_computers                  0.324            0.246              0.440
+  amazon_photo                      0.079            0.172              0.294
+  coauthor_cs                       0.141            0.092              0.172
+  coauthor_physics                  0.105            0.097              0.158
+
+──────────────────────────────────────────────────────────────────────────────
+SUMMARY — KEY NUMBERS
+──────────────────────────────────────────────────────────────────────────────
+  GCN_X ceiling range:    90.42% to 98.84%
+  Gap_U  range (canonical): -1.50 to -0.16 pp
+  Gap_RN range (canonical): -0.96 to +0.82 pp
+  All numbers [VERIFIED] from canonical config (adam lr=0.01, all split seeds).
+
+SCIENTIFIC NOTE:
+  These results represent the upper bound on what GCN can extract from the
+  label structure. Because test labels are embedded in features, accuracy
+  reflects label propagation via message passing — not generalisation.
+  The key scientific question is not "how high is accuracy?" but rather
+  "does span(X)=span(U) at ceiling produce the same geometric gap as
+  at partial (label_rand) and zero (gcn_rand) label information?"
+
+================================================================================
+END OF REPORT
+Output: /home/md724/Spectral-Basis/SpectralGeometryMisalignment/results/label_label/analysis/analysis_report.txt
+================================================================================

@@ -1,0 +1,479 @@
+================================================================================
+EXPERIMENT 2-v2: FULL LABEL INFORMATION + GNN vs TRANSFORMER — ANALYSIS
+SpectralGeometryMisalignment / label_label_v2_experiment.py
+Date: April 2026
+================================================================================
+
+EXPERIMENTAL SETUP
+------------------
+X_label_label: ALL nodes → true one-hot label. Deterministic.
+U_label_label: Rayleigh-Ritz of (L,D) on X_label_label.
+span(X) = span(U) → all gaps are optimization geometry.
+
+*** Scientific probe — test labels in features. NOT predictive. ***
+
+6 models:
+  GCN:         GCN_X | GCN_U (StandardScaler) | GCN_rowNorm_U (row-norm, Option B)
+  Transformer: Transformer_X | Transformer_U | Transformer_rowNorm_U
+  Transformer = 2-layer pre-norm TransformerEncoder, global self-attention,
+  no graph adjacency, no positional encoding. hidden=256, heads=4, ff=512.
+  Skipped for datasets with n > 25000 (O(N^2) infeasible).
+
+Training:  SGD + Adam, LR∈{0.001,0.01,0.1}, 500 epochs, WD=0
+Seeds:     5 train × 5 random split seeds = 25 runs per (model, opt, lr)
+Canonical: adam, lr=0.01, all 5 split seeds pooled
+
+
+================================================================================
+COMPLETENESS CHECK
+Expected: 150 records per dataset (GCN models)
+(5 split_seeds × 2 opts × 3 lrs × 5 train_seeds = 150)
+Transformer models are skipped for n > 25000 — this is expected.
+================================================================================
+  cora                  : INCOMPLETE (141/150)  <-- check  Transformer: feasible
+  citeseer              : ✓  Transformer: feasible
+  pubmed                : INCOMPLETE (149/150)  <-- check  Transformer: feasible
+  ogbn_arxiv            : ✓  Transformer: skipped (n too large)
+  wikics                : ✓  Transformer: feasible
+  amazon_computers      : ✓  Transformer: feasible
+  amazon_photo          : ✓  Transformer: feasible
+  coauthor_cs           : ✓  Transformer: feasible
+  coauthor_physics      : ✓  Transformer: skipped (n too large)
+
+================================================================================
+DATASET METADATA
+================================================================================
+Dataset                 n_nodes  num_cls  d_eff  base%  n_train  Transformer  records
+-------------------------------------------------------------------------------------
+cora                      2,485        7      7  14.29     1491          YES      141
+citeseer                  2,120        6      6  16.67     1272          YES      150
+pubmed                   19,717        3      3  33.33    11830          YES      149
+ogbn_arxiv              169,343       40     40   2.50   101605      SKIPPED      150
+wikics                   11,311       10     10  10.00     6786          YES      150
+amazon_computers         13,381       10     10  10.00     8028          YES      150
+amazon_photo              7,487        8      8  12.50     4492          YES      150
+coauthor_cs              18,333       15     15   6.67    10999          YES      150
+coauthor_physics         34,493        5      5  20.00    20695      SKIPPED      150
+
+Transformer SKIPPED = n > 25000 nodes (O(N^2) attention infeasible).
+NOTE: ALL models use test labels in features — not a predictive experiment.
+
+================================================================================
+REPORT 2: ABOVE-RANDOM CHECK
+Canonical: adam, lr=0.01, all split seeds pooled
+Ratio = mean / random_baseline  (>1.0 = above random)
+REMINDER: near-100% is EXPECTED — test labels are in features.
+================================================================================
+Dataset                base% |        GCN_X         GCN_U      GCN_rowN      Transfor      Transfor      Transfor
+--------------------------------------------------------------------------------------------------------------
+cora                    14.3 |  95.5(6.69x)   94.6(6.62x)   93.6(6.55x)  100.0(7.00x)  100.0(7.00x)   97.5(6.82x)
+citeseer                16.7 |  91.5(5.49x)   91.1(5.46x)   90.1(5.41x)  100.0(6.00x)  100.0(6.00x)  100.0(6.00x)
+pubmed                  33.3 |  97.9(2.94x)   96.4(2.89x)   97.2(2.92x)  100.0(3.00x)  100.0(3.00x)  100.0(3.00x)
+ogbn_arxiv               2.5 |  90.4(36.17x)   89.7(35.89x)   88.8(35.51x)      skip          skip          skip    
+wikics                  10.0 |  92.3(9.23x)   91.1(9.11x)   91.0(9.10x)   98.9(9.89x)  100.0(10.00x)   95.4(9.54x)
+amazon_computers        10.0 |  95.1(9.51x)   94.5(9.45x)   94.4(9.44x)   96.1(9.61x)  100.0(10.00x)   96.7(9.67x)
+amazon_photo            12.5 |  96.8(7.74x)   96.6(7.73x)   96.3(7.70x)   99.3(7.94x)  100.0(8.00x)   98.7(7.89x)
+coauthor_cs              6.7 |  97.6(14.64x)   97.2(14.58x)   96.9(14.54x)   96.4(14.47x)  100.0(15.00x)   94.5(14.18x)
+coauthor_physics        20.0 |  98.8(4.94x)   98.4(4.92x)   98.1(4.91x)      skip          skip          skip    
+
+No anomalies.
+
+================================================================================
+REPORT 1: MAIN RESULTS TABLE — ALL 6 MODELS
+Canonical: adam, lr=0.01, all 5 split seeds pooled (up to 25 runs)
+skip = Transformer not run (n > 25000)
+================================================================================
+
+  Optimizer: SGD
+  Dataset                base% |         GCN_X         GCN_U       GCN_rnU |       Trans_X       Trans_U         T_rnU
+  ----------------------------------------------------------------------------------------------------
+  cora                    14.3 |    93.83±0.81    93.71±0.80    93.68±0.95 |   100.00±0.00   100.00±0.00   100.00±0.00
+  citeseer                16.7 |    88.91±0.93    89.51±0.81    89.55±0.97 |   100.00±0.00   100.00±0.00   100.00±0.00
+  pubmed                  33.3 |    96.43±0.12    95.99±0.10    96.22±0.12 |   100.00±0.00   100.00±0.00   100.00±0.00
+  ogbn_arxiv               2.5 |    83.60±0.15    85.83±0.07    76.44±0.14 |        skip          skip          skip  
+  wikics                  10.0 |    88.47±0.57    88.83±0.70    88.37±0.62 |   100.00±0.00   100.00±0.00   100.00±0.00
+  amazon_computers        10.0 |    93.48±0.26    93.52±0.33    93.07±0.52 |   100.00±0.00   100.00±0.00   100.00±0.00
+  amazon_photo            12.5 |    95.47±0.28    95.88±0.34    95.16±0.48 |   100.00±0.00   100.00±0.00   100.00±0.00
+  coauthor_cs              6.7 |    96.23±0.21    96.24±0.21    94.99±0.30 |   100.00±0.00   100.00±0.00   100.00±0.00
+  coauthor_physics        20.0 |    97.74±0.09    97.81±0.12    97.76±0.09 |        skip          skip          skip  
+
+  Optimizer: ADAM
+  Dataset                base% |         GCN_X         GCN_U       GCN_rnU |       Trans_X       Trans_U         T_rnU
+  ----------------------------------------------------------------------------------------------------
+  cora                    14.3 |    95.69±0.44    94.57±0.80    94.43±0.94 |   100.00±0.00   100.00±0.00   100.00±0.00
+  citeseer                16.7 |    91.83±1.09    91.08±0.69    91.48±0.77 |   100.00±0.00   100.00±0.00   100.00±0.00
+  pubmed                  33.3 |    98.24±0.27    96.47±0.15    97.89±0.18 |   100.00±0.00   100.00±0.00   100.00±0.00
+  ogbn_arxiv               2.5 |    92.75±0.13    90.60±0.18    91.92±0.14 |        skip          skip          skip  
+  wikics                  10.0 |    93.67±0.36    91.06±0.58    92.94±0.42 |   100.00±0.00   100.00±0.00   100.00±0.00
+  amazon_computers        10.0 |    95.99±0.23    94.51±0.27    95.40±0.38 |   100.00±0.00   100.00±0.00   100.00±0.00
+  amazon_photo            12.5 |    97.70±0.24    96.53±0.29    97.08±0.22 |   100.00±0.00   100.00±0.00   100.00±0.00
+  coauthor_cs              6.7 |    98.33±0.11    97.73±0.13    97.99±0.18 |   100.00±0.00   100.00±0.00   100.00±0.00
+  coauthor_physics        20.0 |    99.16±0.12    98.79±0.15    99.02±0.07 |        skip          skip          skip  
+
+Best LR by mean val_acc_curve[-1] across all split × train seeds.
+
+================================================================================
+REPORT 3: CEILING GAP — Gap_U = model(U) − model(X)
+  GCN:         Gap_U_GCN   = GCN_U − GCN_X
+  Transformer: Gap_U_Trans = Transformer_U − Transformer_X
+span(X) = span(U) → gaps are optimization geometry, not information.
+Canonical: adam, lr=0.01, all 5 split seeds pooled.
+================================================================================
+
+Dataset                base% |   GCN_X   GCN_U  Gap_GCN |     T_X     T_U    Gap_T
+------------------------------------------------------------------------------
+cora                    14.3 |   95.52   94.57    -0.96 |  100.00  100.00    +0.00
+citeseer                16.7 |   91.48   91.08    -0.41 |  100.00  100.00    +0.00
+pubmed                  33.3 |   97.90   96.40    -1.50 |  100.00  100.00    +0.00
+ogbn_arxiv               2.5 |   90.42   89.73    -0.69 |    skip    skip     skip
+wikics                  10.0 |   92.25   91.06    -1.19 |   98.90  100.00    +1.10
+amazon_computers        10.0 |   95.07   94.51    -0.55 |   96.06  100.00    +3.94
+amazon_photo            12.5 |   96.76   96.60    -0.16 |   99.26  100.00    +0.74
+coauthor_cs              6.7 |   97.59   97.21    -0.38 |   96.45  100.00    +3.55
+coauthor_physics        20.0 |   98.84   98.39    -0.45 |    skip    skip     skip
+
+*** = |gap| > 5pp. Positive = U helps, negative = X better.
+Compare Gap_GCN vs Gap_T: does spectral projection help both architectures
+the same way, or differently?
+
+================================================================================
+REPORT 4: GCN vs TRANSFORMER — ARCHITECTURAL COMPARISON
+  Gap_arch_X = Transformer_X − GCN_X  (architecture gap on raw features)
+  Gap_arch_U = Transformer_U − GCN_U  (architecture gap on spectral features)
+  Positive = Transformer better. Negative = GCN better.
+Canonical: adam, lr=0.01, all 5 split seeds pooled.
+NOTE: GCN uses graph adjacency (local). Transformer uses global self-attention.
+      At ceiling (all labels given), which inductive bias is more effective?
+================================================================================
+
+Dataset                base% |   GCN_X  Trans_X   Gap_X |   GCN_U  Trans_U   Gap_U
+----------------------------------------------------------------------------------
+cora                    14.3 |   95.52  100.00   +4.48 |   94.57  100.00   +5.43 ***
+citeseer                16.7 |   91.48  100.00   +8.52 *** |   91.08  100.00   +8.92 ***
+pubmed                  33.3 |   97.90  100.00   +2.10 |   96.40  100.00   +3.60
+ogbn_arxiv               2.5 |   90.42    skip    skip |   89.73    skip    skip
+wikics                  10.0 |   92.25   98.90   +6.65 *** |   91.06  100.00   +8.94 ***
+amazon_computers        10.0 |   95.07   96.06   +1.00 |   94.51  100.00   +5.49 ***
+amazon_photo            12.5 |   96.76   99.26   +2.50 |   96.60  100.00   +3.40
+coauthor_cs              6.7 |   97.59   96.45   -1.14 |   97.21  100.00   +2.79
+coauthor_physics        20.0 |   98.84    skip    skip |   98.39    skip    skip
+
+  Gap_arch_X range: -1.14 to +8.52 pp
+    Trans > GCN on X: ['cora', 'citeseer', 'pubmed', 'wikics', 'amazon_photo']
+  Gap_arch_U range: +2.79 to +8.94 pp
+    Trans > GCN on U: ['cora', 'citeseer', 'pubmed', 'wikics', 'amazon_computers', 'amazon_photo', 'coauthor_cs']
+
+KEY QUESTION: Does the spectral pre-processing (U) change WHICH architecture
+wins? If Gap_arch_X and Gap_arch_U have opposite signs on any dataset,
+that is a regime shift — U changes the relative advantage of the architectures.
+
+  Dataset                  Gap_arch_X   Gap_arch_U  Regime shift?
+  -----------------------------------------------------------------
+  cora                          +4.48        +5.43 no (consistent)
+  citeseer                      +8.52        +8.92 no (consistent)
+  pubmed                        +2.10        +3.60 no (consistent)
+  ogbn_arxiv                      N/A          N/A  N/A (skipped)
+  wikics                        +6.65        +8.94 no (consistent)
+  amazon_computers              +1.00        +5.49        partial
+  amazon_photo                  +2.50        +3.40 no (consistent)
+  coauthor_cs                   -1.14        +2.79        partial
+  coauthor_physics                N/A          N/A  N/A (skipped)
+
+================================================================================
+REPORT 5: ROW-NORM EFFECT — GCN vs TRANSFORMER
+  Gap_RN_GCN   = GCN_rowNorm_U − GCN_U
+  Gap_RN_Trans = Transformer_rowNorm_U − Transformer_U
+  For GCN: row-norm at each layer INPUT (Option B).
+  For Transformer: row-norm at input only (before first layer).
+Canonical: adam, lr=0.01, all 5 split seeds pooled.
+================================================================================
+
+Dataset                base% |   GCN_U  GCN_rnU   RN_GCN |     T_U    T_rnU     RN_T
+--------------------------------------------------------------------------------
+cora                    14.3 |   94.57   93.61    -0.96 |  100.00   97.48    -2.52
+citeseer                16.7 |   91.08   90.13    -0.94 |  100.00  100.00    +0.00
+pubmed                  33.3 |   96.40   97.22    +0.82 |  100.00  100.00    +0.00
+ogbn_arxiv               2.5 |   89.73   88.76    -0.97 |    skip    skip     skip
+wikics                  10.0 |   91.06   90.97    -0.09 |  100.00   95.36    -4.64 *
+amazon_computers        10.0 |   94.51   94.41    -0.10 |  100.00   96.69    -3.31 *
+amazon_photo            12.5 |   96.60   96.31    -0.29 |  100.00   98.68    -1.32
+coauthor_cs              6.7 |   97.21   96.93    -0.29 |  100.00   94.55    -5.45 *
+coauthor_physics        20.0 |   98.39   98.14    -0.25 |    skip    skip     skip
+
+* = |effect| > 3pp.  Positive = row-norm helps. Negative = row-norm hurts.
+Sign consistency across GCN and Transformer reveals whether the effect
+is tied to the spectral geometry or the aggregation mechanism.
+
+================================================================================
+REPORT 6: OPTIMIZER SENSITIVITY
+Best LR per optimizer | Mean±std across all split × train seeds
+================================================================================
+
+  Model: GCN_X
+  Dataset                base% |        SGD best-LR |       Adam best-LR |  Gap (Adam−SGD)
+  --------------------------------------------------------------------------------
+  cora                    14.3 |  93.83±0.81[lr=0.01] |  95.69±0.44[lr=0.1] |        +1.87 pp
+  citeseer                16.7 |  88.91±0.93[lr=0.1] |  91.83±1.09[lr=0.1] |        +2.92 pp
+  pubmed                  33.3 |  96.43±0.12[lr=0.1] |  98.24±0.27[lr=0.1] |        +1.82 pp
+  ogbn_arxiv               2.5 |  83.60±0.15[lr=0.1] |  92.75±0.13[lr=0.1] |        +9.15 pp
+  wikics                  10.0 |  88.47±0.57[lr=0.1] |  93.67±0.36[lr=0.1] |        +5.20 pp
+  amazon_computers        10.0 |  93.48±0.26[lr=0.1] |  95.99±0.23[lr=0.1] |        +2.51 pp
+  amazon_photo            12.5 |  95.47±0.28[lr=0.1] |  97.70±0.24[lr=0.1] |        +2.23 pp
+  coauthor_cs              6.7 |  96.23±0.21[lr=0.1] |  98.33±0.11[lr=0.1] |        +2.10 pp
+  coauthor_physics        20.0 |  97.74±0.09[lr=0.1] |  99.16±0.12[lr=0.1] |        +1.42 pp
+
+  Model: GCN_U
+  Dataset                base% |        SGD best-LR |       Adam best-LR |  Gap (Adam−SGD)
+  --------------------------------------------------------------------------------
+  cora                    14.3 |  93.71±0.80[lr=0.01] |  94.57±0.80[lr=0.01] |        +0.85 pp
+  citeseer                16.7 |  89.51±0.81[lr=0.1] |  91.08±0.69[lr=0.01] |        +1.57 pp
+  pubmed                  33.3 |  95.99±0.10[lr=0.1] |  96.47±0.15[lr=0.1] |        +0.48 pp
+  ogbn_arxiv               2.5 |  85.83±0.07[lr=0.1] |  90.60±0.18[lr=0.1] |        +4.78 pp
+  wikics                  10.0 |  88.83±0.70[lr=0.1] |  91.06±0.58[lr=0.01] |        +2.23 pp
+  amazon_computers        10.0 |  93.52±0.33[lr=0.1] |  94.51±0.27[lr=0.01] |        +1.00 pp
+  amazon_photo            12.5 |  95.88±0.34[lr=0.1] |  96.53±0.29[lr=0.1] |        +0.65 pp
+  coauthor_cs              6.7 |  96.24±0.21[lr=0.1] |  97.73±0.13[lr=0.1] |        +1.49 pp
+  coauthor_physics        20.0 |  97.81±0.12[lr=0.1] |  98.79±0.15[lr=0.1] |        +0.98 pp
+
+  Model: GCN_rowNorm_U
+  Dataset                base% |        SGD best-LR |       Adam best-LR |  Gap (Adam−SGD)
+  --------------------------------------------------------------------------------
+  cora                    14.3 |  93.68±0.95[lr=0.1] |  94.43±0.94[lr=0.1] |        +0.75 pp
+  citeseer                16.7 |  89.55±0.97[lr=0.1] |  91.48±0.77[lr=0.1] |        +1.93 pp
+  pubmed                  33.3 |  96.22±0.12[lr=0.1] |  97.89±0.18[lr=0.1] |        +1.66 pp
+  ogbn_arxiv               2.5 |  76.44±0.14[lr=0.1] |  91.92±0.14[lr=0.1] |       +15.48 pp
+  wikics                  10.0 |  88.37±0.62[lr=0.1] |  92.94±0.42[lr=0.1] |        +4.57 pp
+  amazon_computers        10.0 |  93.07±0.52[lr=0.1] |  95.40±0.38[lr=0.1] |        +2.33 pp
+  amazon_photo            12.5 |  95.16±0.48[lr=0.1] |  97.08±0.22[lr=0.1] |        +1.92 pp
+  coauthor_cs              6.7 |  94.99±0.30[lr=0.1] |  97.99±0.18[lr=0.1] |        +3.00 pp
+  coauthor_physics        20.0 |  97.76±0.09[lr=0.1] |  99.02±0.07[lr=0.1] |        +1.27 pp
+
+  Model: Transformer_X
+  Dataset                base% |        SGD best-LR |       Adam best-LR |  Gap (Adam−SGD)
+  --------------------------------------------------------------------------------
+  cora                    14.3 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  citeseer                16.7 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  pubmed                  33.3 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  ogbn_arxiv               2.5 |         skip       |         skip       |         N/A    
+  wikics                  10.0 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  amazon_computers        10.0 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  amazon_photo            12.5 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  coauthor_cs              6.7 | 100.00±0.00[lr=0.01] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  coauthor_physics        20.0 |         skip       |         skip       |         N/A    
+
+  Model: Transformer_U
+  Dataset                base% |        SGD best-LR |       Adam best-LR |  Gap (Adam−SGD)
+  --------------------------------------------------------------------------------
+  cora                    14.3 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  citeseer                16.7 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  pubmed                  33.3 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  ogbn_arxiv               2.5 |         skip       |         skip       |         N/A    
+  wikics                  10.0 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  amazon_computers        10.0 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  amazon_photo            12.5 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  coauthor_cs              6.7 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  coauthor_physics        20.0 |         skip       |         skip       |         N/A    
+
+  Model: Transformer_rowNorm_U
+  Dataset                base% |        SGD best-LR |       Adam best-LR |  Gap (Adam−SGD)
+  --------------------------------------------------------------------------------
+  cora                    14.3 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  citeseer                16.7 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  pubmed                  33.3 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  ogbn_arxiv               2.5 |         skip       |         skip       |         N/A    
+  wikics                  10.0 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  amazon_computers        10.0 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  amazon_photo            12.5 | 100.00±0.00[lr=0.001] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  coauthor_cs              6.7 | 100.00±0.00[lr=0.01] | 100.00±0.00[lr=0.001] |        +0.00 pp
+  coauthor_physics        20.0 |         skip       |         skip       |         N/A    
+
+================================================================================
+REPORT 7: SPLIT SEED STABILITY
+Canonical: adam, lr=0.01
+split_std = std of per-seed means.  seed_std = mean of per-seed stds.
+X_label_label and U_label_label are deterministic — variance = train partition.
+================================================================================
+
+  Model: GCN_X
+  Dataset                     ss0      ss1      ss2      ss3      ss4 |  split_std   seed_std |  stable?
+  ------------------------------------------------------------------------------------------------------
+  cora                       skip    95.53    94.77    95.98    95.81 |      0.464      0.395 |       NO
+  citeseer                  91.89    91.18    91.23    90.61    92.50 |      0.650      0.359 |       NO
+  pubmed                    98.06    98.05    97.32    98.00    98.06 |      0.289      0.047 |       NO
+  ogbn_arxiv                90.40    90.34    90.57    90.46    90.34 |      0.088      0.058 |       NO
+  wikics                    92.45    91.29    92.55    92.68    92.28 |      0.496      0.169 |       NO
+  amazon_computers          94.71    95.01    95.67    95.14    94.82 |      0.333      0.088 |       NO
+  amazon_photo              96.70    96.92    96.76    96.74    96.69 |      0.081      0.068 |       NO
+  coauthor_cs               97.82    97.47    97.65    97.59    97.41 |      0.141      0.074 |       NO
+  coauthor_physics          98.81    98.81    98.74    99.04    98.79 |      0.105      0.054 |       NO
+
+  Model: GCN_U
+  Dataset                     ss0      ss1      ss2      ss3      ss4 |  split_std   seed_std |  stable?
+  ------------------------------------------------------------------------------------------------------
+  cora                       skip    94.89    93.52    95.53    94.33 |      0.740      0.287 |       NO
+  citeseer                  90.66    91.70    90.61    90.57    91.84 |      0.569      0.379 |       NO
+  pubmed                    96.44    96.39    96.25    96.33    96.61 |      0.120      0.048 |       NO
+  ogbn_arxiv                89.56    89.72    89.84    89.84    89.71 |      0.106      0.075 |       NO
+  wikics                    91.26    90.15    91.25    91.87    90.79 |      0.570      0.124 |       NO
+  amazon_computers          94.11    94.62    94.77    94.65    94.42 |      0.231      0.131 |       NO
+  amazon_photo              96.52    96.93    96.53    96.44    96.60 |      0.172      0.062 |       NO
+  coauthor_cs               97.32    97.23    97.21    97.25    97.04 |      0.092      0.092 |       NO
+  coauthor_physics          98.51    98.42    98.32    98.46    98.25 |      0.096      0.040 |       NO
+
+  Model: GCN_rowNorm_U
+  Dataset                     ss0      ss1      ss2      ss3      ss4 |  split_std   seed_std |  stable?
+  ------------------------------------------------------------------------------------------------------
+  cora                       skip    94.33    92.80    94.53    92.80 |      0.818      0.225 |       NO
+  citeseer                  89.34    90.14    90.90    88.96    91.32 |      0.894      0.351 |       NO
+  pubmed                    97.48    97.06    96.97    97.32    97.28 |      0.183      0.065 |       NO
+  ogbn_arxiv                88.70    88.82    88.85    88.77    88.67 |      0.067      0.058 |       NO
+  wikics                    91.19    89.76    91.75    91.65    90.52 |      0.746      0.107 |       NO
+  amazon_computers          93.94    94.70    95.16    94.21    94.04 |      0.457      0.087 |       NO
+  amazon_photo              96.18    96.86    95.93    96.32    96.26 |      0.307      0.079 |       NO
+  coauthor_cs               97.04    96.85    96.79    97.21    96.73 |      0.176      0.073 |       NO
+  coauthor_physics          98.38    98.06    97.94    98.25    98.08 |      0.156      0.061 |       NO
+
+  Model: Transformer_X
+  Dataset                     ss0      ss1      ss2      ss3      ss4 |  split_std   seed_std |  stable?
+  ------------------------------------------------------------------------------------------------------
+  cora                       skip   100.00   100.00   100.00   100.00 |      0.000      0.000 |       NO
+  citeseer                 100.00   100.00   100.00   100.00   100.00 |      0.000      0.000 |       NO
+  pubmed                   100.00   100.00   100.00   100.00   100.00 |      0.000      0.000 |       NO
+  ogbn_arxiv              [insufficient data / skipped]
+  wikics                    97.82    97.53   100.00    99.18   100.00 |      1.054      1.705 |      YES
+  amazon_computers          93.52    96.72    97.76    96.80    95.52 |      1.456      4.533 |      YES
+  amazon_photo             100.00    97.29   100.00   100.00    99.03 |      1.056      1.118 |      YES
+  coauthor_cs               95.56    96.93    99.54    96.90    93.30 |      2.036      3.249 |      YES
+  coauthor_physics        [insufficient data / skipped]
+
+  Model: Transformer_U
+  Dataset                     ss0      ss1      ss2      ss3      ss4 |  split_std   seed_std |  stable?
+  ------------------------------------------------------------------------------------------------------
+  cora                       skip   100.00   100.00   100.00   100.00 |      0.000      0.000 |       NO
+  citeseer                 100.00   100.00   100.00   100.00   100.00 |      0.000      0.000 |       NO
+  pubmed                   100.00   100.00   100.00   100.00   100.00 |      0.000      0.000 |       NO
+  ogbn_arxiv              [insufficient data / skipped]
+  wikics                   100.00   100.00   100.00   100.00   100.00 |      0.000      0.000 |       NO
+  amazon_computers         100.00   100.00   100.00   100.00   100.00 |      0.000      0.000 |       NO
+  amazon_photo             100.00   100.00   100.00   100.00   100.00 |      0.000      0.000 |       NO
+  coauthor_cs              100.00   100.00   100.00   100.00   100.00 |      0.000      0.000 |       NO
+  coauthor_physics        [insufficient data / skipped]
+
+  Model: Transformer_rowNorm_U
+  Dataset                     ss0      ss1      ss2      ss3      ss4 |  split_std   seed_std |  stable?
+  ------------------------------------------------------------------------------------------------------
+  cora                       skip    95.49   100.00    97.22    97.22 |      1.615      5.030 |      YES
+  citeseer                 100.00   100.00   100.00   100.00   100.00 |      0.000      0.000 |       NO
+  pubmed                   100.00   100.00   100.00   100.00   100.00 |      0.000      0.000 |       NO
+  ogbn_arxiv              [insufficient data / skipped]
+  wikics                    96.19    95.87    95.78   100.00    88.94 |      3.573      4.887 |      YES
+  amazon_computers          98.08    97.49    97.05    94.95    95.87 |      1.132      3.342 |      YES
+  amazon_photo              99.03   100.00    99.03    98.17    97.20 |      0.943      2.633 |      YES
+  coauthor_cs               95.13    94.86    95.89    92.46    94.40 |      1.150      4.965 |      YES
+  coauthor_physics        [insufficient data / skipped]
+
+================================================================================
+REPORT 8: TRAINING CURVES — EPOCH CHECKPOINTS
+Canonical: adam, lr=0.01, all 5 split seeds pooled
+Datasets shown: ['cora', 'pubmed', 'wikics']
+================================================================================
+
+  Dataset: cora  (random baseline = 14.29%)
+  Model                     ep 50  ep100  ep200  ep300  ep400  ep500
+  ------------------------------------------------------------------------
+  GCN_X                     93.61  93.69  94.26  94.96  95.44  95.52
+  GCN_U                     93.57  93.59  93.96  94.41  94.50  94.57
+  GCN_rowNorm_U             93.68  93.55  93.42  93.57  93.61  93.61
+  Transformer_X             99.04  99.04  100.00  100.00  100.00  100.00
+  Transformer_U             100.00  100.00  100.00  100.00  100.00  100.00
+  Transformer_rowNorm_U     95.12  98.18  97.48  97.48  97.48  97.48
+
+  Dataset: pubmed  (random baseline = 33.33%)
+  Model                     ep 50  ep100  ep200  ep300  ep400  ep500
+  ------------------------------------------------------------------------
+  GCN_X                     95.14  96.50  97.37  97.66  97.79  97.90
+  GCN_U                     94.62  95.81  96.19  96.31  96.36  96.40
+  GCN_rowNorm_U             96.11  96.25  96.50  96.92  97.13  97.22
+  Transformer_X             100.00  100.00  100.00  100.00  100.00  100.00
+  Transformer_U             100.00  100.00  100.00  100.00  100.00  100.00
+  Transformer_rowNorm_U     100.00  100.00  100.00  100.00  100.00  100.00
+
+  Dataset: wikics  (random baseline = 10.00%)
+  Model                     ep 50  ep100  ep200  ep300  ep400  ep500
+  ------------------------------------------------------------------------
+  GCN_X                     88.66  89.01  89.98  91.00  91.76  92.25
+  GCN_U                     88.72  89.24  90.21  90.72  90.91  91.06
+  GCN_rowNorm_U             88.58  89.95  90.32  90.57  90.82  90.97
+  Transformer_X             89.61  97.56  98.45  98.64  98.81  98.90
+  Transformer_U             100.00  100.00  100.00  100.00  100.00  100.00
+  Transformer_rowNorm_U     92.54  95.81  95.41  95.00  94.98  95.36
+
+================================================================================
+REPORT 9: VERIFIED FINDINGS
+Numbers first, conclusions second.
+Canonical = adam, lr=0.01, all 5 split seeds pooled.
+Skipped Transformer entries excluded from all statistics.
+================================================================================
+
+──────────────────────────────────────────────────────────────────────────────
+FINDING 1: GCN_X ceiling — transductive label propagation via GCN
+──────────────────────────────────────────────────────────────────────────────
+
+  cora                  : 95.52%  (+5.69× above random)
+  citeseer              : 91.48%  (+4.49× above random)
+  pubmed                : 97.90%  (+1.94× above random)
+  ogbn_arxiv            : 90.42%  (+35.17× above random)
+  wikics                : 92.25%  (+8.23× above random)
+  amazon_computers      : 95.07%  (+8.51× above random)
+  amazon_photo          : 96.76%  (+6.74× above random)
+  coauthor_cs           : 97.59%  (+13.64× above random)
+  coauthor_physics      : 98.84%  (+3.94× above random)
+  Range: 90.42% to 98.84%
+
+──────────────────────────────────────────────────────────────────────────────
+FINDING 2: Ceiling gap Gap_U — GCN vs Transformer
+──────────────────────────────────────────────────────────────────────────────
+span(X)=span(U) → gap is geometric optimization effect, not information.
+
+  cora                    GCN:   -0.96 pp  | Transformer:   +0.00 pp 
+  citeseer                GCN:   -0.41 pp  | Transformer:   +0.00 pp 
+  pubmed                  GCN:   -1.50 pp  | Transformer:   +0.00 pp 
+  ogbn_arxiv              GCN:   -0.69 pp  | Transformer:     N/A pp 
+  wikics                  GCN:   -1.19 pp  | Transformer:   +1.10 pp 
+  amazon_computers        GCN:   -0.55 pp  | Transformer:   +3.94 pp 
+  amazon_photo            GCN:   -0.16 pp  | Transformer:   +0.74 pp 
+  coauthor_cs             GCN:   -0.38 pp  | Transformer:   +3.55 pp 
+  coauthor_physics        GCN:   -0.45 pp  | Transformer:     N/A pp 
+  Gap_U GCN   range: -1.50 to -0.16 pp
+  Gap_U Trans range: +0.00 to +3.94 pp
+
+──────────────────────────────────────────────────────────────────────────────
+FINDING 3: GCN vs Transformer — which benefits more from spectral pre-processing?
+──────────────────────────────────────────────────────────────────────────────
+
+  Same direction: ['cora', 'citeseer', 'pubmed', 'wikics', 'amazon_photo']
+  Different response to U: ['amazon_computers(GCN=-0.6,T=+3.9)', 'coauthor_cs(GCN=-0.4,T=+3.6)']
+
+──────────────────────────────────────────────────────────────────────────────
+SUMMARY — KEY NUMBERS  [VERIFIED from canonical config]
+──────────────────────────────────────────────────────────────────────────────
+  Dataset                |    GCN_X    GCN_U  G_U_gcn |      T_X      T_U    G_U_t
+  ------------------------------------------------------------------------------
+  cora                   |    95.52    94.57    -0.96 |   100.00   100.00    +0.00
+  citeseer               |    91.48    91.08    -0.41 |   100.00   100.00    +0.00
+  pubmed                 |    97.90    96.40    -1.50 |   100.00   100.00    +0.00
+  ogbn_arxiv             |    90.42    89.73    -0.69 |      N/A      N/A      N/A
+  wikics                 |    92.25    91.06    -1.19 |    98.90   100.00    +1.10
+  amazon_computers       |    95.07    94.51    -0.55 |    96.06   100.00    +3.94
+  amazon_photo           |    96.76    96.60    -0.16 |    99.26   100.00    +0.74
+  coauthor_cs            |    97.59    97.21    -0.38 |    96.45   100.00    +3.55
+  coauthor_physics       |    98.84    98.39    -0.45 |      N/A      N/A      N/A
+
+  SCIENTIFIC NOTE: Accuracy here measures label propagation, not generalisation.
+  The key question is: does Gap_U differ between GCN and Transformer?
+  If yes: the spectral pre-processing interacts with the inductive bias.
+
+================================================================================
+END OF REPORT
+Output: /home/md724/Spectral-Basis/SpectralGeometryMisalignment/results/label_label_v2/analysis/analysis_report.txt
+================================================================================
